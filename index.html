@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Légion Impériale — Logistique & Inventaire</title>
+<title>XXV Légion Impériale</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
@@ -484,7 +484,7 @@
       <div class="emblem-icon"><span>L</span></div>
       <div class="header-title">
         <h1>Légion Impériale</h1>
-        <p id="header-subtitle">Compagnie Blancherive — Système Logistique XXV</p>
+        <p id="header-subtitle">Système Logistique de la XXV Légion</p>
       </div>
     </div>
     <button class="btn-admin-toggle" id="adminToggle" onclick="toggleAdmin()">⚙ Panneau Admin</button>
@@ -1091,7 +1091,7 @@ function switchFortress(fortKey, btnEl) {
   document.querySelectorAll('.fortress-btn').forEach(b => b.classList.remove('active'));
   btnEl.classList.add('active');
   document.getElementById('header-subtitle').textContent =
-    'Compagnie Blancherive — ' + fortLabel(fortKey);
+    'XXV Légion Impérial — ' + fortLabel(fortKey);
   renderAllTables();
   if (isLogged()) { historyViewFort=fortKey; syncHistoryButtons(); renderHistory(); }
   toast('Forteresse active : ' + fortLabel(fortKey));
