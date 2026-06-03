@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>XXV Légion Impériale — Logistique & Inventaire</title>
+<title>Légion Impériale — Logistique & Inventaire</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
@@ -457,7 +457,7 @@
   .player-bar-input {
     background: var(--parchment); border: 1px solid var(--border-red);
     color: var(--ink); font-family: 'IM Fell English', Georgia, serif; font-size: 0.95rem;
-    padding: 0.28rem 0.65rem; width: 220px; transition: border-color 0.15s;
+    padding: 0.28rem 0.65rem; width: 280px; min-width: 180px; transition: border-color 0.15s;
   }
   .player-bar-input:focus { outline: none; border-color: var(--red); }
   .player-bar-input.required { border-color: var(--red); background: rgba(122,16,16,0.05); }
@@ -483,8 +483,8 @@
     <div class="header-emblem">
       <div class="emblem-icon"><span>L</span></div>
       <div class="header-title">
-        <h1>XXV Légion Impériale</h1>
-        <p id="header-subtitle">Système Logistique</p>
+        <h1>Légion Impériale</h1>
+        <p id="header-subtitle">Compagnie Blancherive — Système Logistique XXV</p>
       </div>
     </div>
     <button class="btn-admin-toggle" id="adminToggle" onclick="toggleAdmin()">⚙ Panneau Admin</button>
@@ -1091,7 +1091,7 @@ function switchFortress(fortKey, btnEl) {
   document.querySelectorAll('.fortress-btn').forEach(b => b.classList.remove('active'));
   btnEl.classList.add('active');
   document.getElementById('header-subtitle').textContent =
-    'XXV Légion Impérial — ' + fortLabel(fortKey);
+    'Compagnie Blancherive — ' + fortLabel(fortKey);
   renderAllTables();
   if (isLogged()) { historyViewFort=fortKey; syncHistoryButtons(); renderHistory(); }
   toast('Forteresse active : ' + fortLabel(fortKey));
