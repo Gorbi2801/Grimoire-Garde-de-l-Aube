@@ -8,6 +8,21 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
 <style>
+  /* ══ LOADER ════════════════════════════════════════════════════════════ */
+  #loader {
+    position:fixed; inset:0; z-index:9999;
+    background:var(--parchment-dark);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:1rem;
+  }
+  #loader .loader-emblem {
+    width:52px; height:52px; background:var(--red-dark); border:2px solid var(--gold-light);
+    transform:rotate(45deg); display:flex; align-items:center; justify-content:center;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  #loader .loader-emblem span { transform:rotate(-45deg); font-family:'Eagle Lake',serif; font-size:1.1rem; color:var(--gold-light); }
+  #loader-msg { font-family:'Eagle Lake',serif; font-size:0.85rem; color:var(--ink-mid); letter-spacing:0.06em; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
   :root {
     --parchment:       #F0E6C8;
@@ -426,6 +441,10 @@
 </style>
 </head>
 <body>
+<div id="loader">
+  <div class="loader-emblem"><span>L</span></div>
+  <div id="loader-msg">Connexion à la base de données...</div>
+</div>
 
 <header>
   <div class="header-top">
@@ -576,30 +595,72 @@
 
 <script>
 // ══════════════════════════════════════════════════════════════════════
-//  AUTH — PBKDF2 via Web Crypto (résistant aux attaques par dictionnaire)
+//  SUPABASE CONFIG
 // ══════════════════════════════════════════════════════════════════════
+const SB_URL    = 'https://cbfcmtgvxlvfkjhppufq.supabase.co';
+const SB_ANON   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNiZmNtdGd2eGx2ZmtqaHBwdWZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NjY3NzksImV4cCI6MjA5NjA0Mjc3OX0.ebH8CEjQxEehKIG0P6iwvi7_xgaHalg6P5wpH7Off8g';
 
-// Génère un sel aléatoire en hex
+const SB_HEADERS = {
+  'Content-Type':  'application/json',
+  'apikey':        SB_ANON,
+  'Authorization': 'Bearer ' + SB_ANON,
+  'Prefer':        'return=representation'
+};
+
+async function sbGet(table, params = '') {
+  const r = await fetch(`${SB_URL}/rest/v1/${table}${params}`, { headers: SB_HEADERS });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function sbPost(table, body) {
+  const r = await fetch(`${SB_URL}/rest/v1/${table}`, {
+    method: 'POST', headers: SB_HEADERS, body: JSON.stringify(body)
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function sbPatch(table, params, body) {
+  const r = await fetch(`${SB_URL}/rest/v1/${table}${params}`, {
+    method: 'PATCH', headers: SB_HEADERS, body: JSON.stringify(body)
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function sbDelete(table, params) {
+  const r = await fetch(`${SB_URL}/rest/v1/${table}${params}`, {
+    method: 'DELETE', headers: SB_HEADERS
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function sbUpsert(table, body) {
+  const h = { ...SB_HEADERS, 'Prefer': 'resolution=merge-duplicates,return=representation' };
+  const r = await fetch(`${SB_URL}/rest/v1/${table}`, {
+    method: 'POST', headers: h, body: JSON.stringify(body)
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+//  AUTH — PBKDF2 (résistant aux attaques par dictionnaire)
+// ══════════════════════════════════════════════════════════════════════
 function generateSalt() {
   const arr = new Uint8Array(16);
   crypto.getRandomValues(arr);
   return Array.from(arr).map(b => b.toString(16).padStart(2,'0')).join('');
 }
-
-// Hash PBKDF2 : renvoie "sel:hash" stockable
 async function hashPassword(password, salt) {
   if (!salt) salt = generateSalt();
-  const enc     = new TextEncoder();
-  const keyMat  = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']);
-  const bits    = await crypto.subtle.deriveBits(
+  const enc    = new TextEncoder();
+  const keyMat = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']);
+  const bits   = await crypto.subtle.deriveBits(
     { name:'PBKDF2', hash:'SHA-256', salt: enc.encode(salt), iterations: 100000 },
     keyMat, 256
   );
   const hash = Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2,'0')).join('');
   return `${salt}:${hash}`;
 }
-
-// Vérifie un mot de passe contre un "sel:hash" stocké
 async function verifyPassword(password, stored) {
   if (!stored || !stored.includes(':')) return false;
   const salt      = stored.split(':')[0];
@@ -607,31 +668,21 @@ async function verifyPassword(password, stored) {
   return candidate === stored;
 }
 
-// Anti-bruteforce : compteur d'échecs en mémoire
-const loginAttempts = { count: 0, lockedUntil: 0 };
-
-function isLoginLocked() {
-  if (loginAttempts.lockedUntil > Date.now()) return true;
-  return false;
-}
-
+// Anti-bruteforce
+const loginAttempts = { count:0, lockedUntil:0 };
+function isLoginLocked() { return loginAttempts.lockedUntil > Date.now(); }
 function recordFailedAttempt() {
   loginAttempts.count++;
-  // Délai progressif : 3 échecs = 5s, 5 = 30s, 7+ = 5min
-  if      (loginAttempts.count >= 7) loginAttempts.lockedUntil = Date.now() + 5 * 60 * 1000;
-  else if (loginAttempts.count >= 5) loginAttempts.lockedUntil = Date.now() + 30 * 1000;
-  else if (loginAttempts.count >= 3) loginAttempts.lockedUntil = Date.now() + 5 * 1000;
+  if      (loginAttempts.count >= 7) loginAttempts.lockedUntil = Date.now() + 5*60*1000;
+  else if (loginAttempts.count >= 5) loginAttempts.lockedUntil = Date.now() + 30*1000;
+  else if (loginAttempts.count >= 3) loginAttempts.lockedUntil = Date.now() + 5*1000;
 }
-
-function resetAttempts() { loginAttempts.count = 0; loginAttempts.lockedUntil = 0; }
+function resetAttempts() { loginAttempts.count=0; loginAttempts.lockedUntil=0; }
 
 // ══════════════════════════════════════════════════════════════════════
 //  CONFIG
 // ══════════════════════════════════════════════════════════════════════
-const SUPERADMIN_ID   = 'superadmin';
-const SA_HASH_KEY     = 'legion_sa_hash';
-const SA_FIRSTLOGIN   = 'legion_sa_firstlogin';  // flag : doit changer son mdp
-const ADMINS_KEY      = 'legion_admins';          // { pseudo: "sel:hash" }
+const SUPERADMIN_ID = 'superadmin';
 
 const FORTRESSES = [
   { key:'mornefort', label:'Mornefort' },
@@ -713,258 +764,109 @@ const TABS = [
 ];
 
 // ══════════════════════════════════════════════════════════════════════
-//  STATE
+//  STATE (en mémoire — chargé depuis Supabase)
 // ══════════════════════════════════════════════════════════════════════
-let stores          = {};
-let histories       = {};
+let stores          = {};   // stores['mornefort']['eq'] = [{name,qty,min},...]
+let histories       = {};   // histories['mornefort'] = [{...},...]
 let activeFort      = 'mornefort';
 let activeTab       = TABS[0].key;
 let historyViewFort = 'mornefort';
-
-// Session en mémoire uniquement (jamais dans localStorage)
-let session = null;  // { username, role: 'superadmin'|'admin' }
+let session         = null; // { username, role }
+let isLoading       = false;
 
 // ══════════════════════════════════════════════════════════════════════
-//  COMPTES — init + CRUD
+//  LOADING OVERLAY
+// ══════════════════════════════════════════════════════════════════════
+function showLoader(msg = 'Chargement...') {
+  document.getElementById('loader-msg').textContent = msg;
+  document.getElementById('loader').style.display   = 'flex';
+}
+function hideLoader() {
+  document.getElementById('loader').style.display = 'none';
+}
+
+// ══════════════════════════════════════════════════════════════════════
+//  INIT AUTH (superadmin dans Supabase)
 // ══════════════════════════════════════════════════════════════════════
 async function initAuth() {
-  if (!localStorage.getItem(SA_HASH_KEY)) {
-    // Premier lancement : hash PBKDF2 du mot de passe par défaut + flag changement obligatoire
-    const stored = await hashPassword('legion25');
-    localStorage.setItem(SA_HASH_KEY, stored);
-    localStorage.setItem(SA_FIRSTLOGIN, '1');
-  }
-  if (!localStorage.getItem(ADMINS_KEY)) {
-    localStorage.setItem(ADMINS_KEY, JSON.stringify({}));
-  }
-}
-
-function getAdmins() {
-  try { return JSON.parse(localStorage.getItem(ADMINS_KEY)) || {}; } catch(e) { return {}; }
-}
-function saveAdmins(obj) { localStorage.setItem(ADMINS_KEY, JSON.stringify(obj)); }
-
-// ══════════════════════════════════════════════════════════════════════
-//  LOGIN / LOGOUT
-// ══════════════════════════════════════════════════════════════════════
-async function doLogin() {
-  const user = document.getElementById('loginUsername').value.trim();
-  const pass = document.getElementById('loginPassword').value;
-  const errEl = document.getElementById('loginError');
-  if (!user || !pass) return;
-
-  // Vérif blocage anti-bruteforce
-  if (isLoginLocked()) {
-    const secs = Math.ceil((loginAttempts.lockedUntil - Date.now()) / 1000);
-    errEl.textContent = `Trop de tentatives. Réessayez dans ${secs}s.`;
-    errEl.style.display = 'block';
-    return;
-  }
-
-  let role = null;
-  if (user === SUPERADMIN_ID) {
-    const stored = localStorage.getItem(SA_HASH_KEY);
-    if (await verifyPassword(pass, stored)) role = 'superadmin';
-  } else {
-    const admins = getAdmins();
-    if (admins[user] && await verifyPassword(pass, admins[user])) role = 'admin';
-  }
-
-  if (!role) {
-    recordFailedAttempt();
-    errEl.textContent = 'Identifiants incorrects.';
-    errEl.style.display = 'block';
-    return;
-  }
-
-  resetAttempts();
-  errEl.style.display = 'none';
-  session = { username: user, role };
-
-  // Détection first-login superadmin : forcer changement de mot de passe
-  if (role === 'superadmin' && localStorage.getItem(SA_FIRSTLOGIN) === '1') {
-    document.getElementById('loginBlock').style.display   = 'none';
-    document.getElementById('sessionBlock').style.display = 'flex';
-    document.getElementById('sessionLabel').textContent   = `${user} — Légat Suprême`;
-    document.getElementById('superadminBlock').style.display = 'block';
-    renderAdminList();
-    // Forcer l'ouverture du bloc changement mdp avec avertissement
-    const saMsg = document.getElementById('saPassMsg');
-    saMsg.style.display = 'block';
-    saMsg.style.color   = 'var(--red)';
-    saMsg.textContent   = '⚠ Mot de passe par défaut actif — changez-le maintenant.';
-    document.getElementById('saNewPass').focus();
-    // Verrouille barre joueur
-    const pInp = document.getElementById('playerName');
-    pInp.value = user; pInp.readOnly = true; pInp.style.opacity = '0.7';
-    onPlayerNameInput(user);
-    historyViewFort = activeFort; syncHistoryButtons(); renderHistory(); renderAllTables();
-    toast('⚠ Changez votre mot de passe par défaut !');
-    return;
-  }
-
-  document.getElementById('loginBlock').style.display    = 'none';
-  document.getElementById('sessionBlock').style.display  = 'flex';
-  document.getElementById('sessionLabel').textContent    =
-    `${user} — ${role === 'superadmin' ? 'Légat Suprême' : 'Centurion'}`;
-
-  // Verrouille la barre joueur sur le pseudo du compte
-  const pInp = document.getElementById('playerName');
-  pInp.value    = user;
-  pInp.readOnly = true;
-  pInp.style.opacity = '0.7';
-  onPlayerNameInput(user);
-
-  if (role === 'superadmin') {
-    document.getElementById('superadminBlock').style.display = 'block';
-    renderAdminList();
-  }
-
-  historyViewFort = activeFort;
-  syncHistoryButtons();
-  renderHistory();
-  renderAllTables();
-  toast(`Bienvenue, ${user}.`);
-}
-
-function doLogout() {
-  session = null;
-  document.getElementById('loginBlock').style.display    = 'block';
-  document.getElementById('sessionBlock').style.display  = 'none';
-  document.getElementById('superadminBlock').style.display = 'none';
-  document.getElementById('loginUsername').value = '';
-  document.getElementById('loginPassword').value = '';
-  document.getElementById('loginError').style.display = 'none';
-  // Libère la barre joueur
-  const pInp = document.getElementById('playerName');
-  pInp.value    = '';
-  pInp.readOnly = false;
-  pInp.style.opacity = '1';
-  onPlayerNameInput('');
-  renderAllTables();
-  toggleAdmin();
-  toast('Déconnexion effectuée.');
-}
-
-function toggleAdmin() {
-  document.getElementById('adminPanel').classList.toggle('open');
-  document.getElementById('adminToggle').classList.toggle('active');
+  try {
+    const rows = await sbGet('accounts', `?username=eq.${SUPERADMIN_ID}`);
+    if (rows.length === 0) {
+      // Premier lancement : créer le superadmin avec mdp par défaut
+      const stored = await hashPassword('legion25');
+      await sbPost('accounts', { username: SUPERADMIN_ID, role:'superadmin', password_hash: stored, first_login: true });
+    }
+  } catch(e) { console.error('initAuth:', e); }
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  GESTION COMPTES (superadmin)
+//  CHARGEMENT DONNÉES DEPUIS SUPABASE
 // ══════════════════════════════════════════════════════════════════════
-async function changeSuperadminPassword() {
-  const np  = document.getElementById('saNewPass').value;
-  const cp  = document.getElementById('saConfPass').value;
-  const msg = document.getElementById('saPassMsg');
-  if (!np || np.length < 6) { showMsg(msg, 'error', 'Minimum 6 caractères.'); return; }
-  if (np !== cp)             { showMsg(msg, 'error', 'Les mots de passe ne correspondent pas.'); return; }
-  const stored = await hashPassword(np);
-  localStorage.setItem(SA_HASH_KEY, stored);
-  localStorage.removeItem(SA_FIRSTLOGIN);  // efface le flag first-login
-  document.getElementById('saNewPass').value  = '';
-  document.getElementById('saConfPass').value = '';
-  showMsg(msg, 'ok', 'Mot de passe modifié avec succès.');
-}
-
-async function createAdmin() {
-  const user = document.getElementById('newAdminUser').value.trim();
-  const pass = document.getElementById('newAdminPass').value;
-  const msg  = document.getElementById('createAdminMsg');
-  if (!user)               { showMsg(msg, 'error', 'Pseudo requis.'); return; }
-  if (user === SUPERADMIN_ID) { showMsg(msg, 'error', 'Pseudo réservé.'); return; }
-  if (pass.length < 6)     { showMsg(msg, 'error', 'Minimum 6 caractères.'); return; }
-  const admins = getAdmins();
-  if (admins[user])         { showMsg(msg, 'error', 'Ce pseudo existe déjà.'); return; }
-  admins[user] = await hashPassword(pass);
-  saveAdmins(admins);
-  document.getElementById('newAdminUser').value = '';
-  document.getElementById('newAdminPass').value = '';
-  showMsg(msg, 'ok', `Compte "${user}" créé.`);
-  renderAdminList();
-}
-
-function deleteAdmin(user) {
-  if (!confirm(`Supprimer le compte "${user}" ?`)) return;
-  const admins = getAdmins();
-  delete admins[user];
-  saveAdmins(admins);
-  renderAdminList();
-  toast(`Compte "${user}" supprimé.`);
-}
-
-function renderAdminList() {
-  const admins = getAdmins();
-  const list   = document.getElementById('adminList');
-  const empty  = document.getElementById('adminListEmpty');
-  const keys   = Object.keys(admins);
-  if (keys.length === 0) { list.innerHTML = ''; empty.style.display = 'block'; return; }
-  empty.style.display = 'none';
-  list.innerHTML = keys.map(u => `
-    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--parchment);border:1px solid var(--border-red);padding:0.35rem 0.7rem;">
-      <span style="font-family:'Eagle Lake',serif;font-size:0.78rem;color:var(--ink);">&#10070; ${escHtml(u)}</span>
-      <button onclick="deleteAdmin('${escHtml(u)}')" style="background:none;border:1px solid rgba(122,16,16,0.3);color:var(--red);font-family:'Eagle Lake',serif;font-size:0.62rem;letter-spacing:0.05em;padding:0.15rem 0.45rem;cursor:pointer;">Suppr.</button>
-    </div>
-  `).join('');
-}
-
-function resetAll() {
-  if (!confirm('Réinitialiser TOUT l\'inventaire et tous les historiques ? Cette action est irréversible.')) return;
-  FORTRESSES.forEach(f => {
-    TABS.forEach(t => { stores[f.key][t.key] = TABS.find(x=>x.key===t.key).data.map(i=>({...i})); });
-    histories[f.key] = [];
-  });
-  saveData();
-  renderAllTables();
-  renderHistory();
-  toast('Reset complet effectué.');
-}
-
-function showMsg(el, type, txt) {
-  el.style.display = 'block';
-  el.style.color   = type === 'ok' ? 'var(--status-ok)' : 'var(--red)';
-  el.textContent   = txt;
-  setTimeout(() => { el.style.display = 'none'; }, 4000);
-}
-
-// ══════════════════════════════════════════════════════════════════════
-//  PERSISTENCE
-// ══════════════════════════════════════════════════════════════════════
-function lsKey(fort, tab) { return `legion2_${fort}_${tab}`; }
-function lsHistKey(fort)  { return `legion2_hist_${fort}`; }
-
-function loadData() {
-  FORTRESSES.forEach(f => {
-    stores[f.key]    = {};
-    histories[f.key] = [];
-    TABS.forEach(t => {
-      try {
-        const raw = localStorage.getItem(lsKey(f.key, t.key));
-        stores[f.key][t.key] = raw ? JSON.parse(raw) : t.data.map(i=>({...i}));
-      } catch(e) { stores[f.key][t.key] = t.data.map(i=>({...i})); }
+async function loadData() {
+  showLoader('Chargement de l\'inventaire...');
+  try {
+    // Init stores vides
+    FORTRESSES.forEach(f => {
+      stores[f.key]    = {};
+      histories[f.key] = [];
+      TABS.forEach(t => { stores[f.key][t.key] = null; }); // null = pas encore chargé
     });
-    try {
-      const h = localStorage.getItem(lsHistKey(f.key));
-      histories[f.key] = h ? JSON.parse(h) : [];
-    } catch(e) { histories[f.key] = []; }
-  });
+
+    // Charger tout l'inventaire en une requête
+    const rows = await sbGet('inventory', '?select=fort,category,items');
+    rows.forEach(row => {
+      if (stores[row.fort]) stores[row.fort][row.category] = row.items;
+    });
+
+    // Remplir les catégories manquantes avec les données par défaut
+    for (const f of FORTRESSES) {
+      for (const t of TABS) {
+        if (!stores[f.key][t.key]) {
+          const items = t.data.map(i => ({...i}));
+          stores[f.key][t.key] = items;
+          // Sauvegarder les données par défaut dans Supabase
+          await sbUpsert('inventory', { fort: f.key, category: t.key, items, updated_at: new Date().toISOString() });
+        }
+      }
+    }
+
+    // Charger les historiques (50 dernières entrées par forteresse)
+    for (const f of FORTRESSES) {
+      const h = await sbGet('history', `?fort=eq.${f.key}&order=created_at.desc&limit=100`);
+      histories[f.key] = h.map(e => ({
+        action:   e.action,
+        type:     e.type,
+        author:   e.author,
+        itemName: e.item_name,
+        oldVal:   e.old_val,
+        newVal:   e.new_val,
+        tabKey:   e.tab_key,
+        fort:     e.fort,
+        time:     new Date(e.created_at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}),
+        sb_id:    e.id
+      }));
+    }
+  } catch(e) {
+    console.error('loadData:', e);
+    toast('Erreur de connexion à la base de données.');
+  }
+  hideLoader();
 }
 
-function saveData() {
-  FORTRESSES.forEach(f => {
-    TABS.forEach(t => {
-      try { localStorage.setItem(lsKey(f.key, t.key), JSON.stringify(stores[f.key][t.key])); } catch(e) {}
-    });
-    try { localStorage.setItem(lsHistKey(f.key), JSON.stringify(histories[f.key])); } catch(e) {}
-  });
+async function saveInventory(fortKey, tabKey) {
+  const items = stores[fortKey][tabKey];
+  try {
+    await sbUpsert('inventory', { fort: fortKey, category: tabKey, items, updated_at: new Date().toISOString() });
+  } catch(e) { console.error('saveInventory:', e); toast('Erreur de sauvegarde.'); }
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  SHORTCUTS
+//  HELPERS
 // ══════════════════════════════════════════════════════════════════════
 function activeStore(tabKey) { return stores[activeFort][tabKey]; }
 function isLogged()          { return session !== null; }
+function tabLabel(key)  { const t=TABS.find(t=>t.key===key); return t?t.label:key; }
+function fortLabel(key) { const f=FORTRESSES.find(f=>f.key===key); return f?f.label:key; }
 
 // ══════════════════════════════════════════════════════════════════════
 //  STATUS
@@ -991,7 +893,7 @@ function buildTabs() {
 
   TABS.forEach((tab, ti) => {
     const btn = document.createElement('button');
-    btn.className = 'nav-tab' + (ti===0?' active':'');
+    btn.className = 'nav-tab'+(ti===0?' active':'');
     btn.textContent = tab.label;
     btn.onclick = () => switchTab(tab.key, btn);
     nav.appendChild(btn);
@@ -1053,7 +955,7 @@ function buildTabs() {
 function renderTable(tabKey) {
   const data  = activeStore(tabKey);
   const tbody = document.getElementById(tabKey+'-tbody');
-  if (!tbody) return;
+  if (!tbody || !data) return;
   tbody.innerHTML = '';
   data.forEach((item, i) => {
     const tr = document.createElement('tr');
@@ -1091,8 +993,8 @@ function updateStats(tabKey, data) {
     if(s==='ok') ok++; else if(s==='warn') warn++; else danger++;
   });
   const set = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
-  set(tabKey+'-ok-count', ok); set(tabKey+'-warn-count', warn); set(tabKey+'-danger-count', danger);
-  set(tabKey+'-total', data.length); set(tabKey+'-ruptures', danger); set(tabKey+'-critiques', warn);
+  set(tabKey+'-ok-count',ok); set(tabKey+'-warn-count',warn); set(tabKey+'-danger-count',danger);
+  set(tabKey+'-total',data.length); set(tabKey+'-ruptures',danger); set(tabKey+'-critiques',warn);
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -1103,10 +1005,10 @@ function switchFortress(fortKey, btnEl) {
   document.querySelectorAll('.fortress-btn').forEach(b => b.classList.remove('active'));
   btnEl.classList.add('active');
   document.getElementById('header-subtitle').textContent =
-    'Compagnie Blancherive — ' + FORTRESSES.find(f=>f.key===fortKey).label;
+    'Compagnie Blancherive — ' + fortLabel(fortKey);
   renderAllTables();
   if (isLogged()) { historyViewFort=fortKey; syncHistoryButtons(); renderHistory(); }
-  toast('Forteresse active : ' + FORTRESSES.find(f=>f.key===fortKey).label);
+  toast('Forteresse active : ' + fortLabel(fortKey));
 }
 
 function switchTab(tabKey, btnEl) {
@@ -1141,7 +1043,7 @@ function onMinChange(tabKey, i, val) {
 // ══════════════════════════════════════════════════════════════════════
 //  UPDATE / ADD / DELETE
 // ══════════════════════════════════════════════════════════════════════
-function updateItem(tabKey, i) {
+async function updateItem(tabKey, i) {
   if (!requireAuthor()) return;
   const data   = activeStore(tabKey);
   const qInput = document.getElementById(tabKey+'-qty-'+i);
@@ -1151,21 +1053,23 @@ function updateItem(tabKey, i) {
   const newMin = mInput ? Math.max(0, parseInt(mInput.value)||0) : data[i].min;
   const oldMin = data[i].min;
   if (newQty===oldQty && newMin===oldMin) { toast('Aucune modification détectée.'); return; }
+
   if (newQty!==oldQty) {
     const delta = newQty-oldQty;
-    addHistoryEntry(data[i].name, oldQty, newQty, tabKey, 'update');
+    await addHistoryEntry(data[i].name, oldQty, newQty, tabKey, 'update');
     data[i].qty = newQty;
     toast(`${data[i].name} — ${delta>0?'+':''}${delta} (${newQty} en stock)`);
   }
   if (newMin!==oldMin) {
-    addHistoryEntry(data[i].name, oldMin, newMin, tabKey, 'min');
+    await addHistoryEntry(data[i].name, oldMin, newMin, tabKey, 'min');
     data[i].min = newMin;
     toast(`${data[i].name} — Seuil minimum : ${oldMin} → ${newMin}`);
   }
-  saveData(); renderTable(tabKey);
+  await saveInventory(activeFort, tabKey);
+  renderTable(tabKey);
 }
 
-function addItem(tabKey) {
+async function addItem(tabKey) {
   if (!requireAuthor()) return;
   const nameEl = document.getElementById(tabKey+'-new-name');
   const qtyEl  = document.getElementById(tabKey+'-new-qty');
@@ -1175,67 +1079,30 @@ function addItem(tabKey) {
   const qty = Math.max(0, parseInt(qtyEl.value)||0);
   const min = Math.max(0, parseInt(minEl.value)||0);
   activeStore(tabKey).push({name, qty, min});
-  addHistoryEntry(name, null, qty, tabKey, 'add');
-  saveData(); renderTable(tabKey);
+  await addHistoryEntry(name, null, qty, tabKey, 'add');
+  await saveInventory(activeFort, tabKey);
+  renderTable(tabKey);
   nameEl.value=''; qtyEl.value='0';
   document.getElementById(tabKey+'-form-header').classList.remove('open');
   document.getElementById(tabKey+'-form-body').classList.remove('open');
   toast(`${name} ajouté à l'inventaire.`);
 }
 
-function deleteItem(tabKey, i) {
+async function deleteItem(tabKey, i) {
   if (!requireAuthor()) return;
   const item = activeStore(tabKey)[i];
   if (!confirm(`Supprimer "${item.name}" de l'inventaire ?`)) return;
-  addHistoryEntry(item.name, item.qty, null, tabKey, 'delete');
+  await addHistoryEntry(item.name, item.qty, null, tabKey, 'delete');
   activeStore(tabKey).splice(i, 1);
-  saveData(); renderTable(tabKey);
+  await saveInventory(activeFort, tabKey);
+  renderTable(tabKey);
   toast(`${item.name} supprimé de l'inventaire.`);
 }
 
 // ══════════════════════════════════════════════════════════════════════
 //  HISTORY
 // ══════════════════════════════════════════════════════════════════════
-function tabLabel(key)  { const t=TABS.find(t=>t.key===key); return t?t.label:key; }
-function fortLabel(key) { const f=FORTRESSES.find(f=>f.key===key); return f?f.label:key; }
-
-function getAuthor() {
-  if (session) return session.username;
-  const name = document.getElementById('playerName').value.trim();
-  return name || null;
-}
-
-function requireAuthor() {
-  // Renvoie l'auteur si disponible, sinon secoue le champ et renvoie null
-  const author = getAuthor();
-  if (!author) {
-    const inp = document.getElementById('playerName');
-    inp.classList.add('required');
-    inp.focus();
-    const status = document.getElementById('playerBarStatus');
-    status.textContent = '⚠ Identification requise avant toute modification !';
-    status.className = 'player-bar-status warn';
-    setTimeout(() => { inp.classList.remove('required'); }, 2500);
-    toast('Entrez votre nom de personnage avant d\'agir.');
-    return null;
-  }
-  return author;
-}
-
-function onPlayerNameInput(val) {
-  const status = document.getElementById('playerBarStatus');
-  const inp    = document.getElementById('playerName');
-  inp.classList.remove('required');
-  if (val.trim()) {
-    status.textContent = '✦ ' + val.trim();
-    status.className = 'player-bar-status ok';
-  } else {
-    status.textContent = 'Identification requise pour modifier l\'inventaire';
-    status.className = 'player-bar-status';
-  }
-}
-
-function addHistoryEntry(itemName, oldVal, newVal, tabKey, type='update') {
+async function addHistoryEntry(itemName, oldVal, newVal, tabKey, type='update') {
   const section = tabLabel(tabKey);
   const author  = getAuthor() || 'Anonyme';
   let action = '';
@@ -1249,68 +1116,76 @@ function addHistoryEntry(itemName, oldVal, newVal, tabKey, type='update') {
     const delta = newVal-oldVal;
     action = `<strong>${escHtml(itemName)}</strong> : ${oldVal} → ${newVal} (${delta>0?'+':''}${delta}) — ${section}`;
   }
-  histories[activeFort].unshift({
-    action, type, author,
-    itemName, oldVal, newVal, tabKey,
-    fort: activeFort,
-    time: new Date().toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
-  });
-  if (histories[activeFort].length>200) histories[activeFort].pop();
-  saveData();
-  if (isLogged() && historyViewFort===activeFort) renderHistory();
+
+  const entry = {
+    fort:      activeFort,
+    author,
+    action,
+    type,
+    item_name: itemName,
+    old_val:   oldVal,
+    new_val:   newVal,
+    tab_key:   tabKey
+  };
+
+  try {
+    const rows = await sbPost('history', entry);
+    const saved = rows[0];
+    histories[activeFort].unshift({
+      action, type, author,
+      itemName, oldVal, newVal, tabKey,
+      fort: activeFort,
+      time: new Date(saved.created_at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}),
+      sb_id: saved.id
+    });
+    if (histories[activeFort].length > 200) histories[activeFort].pop();
+    if (isLogged() && historyViewFort===activeFort) renderHistory();
+  } catch(e) { console.error('addHistoryEntry:', e); }
 }
 
-// Annule une entrée précise : remet oldVal, supprime l'entrée de l'historique
-function revertEntry(fortKey, idx) {
+async function revertEntry(fortKey, idx) {
   const entry = histories[fortKey][idx];
   if (!entry) return;
-
   const data = stores[fortKey][entry.tabKey];
-  if (!data) { toast('Catégorie introuvable — annulation impossible.'); return; }
-
-  // Trouver l'item par nom
+  if (!data) { toast('Catégorie introuvable.'); return; }
   const itemIdx = data.findIndex(i => i.name === entry.itemName);
 
-  if (entry.type === 'update') {
-    if (itemIdx === -1) { toast(`Item "${entry.itemName}" introuvable.`); return; }
+  if (entry.type==='update') {
+    if (itemIdx===-1) { toast(`Item "${entry.itemName}" introuvable.`); return; }
     data[itemIdx].qty = entry.oldVal;
     toast(`Annulé : ${entry.itemName} remis à ${entry.oldVal}`);
-  } else if (entry.type === 'min') {
-    if (itemIdx === -1) { toast(`Item "${entry.itemName}" introuvable.`); return; }
+  } else if (entry.type==='min') {
+    if (itemIdx===-1) { toast(`Item "${entry.itemName}" introuvable.`); return; }
     data[itemIdx].min = entry.oldVal;
     toast(`Annulé : seuil de ${entry.itemName} remis à ${entry.oldVal}`);
-  } else if (entry.type === 'add') {
-    // Supprimer l'item qui avait été ajouté
-    if (itemIdx === -1) { toast(`Item "${entry.itemName}" déjà supprimé.`); return; }
+  } else if (entry.type==='add') {
+    if (itemIdx===-1) { toast(`Item "${entry.itemName}" déjà supprimé.`); return; }
     data.splice(itemIdx, 1);
-    toast(`Annulé : "${entry.itemName}" retiré de l'inventaire`);
-  } else if (entry.type === 'delete') {
-    // Remettre l'item supprimé
+    toast(`Annulé : "${entry.itemName}" retiré`);
+  } else if (entry.type==='delete') {
     data.push({ name: entry.itemName, qty: entry.oldVal, min: 0 });
-    toast(`Annulé : "${entry.itemName}" restauré (qté : ${entry.oldVal})`);
-  } else {
-    toast('Ce type d\'action ne peut pas être annulé.');
-    return;
-  }
+    toast(`Annulé : "${entry.itemName}" restauré`);
+  } else { toast('Action non annulable.'); return; }
 
-  // Supprimer l'entrée de l'historique
+  // Supprimer l'entrée dans Supabase
+  try {
+    if (entry.sb_id) await sbDelete('history', `?id=eq.${entry.sb_id}`);
+  } catch(e) { console.error('revertEntry delete:', e); }
+
   histories[fortKey].splice(idx, 1);
-  saveData();
+  await saveInventory(fortKey, entry.tabKey);
   renderAllTables();
   renderHistory();
 }
 
 function switchHistoryFortress(fortKey) {
-  historyViewFort = fortKey;
-  syncHistoryButtons(); renderHistory();
+  historyViewFort = fortKey; syncHistoryButtons(); renderHistory();
 }
-
 function syncHistoryButtons() {
   document.querySelectorAll('.fh-btn').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById('fh-'+historyViewFort);
   if (btn) btn.classList.add('active');
 }
-
 function renderHistory() {
   const list  = document.getElementById('historyList');
   const empty = document.getElementById('historyEmpty');
@@ -1318,24 +1193,21 @@ function renderHistory() {
   if (h.length===0) { list.innerHTML=''; empty.style.display='block'; return; }
   empty.style.display='none';
   const fortKey = historyViewFort;
-  list.innerHTML = h.slice(0,100).map((e, idx) => `
+  list.innerHTML = h.slice(0,100).map((e,idx) => `
     <div class="history-entry ${e.type||'update'}">
       <div class="history-meta">
         <span class="history-user">&#10070; ${escHtml(e.author||'Légionnaire')}</span>
         <div style="display:flex;align-items:center;gap:0.5rem;">
           <span class="history-time">${e.time}</span>
-          ${isLogged() && e.type !== 'delete' || (isLogged() && e.type === 'delete')
-            ? `<button
-                onclick="revertEntry('${fortKey}',${idx})"
-                title="Annuler cette action"
-                style="background:none;border:1px solid rgba(122,16,16,0.3);color:var(--red);
-                       font-size:0.65rem;width:18px;height:18px;cursor:pointer;
-                       display:flex;align-items:center;justify-content:center;
-                       font-family:monospace;flex-shrink:0;padding:0;
-                       transition:all 0.15s;"
-                onmouseover="this.style.background='rgba(122,16,16,0.12)'"
-                onmouseout="this.style.background='none'">&#x2715;</button>`
-            : ''}
+          ${isLogged() ? `<button
+            onclick="revertEntry('${fortKey}',${idx})"
+            title="Annuler cette action"
+            style="background:none;border:1px solid rgba(122,16,16,0.3);color:var(--red);
+                   font-size:0.65rem;width:18px;height:18px;cursor:pointer;
+                   display:flex;align-items:center;justify-content:center;
+                   font-family:monospace;flex-shrink:0;padding:0;transition:all 0.15s;"
+            onmouseover="this.style.background='rgba(122,16,16,0.12)'"
+            onmouseout="this.style.background='none'">&#x2715;</button>` : ''}
         </div>
       </div>
       <div class="history-action">${e.action}</div>
@@ -1343,22 +1215,215 @@ function renderHistory() {
   `).join('');
 }
 
-function clearHistory() {
+async function clearHistory() {
   if (!confirm(`Effacer l'historique de ${fortLabel(activeFort)} ?`)) return;
-  histories[activeFort] = [];
-  saveData();
-  if (historyViewFort===activeFort) renderHistory();
-  toast(`Historique de ${fortLabel(activeFort)} effacé.`);
+  try {
+    await sbDelete('history', `?fort=eq.${activeFort}`);
+    histories[activeFort] = [];
+    if (historyViewFort===activeFort) renderHistory();
+    toast(`Historique de ${fortLabel(activeFort)} effacé.`);
+  } catch(e) { toast('Erreur lors de la suppression de l\'historique.'); }
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  EXPORT / IMPORT
+//  GESTION COMPTES — Supabase
+// ══════════════════════════════════════════════════════════════════════
+async function doLogin() {
+  const user  = document.getElementById('loginUsername').value.trim();
+  const pass  = document.getElementById('loginPassword').value;
+  const errEl = document.getElementById('loginError');
+  if (!user || !pass) return;
+
+  if (isLoginLocked()) {
+    const secs = Math.ceil((loginAttempts.lockedUntil - Date.now()) / 1000);
+    errEl.textContent = `Trop de tentatives. Réessayez dans ${secs}s.`;
+    errEl.style.display = 'block'; return;
+  }
+
+  try {
+    const rows = await sbGet('accounts', `?username=eq.${encodeURIComponent(user)}`);
+    if (rows.length === 0 || !await verifyPassword(pass, rows[0].password_hash)) {
+      recordFailedAttempt();
+      errEl.textContent = 'Identifiants incorrects.';
+      errEl.style.display = 'block'; return;
+    }
+    resetAttempts();
+    errEl.style.display = 'none';
+    const acc  = rows[0];
+    session    = { username: user, role: acc.role };
+
+    document.getElementById('loginBlock').style.display   = 'none';
+    document.getElementById('sessionBlock').style.display = 'flex';
+    document.getElementById('sessionLabel').textContent   =
+      `${user} — ${acc.role==='superadmin' ? 'Légat Suprême' : 'Centurion'}`;
+
+    const pInp = document.getElementById('playerName');
+    pInp.value = user; pInp.readOnly = true; pInp.style.opacity = '0.7';
+    onPlayerNameInput(user);
+
+    if (acc.role === 'superadmin') {
+      document.getElementById('superadminBlock').style.display = 'block';
+      await renderAdminList();
+      if (acc.first_login) {
+        const saMsg = document.getElementById('saPassMsg');
+        saMsg.style.display = 'block'; saMsg.style.color = 'var(--red)';
+        saMsg.textContent = '⚠ Mot de passe par défaut actif — changez-le maintenant.';
+        document.getElementById('saNewPass').focus();
+      }
+    }
+    historyViewFort = activeFort; syncHistoryButtons(); renderHistory(); renderAllTables();
+    toast(`Bienvenue, ${user}.`);
+  } catch(e) { errEl.textContent = 'Erreur réseau.'; errEl.style.display = 'block'; }
+}
+
+function doLogout() {
+  session = null;
+  document.getElementById('loginBlock').style.display    = 'block';
+  document.getElementById('sessionBlock').style.display  = 'none';
+  document.getElementById('superadminBlock').style.display = 'none';
+  document.getElementById('loginUsername').value = '';
+  document.getElementById('loginPassword').value = '';
+  document.getElementById('loginError').style.display = 'none';
+  const pInp = document.getElementById('playerName');
+  pInp.value=''; pInp.readOnly=false; pInp.style.opacity='1';
+  onPlayerNameInput('');
+  renderAllTables();
+  if (document.getElementById('adminPanel').classList.contains('open')) toggleAdmin();
+  toast('Déconnexion effectuée.');
+}
+
+function toggleAdmin() {
+  document.getElementById('adminPanel').classList.toggle('open');
+  document.getElementById('adminToggle').classList.toggle('active');
+}
+
+async function changeSuperadminPassword() {
+  const np  = document.getElementById('saNewPass').value;
+  const cp  = document.getElementById('saConfPass').value;
+  const msg = document.getElementById('saPassMsg');
+  if (!np || np.length < 6) { showMsg(msg,'error','Minimum 6 caractères.'); return; }
+  if (np !== cp)             { showMsg(msg,'error','Les mots de passe ne correspondent pas.'); return; }
+  try {
+    const stored = await hashPassword(np);
+    await sbPatch('accounts', `?username=eq.${SUPERADMIN_ID}`, { password_hash: stored, first_login: false });
+    document.getElementById('saNewPass').value  = '';
+    document.getElementById('saConfPass').value = '';
+    showMsg(msg,'ok','Mot de passe modifié avec succès.');
+  } catch(e) { showMsg(msg,'error','Erreur de sauvegarde.'); }
+}
+
+async function createAdmin() {
+  const user = document.getElementById('newAdminUser').value.trim();
+  const pass = document.getElementById('newAdminPass').value;
+  const msg  = document.getElementById('createAdminMsg');
+  if (!user)                { showMsg(msg,'error','Pseudo requis.'); return; }
+  if (user===SUPERADMIN_ID) { showMsg(msg,'error','Pseudo réservé.'); return; }
+  if (pass.length < 6)      { showMsg(msg,'error','Minimum 6 caractères.'); return; }
+  try {
+    const existing = await sbGet('accounts', `?username=eq.${encodeURIComponent(user)}`);
+    if (existing.length > 0) { showMsg(msg,'error','Ce pseudo existe déjà.'); return; }
+    const stored = await hashPassword(pass);
+    await sbPost('accounts', { username: user, role:'admin', password_hash: stored, first_login: false });
+    document.getElementById('newAdminUser').value = '';
+    document.getElementById('newAdminPass').value = '';
+    showMsg(msg,'ok',`Compte "${user}" créé.`);
+    await renderAdminList();
+  } catch(e) { showMsg(msg,'error','Erreur de création.'); }
+}
+
+async function deleteAdmin(user) {
+  if (!confirm(`Supprimer le compte "${user}" ?`)) return;
+  try {
+    await sbDelete('accounts', `?username=eq.${encodeURIComponent(user)}`);
+    toast(`Compte "${user}" supprimé.`);
+    await renderAdminList();
+  } catch(e) { toast('Erreur de suppression.'); }
+}
+
+async function renderAdminList() {
+  const list  = document.getElementById('adminList');
+  const empty = document.getElementById('adminListEmpty');
+  try {
+    const rows = await sbGet('accounts', `?role=eq.admin&select=username`);
+    if (rows.length===0) { list.innerHTML=''; empty.style.display='block'; return; }
+    empty.style.display = 'none';
+    list.innerHTML = rows.map(r => `
+      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--parchment);border:1px solid var(--border-red);padding:0.35rem 0.7rem;">
+        <span style="font-family:'Eagle Lake',serif;font-size:0.78rem;color:var(--ink);">&#10070; ${escHtml(r.username)}</span>
+        <button onclick="deleteAdmin('${escHtml(r.username)}')" style="background:none;border:1px solid rgba(122,16,16,0.3);color:var(--red);font-family:'Eagle Lake',serif;font-size:0.62rem;padding:0.15rem 0.45rem;cursor:pointer;">Suppr.</button>
+      </div>
+    `).join('');
+  } catch(e) { list.innerHTML = '<p style="color:var(--red);font-size:0.8rem;">Erreur de chargement.</p>'; }
+}
+
+async function resetAll() {
+  if (!confirm('Réinitialiser TOUT l\'inventaire et tous les historiques ?')) return;
+  showLoader('Réinitialisation...');
+  try {
+    for (const f of FORTRESSES) {
+      for (const t of TABS) {
+        stores[f.key][t.key] = t.data.map(i=>({...i}));
+        await saveInventory(f.key, t.key);
+      }
+      await sbDelete('history', `?fort=eq.${f.key}`);
+      histories[f.key] = [];
+    }
+    renderAllTables(); renderHistory();
+    toast('Reset complet effectué.');
+  } catch(e) { toast('Erreur lors du reset.'); }
+  hideLoader();
+}
+
+function showMsg(el, type, txt) {
+  el.style.display='block';
+  el.style.color = type==='ok' ? 'var(--status-ok)' : 'var(--red)';
+  el.textContent = txt;
+  setTimeout(()=>{ el.style.display='none'; }, 4000);
+}
+
+// ══════════════════════════════════════════════════════════════════════
+//  JOUEUR (pseudo libre)
+// ══════════════════════════════════════════════════════════════════════
+function getAuthor() {
+  if (session) return session.username;
+  const name = document.getElementById('playerName').value.trim();
+  return name || null;
+}
+function requireAuthor() {
+  const author = getAuthor();
+  if (!author) {
+    const inp = document.getElementById('playerName');
+    inp.classList.add('required'); inp.focus();
+    const status = document.getElementById('playerBarStatus');
+    status.textContent = '⚠ Identification requise avant toute modification !';
+    status.className = 'player-bar-status warn';
+    setTimeout(()=>{ inp.classList.remove('required'); }, 2500);
+    toast('Entrez votre nom de personnage avant d\'agir.');
+    return null;
+  }
+  return author;
+}
+function onPlayerNameInput(val) {
+  const status = document.getElementById('playerBarStatus');
+  const inp    = document.getElementById('playerName');
+  inp.classList.remove('required');
+  if (val.trim()) {
+    status.textContent = '✦ ' + val.trim();
+    status.className = 'player-bar-status ok';
+  } else {
+    status.textContent = 'Identification requise pour modifier l\'inventaire';
+    status.className = 'player-bar-status';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+//  EXPORT
 // ══════════════════════════════════════════════════════════════════════
 function buildCSV(fortKey) {
   let csv = `Forteresse,Section,Désignation,Quantité,Minimum,Statut\n`;
   const fl = fortLabel(fortKey);
   TABS.forEach(t => {
-    stores[fortKey][t.key].forEach(i => {
+    (stores[fortKey][t.key]||[]).forEach(i => {
       csv += `${fl},${t.label},"${i.name}",${i.qty},${i.min},${getStatus(i.qty,i.min)}\n`;
     });
   });
@@ -1377,50 +1442,7 @@ function exportJSON() {
 function downloadFile(name, content, mime) {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([content],{type:mime}));
-  a.download = name; a.click();
-}
-
-function handleImport(input) {
-  const file = input.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const data = JSON.parse(e.target.result);
-      const errors = [];
-      FORTRESSES.forEach(f => {
-        if (!data[f.key]) { errors.push(`Clé manquante : "${f.key}"`); return; }
-        if (!data[f.key].inventory) errors.push(`Inventaire manquant pour ${f.label}`);
-        if (!Array.isArray(data[f.key].history)) errors.push(`Historique invalide pour ${f.label}`);
-        TABS.forEach(t => {
-          if (!Array.isArray(data[f.key].inventory[t.key]))
-            errors.push(`Catégorie "${t.label}" manquante pour ${f.label}`);
-        });
-      });
-      if (errors.length>0) { showImportStatus('error','Fichier invalide : '+errors.join(' / ')); input.value=''; return; }
-      if (!confirm('Importer ce fichier ? Inventaire + historique des deux forteresses seront remplacés.')) { input.value=''; return; }
-      FORTRESSES.forEach(f => {
-        TABS.forEach(t => { stores[f.key][t.key] = data[f.key].inventory[t.key]; });
-        histories[f.key] = data[f.key].history;
-      });
-      saveData(); renderAllTables(); if (historyViewFort) renderHistory();
-      const dateStr = data.exportDate
-        ? new Date(data.exportDate).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})
-        : 'date inconnue';
-      showImportStatus('ok', `Import réussi — sauvegarde du ${dateStr}`);
-      toast('Import JSON effectué avec succès.');
-    } catch(err) { showImportStatus('error','Fichier JSON corrompu ou invalide.'); }
-    input.value='';
-  };
-  reader.readAsText(file);
-}
-
-function showImportStatus(type, msg) {
-  const el = document.getElementById('importStatus');
-  el.style.display = 'block';
-  if (type==='ok') { el.style.color='var(--status-ok)'; el.style.borderColor='rgba(45,106,45,0.4)'; el.style.background='rgba(45,106,45,0.08)'; }
-  else             { el.style.color='var(--red)';       el.style.borderColor='rgba(122,16,16,0.35)'; el.style.background='rgba(122,16,16,0.07)'; }
-  el.textContent = msg;
-  setTimeout(()=>{ el.style.display='none'; }, 6000);
+  a.download=name; a.click();
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -1440,10 +1462,15 @@ function toast(msg) {
 // ══════════════════════════════════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════════════════════════════════
-loadData();
-buildTabs();
-renderAllTables();
-initAuth();
+async function init() {
+  buildTabs();
+  showLoader('Connexion à la base de données...');
+  await initAuth();
+  await loadData();
+  renderAllTables();
+}
+
+init();
 </script>
 </body>
 </html>
