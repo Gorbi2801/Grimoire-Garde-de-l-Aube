@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>XXV Légion Impériale — Logistique & Inventaire</title>
+<title>Légion Impériale — Logistique & Inventaire</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
@@ -411,7 +411,39 @@
   @keyframes toastOut { from{opacity:1} to{opacity:0} }
 
 
-  /* ══ BARRE JOUEUR ══════════════════════════════════════════════════════ */
+  /* ══ BARRE DE RECHERCHE ════════════════════════════════════════════════ */
+  .search-bar {
+    display: flex; align-items: center; gap: 0.6rem;
+    margin-bottom: 0.85rem;
+    background: var(--parchment-dark);
+    border: 1px solid var(--border-red);
+    border-left: 3px solid var(--red);
+    padding: 0.45rem 0.75rem;
+  }
+  .search-bar label {
+    font-family: 'Eagle Lake', serif; font-size: 0.68rem;
+    color: var(--ink-faint); white-space: nowrap; letter-spacing: 0.05em;
+  }
+  .search-input {
+    flex: 1; background: var(--parchment);
+    border: 1px solid var(--border-red);
+    color: var(--ink); font-family: 'IM Fell English', serif;
+    font-size: 0.95rem; padding: 0.28rem 0.65rem;
+    transition: border-color 0.15s;
+  }
+  .search-input:focus { outline: none; border-color: var(--red); }
+  .search-clear {
+    background: none; border: none; color: var(--ink-faint);
+    font-size: 1rem; cursor: pointer; padding: 0 0.2rem;
+    line-height: 1; transition: color 0.15s;
+  }
+  .search-clear:hover { color: var(--red); }
+  .search-count {
+    font-family: 'Eagle Lake', serif; font-size: 0.68rem;
+    color: var(--ink-faint); white-space: nowrap;
+  }
+  .search-count.active { color: var(--red-dark); font-style: italic; }
+  .row-hidden { display: none !important; }
   .player-bar {
     background: var(--parchment-dark);
     border-bottom: 1px solid var(--border-red);
@@ -451,8 +483,8 @@
     <div class="header-emblem">
       <div class="emblem-icon"><span>L</span></div>
       <div class="header-title">
-        <h1>XXV Légion Impériale</h1>
-        <p id="header-subtitle">Système Logistique</p>
+        <h1>Légion Impériale</h1>
+        <p id="header-subtitle">Compagnie Blancherive — Système Logistique XXV</p>
       </div>
     </div>
     <button class="btn-admin-toggle" id="adminToggle" onclick="toggleAdmin()">⚙ Panneau Admin</button>
@@ -737,6 +769,10 @@ const TABS = [
     data:[
       {name:'Pain',             qty:30, min:20},
       {name:'Viande séchée',    qty:15, min:20},
+      {name:'Fromage',          qty:10, min:15},
+      {name:'Pomme',            qty:25, min:20},
+      {name:'Eau (gourde)',     qty:20, min:30},
+      {name:'Vin de Cyrodiil',  qty:8,  min:10},
       {name:'Soupe de légumes', qty:5,  min:10}
     ]
   },
@@ -749,8 +785,12 @@ const TABS = [
       {name:"Lingot d'acier",        qty:8,  min:10},
       {name:'Cuir brut',             qty:25, min:15},
       {name:'Cuir tanné',            qty:12, min:10},
+      {name:'Bois de construction',  qty:50, min:20},
       {name:'Pierre de taille',      qty:30, min:15},
+      {name:'Corde',                 qty:18, min:10},
       {name:'Charbon',               qty:22, min:10},
+      {name:'Soufre',                qty:5,  min:5},
+      {name:'Toile de lin',          qty:10, min:10}
     ]
   }
 ];
@@ -937,6 +977,15 @@ function buildTabs() {
       <div style="margin-bottom:0.6rem;">
         <span style="font-size:0.78rem;color:var(--ink-faint);font-style:italic;">Modifiez les quantités puis cliquez sur « Mettre à jour »</span>
       </div>
+      <div class="search-bar">
+        <label>&#10070; Rechercher</label>
+        <input class="search-input" id="${tab.key}-search" type="text"
+          placeholder="Filtrer les items..."
+          oninput="filterTable('${tab.key}', this.value)"
+          autocomplete="off">
+        <button class="search-clear" onclick="clearSearch('${tab.key}')" title="Effacer">&#x2715;</button>
+        <span class="search-count" id="${tab.key}-search-count"></span>
+      </div>
       <div class="table-wrap">
         <table>
           <thead><tr>
@@ -960,6 +1009,7 @@ function renderTable(tabKey) {
   tbody.innerHTML = '';
   data.forEach((item, i) => {
     const tr = document.createElement('tr');
+    tr.setAttribute('data-name', item.name.toLowerCase());
     tr.innerHTML = `
       <td><span class="item-name">${escHtml(item.name)}</span></td>
       <td>
@@ -983,6 +1033,41 @@ function renderTable(tabKey) {
     tbody.appendChild(tr);
   });
   updateStats(tabKey, data);
+  // Réappliquer le filtre en cours si la recherche est active
+  const searchEl = document.getElementById(tabKey+'-search');
+  if (searchEl && searchEl.value.trim()) filterTable(tabKey, searchEl.value);
+}
+
+function filterTable(tabKey, query) {
+  const tbody    = document.getElementById(tabKey+'-tbody');
+  const countEl  = document.getElementById(tabKey+'-search-count');
+  if (!tbody) return;
+  const q     = query.trim().toLowerCase();
+  const rows  = tbody.querySelectorAll('tr');
+  let visible = 0;
+  rows.forEach(tr => {
+    const name = tr.getAttribute('data-name') || '';
+    if (!q || name.includes(q)) {
+      tr.classList.remove('row-hidden');
+      visible++;
+    } else {
+      tr.classList.add('row-hidden');
+    }
+  });
+  if (countEl) {
+    if (q) {
+      countEl.textContent = `${visible} résultat${visible > 1 ? 's' : ''}`;
+      countEl.className = 'search-count active';
+    } else {
+      countEl.textContent = '';
+      countEl.className = 'search-count';
+    }
+  }
+}
+
+function clearSearch(tabKey) {
+  const inp = document.getElementById(tabKey+'-search');
+  if (inp) { inp.value = ''; filterTable(tabKey, ''); inp.focus(); }
 }
 
 function renderAllTables() { TABS.forEach(t => renderTable(t.key)); }
@@ -1256,7 +1341,7 @@ async function doLogin() {
     document.getElementById('loginBlock').style.display   = 'none';
     document.getElementById('sessionBlock').style.display = 'flex';
     document.getElementById('sessionLabel').textContent   =
-      `${user} — ${acc.role==='superadmin' ? 'Légat' : 'Centurion'}`;
+      `${user} — ${acc.role==='superadmin' ? 'Légat Suprême' : 'Centurion'}`;
 
     const pInp = document.getElementById('playerName');
     pInp.value = user; pInp.readOnly = true; pInp.style.opacity = '0.7';
