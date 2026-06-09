@@ -67,7 +67,7 @@ header{background:linear-gradient(180deg,var(--green-dark) 0%,var(--green) 100%)
 .section-page.active{display:block;}
 
 /* ── ADMIN PANEL ── */
-.admin-panel{width:370px;background:var(--panel);border-left:2px solid var(--green);padding:1.5rem;overflow-y:auto;display:none;flex-direction:column;gap:1.1rem;position:fixed;top:128px;right:0;bottom:0;z-index:100;box-shadow:-4px 0 16px rgba(42,64,32,0.2);}
+.admin-panel{width:370px;background:var(--panel);border-left:2px solid var(--green);padding:1.5rem;overflow-y:auto;overscroll-behavior:contain;display:none;flex-direction:column;gap:1.1rem;position:fixed;top:128px;right:0;bottom:0;z-index:100;box-shadow:-4px 0 16px rgba(42,64,32,0.2);}
 .admin-panel.open{display:flex;}
 .panel-title{font-family:'Eagle Lake',serif;font-size:0.7rem;letter-spacing:0.12em;color:var(--green-dark);border-bottom:1px solid var(--border-g);padding-bottom:0.45rem;margin-bottom:0.6rem;}
 .session-bar{background:var(--green-dark);padding:0.5rem 0.8rem;display:flex;align-items:center;justify-content:space-between;}
@@ -576,6 +576,16 @@ td.act{text-align:center;white-space:nowrap;}
       <div class="panel-title">Exporter</div>
       <button class="btn-export" id="exp-btn" onclick="exportSection()">⬇ Exporter la section active (.csv)</button>
     </div>
+
+    <!-- HISTORIQUE INVENTAIRE -->
+    <div id="inv-history-block">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;">
+        <div class="panel-title" style="margin-bottom:0;">Historique des stocks</div>
+        <button class="btn-export" onclick="clearInvHistory()" style="width:auto;margin-top:0;padding:0.2rem 0.5rem;font-size:0.62rem;color:var(--s-danger);border-color:rgba(122,16,16,0.3);">Effacer</button>
+      </div>
+      <div id="inv-history-list" style="display:flex;flex-direction:column;gap:0.4rem;max-height:40vh;overflow-y:auto;overscroll-behavior:contain;"></div>
+      <p id="inv-history-empty" style="font-size:0.8rem;color:var(--ink-faint);font-style:italic;text-align:center;padding:0.75rem 0;">Aucune modification enregistrée.</p>
+    </div>
   </div>
 </aside>
 </div><!-- /main-layout -->
@@ -975,6 +985,7 @@ async function doLogin(){
     // Afficher les formulaires d'ajout pour la section autorisée
     updateAdminUI();
     toast(`Bienvenue, ${user}.`);
+    renderInvHistory();
   }catch(e){errEl.textContent='Erreur réseau.';errEl.style.display='block';}
 }
 
@@ -1010,7 +1021,7 @@ function updateAdminUI(){
 }
 
 function sectionLabel(s){
-  const m={citoyens:'Registre des Citoyens',garde:'Registre de la Garde',commerces:'Registre des Commerces',diplomatie:'Diplomatie',cour:'Cour du Jarl',inventaire:'Inventaire',superadmin:'Châtelain Suprême'};
+  const m={citoyens:'Registre des Citoyens',garde:'Registre de la Garde',commerces:'Registre des Commerces',diplomatie:'Diplomatie',cour:'Cour du Jarl',inventaire:'Inventaire',superadmin:'Compte de Gestion'};
   return m[s]||s;
 }
 
@@ -1138,23 +1149,22 @@ async function loadInventaire(){
 
 function renderInventaire(rows){
   const tbody=document.getElementById('inv-tbody');
-  const canEdit=canEditSection('inventaire');
+  const canAdmin=canEditSection('inventaire');
   const empty=rows.filter(r=>r.quantite<=0).length;
   document.getElementById('inv-total').textContent=rows.length;
   document.getElementById('inv-empty').textContent=empty;
-  document.getElementById('inv-act-head').style.display=canEdit?'':'none';
+  document.getElementById('inv-act-head').style.display=canAdmin?'':'none';
   tbody.innerHTML=rows.map(r=>`
     <tr data-search="${esc(r.nom.toLowerCase())}" data-stock="${r.quantite<=0?'vide':'dispo'}">
       <td class="cell-name">${esc(r.nom)}</td>
       <td>
-        ${canEdit ? `
         <div style="display:flex;align-items:center;gap:0.5rem;">
-          <button class="btn-del" style="border-color:var(--border-g);color:var(--ink-mid);font-size:1rem;width:26px;height:26px;display:flex;align-items:center;justify-content:center;padding:0;" onclick="updateQty('${r.id}',${r.quantite},-1)">−</button>
+          <button class="btn-del" style="border-color:var(--border-g);color:var(--ink-mid);font-size:1rem;width:26px;height:26px;display:flex;align-items:center;justify-content:center;padding:0;" onclick="updateQty('${r.id}','${esc(r.nom)}',${r.quantite},-1)">−</button>
           <span style="font-family:'Eagle Lake',serif;font-size:1rem;min-width:2.5rem;text-align:center;color:${r.quantite<=0?'#7A1010':'var(--green-dark)'};">${r.quantite}</span>
-          <button class="btn-del" style="border-color:var(--border-g);color:var(--ink-mid);font-size:1rem;width:26px;height:26px;display:flex;align-items:center;justify-content:center;padding:0;" onclick="updateQty('${r.id}',${r.quantite},1)">+</button>
-        </div>` : `<span style="font-family:'Eagle Lake',serif;font-size:1rem;color:${r.quantite<=0?'#7A1010':'var(--green-dark)'};">${r.quantite}</span>`}
+          <button class="btn-del" style="border-color:var(--border-g);color:var(--ink-mid);font-size:1rem;width:26px;height:26px;display:flex;align-items:center;justify-content:center;padding:0;" onclick="updateQty('${r.id}','${esc(r.nom)}',${r.quantite},1)">+</button>
+        </div>
       </td>
-      ${canEdit?`<td class="act"><button class="btn-del" onclick="delInvItem('${r.id}')">Suppr.</button></td>`:''}
+      ${canAdmin?`<td class="act"><button class="btn-del" onclick="delInvItem('${r.id}')">Suppr.</button></td>`:''}
     </tr>
   `).join('');
 }
@@ -1173,11 +1183,27 @@ async function addInvItem(){
   }catch(e){toast('Erreur d\'enregistrement.');}
 }
 
-async function updateQty(id,current,delta){
-  const newQty=Math.max(0,current+delta);
+// Historique inventaire en mémoire (localStorage pour persistance légère)
+function loadInvHistory(){
+  try{ return JSON.parse(localStorage.getItem('mk_inv_history')||'[]'); }catch(e){ return []; }
+}
+function saveInvHistory(h){ try{ localStorage.setItem('mk_inv_history',JSON.stringify(h.slice(0,200))); }catch(e){} }
+
+async function updateQty(id, nom, current, delta){
+  const newQty = Math.max(0, current+delta);
+  if(newQty === current) return;
   try{
     await sbPatch('mk_inventaire',`?id=eq.${id}`,{quantite:newQty});
+    // Enregistrer dans l'historique
+    const h = loadInvHistory();
+    h.unshift({
+      id, nom, oldQty: current, newQty,
+      delta,
+      time: new Date().toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
+    });
+    saveInvHistory(h);
     await loadInventaire();
+    if(isLogged()) renderInvHistory();
   }catch(e){toast('Erreur de mise à jour.');}
 }
 
@@ -1185,6 +1211,50 @@ async function delInvItem(id){
   if(!confirm('Supprimer cet item du stock ?'))return;
   try{await sbDelete('mk_inventaire',`?id=eq.${id}`);await loadInventaire();toast('Item supprimé.');}
   catch(e){toast('Erreur.');}
+}
+
+function renderInvHistory(){
+  const list  = document.getElementById('inv-history-list');
+  const empty = document.getElementById('inv-history-empty');
+  if(!list) return;
+  const h = loadInvHistory();
+  if(h.length===0){ list.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  list.innerHTML = h.slice(0,100).map((e,idx)=>`
+    <div style="background:var(--parch);border:1px solid var(--border-g);border-left:3px solid ${e.delta>0?'var(--green-dark)':'#8B5E00'};padding:0.5rem 0.7rem;font-size:0.82rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.15rem;">
+        <span style="font-family:'Eagle Lake',serif;font-size:0.7rem;color:var(--green-dark);">${esc(e.nom)}</span>
+        <div style="display:flex;align-items:center;gap:0.4rem;">
+          <span style="font-size:0.7rem;color:var(--ink-faint);font-style:italic;">${e.time}</span>
+          <button onclick="revertInvEntry(${idx})" title="Annuler"
+            style="background:none;border:1px solid rgba(122,16,16,0.3);color:#7A1010;font-size:0.65rem;width:18px;height:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;"
+            onmouseover="this.style.background='rgba(122,16,16,0.1)'" onmouseout="this.style.background='none'">✕</button>
+        </div>
+      </div>
+      <span style="color:var(--ink-mid);">${e.oldQty} → ${e.newQty} <strong style="color:${e.delta>0?'var(--green-dark)':'#8B5E00'}">(${e.delta>0?'+':''}${e.delta})</strong></span>
+    </div>
+  `).join('');
+}
+
+async function revertInvEntry(idx){
+  const h = loadInvHistory();
+  const e = h[idx];
+  if(!e) return;
+  try{
+    await sbPatch('mk_inventaire',`?id=eq.${e.id}`,{quantite:e.oldQty});
+    h.splice(idx,1);
+    saveInvHistory(h);
+    await loadInventaire();
+    renderInvHistory();
+    toast(`${e.nom} rétabli à ${e.oldQty}.`);
+  }catch(err){toast('Erreur lors de l\'annulation.');}
+}
+
+function clearInvHistory(){
+  if(!confirm('Effacer tout l\'historique des stocks ?'))return;
+  saveInvHistory([]);
+  renderInvHistory();
+  toast('Historique effacé.');
 }
 
 // ══════════════════════════════════════════════════════════════════════
