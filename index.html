@@ -60,13 +60,14 @@ header{background:linear-gradient(180deg,var(--green-dark) 0%,var(--green) 100%)
 .nav-btn .nav-icon{display:block;font-size:1.2rem;margin-bottom:0.2rem;}
 
 /* ── LAYOUT ── */
-.main-layout{display:flex;min-height:calc(100vh - 128px);position:relative;z-index:1;}
-.content{flex:1;padding:1.75rem 2.5rem;background:var(--parch);}
+.main-layout{position:relative;z-index:1;}
+.content{padding:1.75rem 2.5rem;background:var(--parch);min-height:calc(100vh - 128px);transition:margin-right 0.25s;}
+.content.panel-open{margin-right:375px;}
 .section-page{display:none;}
 .section-page.active{display:block;}
 
 /* ── ADMIN PANEL ── */
-.admin-panel{width:360px;background:var(--panel);border-left:2px solid var(--green);padding:1.5rem;overflow-y:auto;display:none;flex-direction:column;gap:1.1rem;max-height:calc(100vh - 128px);}
+.admin-panel{width:370px;background:var(--panel);border-left:2px solid var(--green);padding:1.5rem;overflow-y:auto;display:none;flex-direction:column;gap:1.1rem;position:fixed;top:128px;right:0;bottom:0;z-index:100;box-shadow:-4px 0 16px rgba(42,64,32,0.2);}
 .admin-panel.open{display:flex;}
 .panel-title{font-family:'Eagle Lake',serif;font-size:0.7rem;letter-spacing:0.12em;color:var(--green-dark);border-bottom:1px solid var(--border-g);padding-bottom:0.45rem;margin-bottom:0.6rem;}
 .session-bar{background:var(--green-dark);padding:0.5rem 0.8rem;display:flex;align-items:center;justify-content:space-between;}
@@ -182,7 +183,11 @@ td.act{text-align:center;white-space:nowrap;}
 .admin-entry-section{font-size:0.72rem;color:var(--ink-faint);font-style:italic;}
 .msg{font-size:0.75rem;margin-top:0.3rem;display:none;}
 
-/* ── EXPORT ── */
+/* ── TRI ── */
+.btn-sort{background:var(--parch-dark);border:1px solid var(--border-g);color:var(--ink-mid);font-family:'Eagle Lake',serif;font-size:0.68rem;letter-spacing:0.06em;padding:0.3rem 0.7rem;cursor:pointer;transition:all 0.15s;white-space:nowrap;display:flex;align-items:center;gap:0.35rem;}
+.btn-sort:hover{border-color:var(--green);color:var(--green-dark);}
+.btn-sort.asc::after{content:' ↑';}
+.btn-sort.desc::after{content:' ↓';}
 .btn-export{background:var(--parch);border:1px solid var(--border-g);color:var(--ink-mid);font-family:'Eagle Lake',serif;font-size:0.67rem;letter-spacing:0.06em;padding:0.38rem 0.8rem;cursor:pointer;transition:all 0.2s;width:100%;margin-top:0.35rem;text-align:left;}
 .btn-export:hover{border-color:var(--green);color:var(--green-dark);}
 
@@ -261,6 +266,7 @@ td.act{text-align:center;white-space:nowrap;}
         <option>Rougegarde</option><option>Elfe des bois</option><option>Haut-Elfe</option>
         <option>Elfe sombre</option><option>Orque</option><option>Argonien</option><option>Khajiit</option>
       </select>
+      <button class="btn-sort asc" id="cit-sort-btn" onclick="sortTable('cit-tbody','name','cit-sort-btn')">Nom</button>
     </div>
     <div class="table-wrap">
       <table><thead><tr><th>Prénom & Nom</th><th>Race</th><th>Métier</th><th id="cit-act-head" style="display:none;">Actions</th></tr></thead>
@@ -327,6 +333,8 @@ td.act{text-align:center;white-space:nowrap;}
         <option>Garde-Frontière</option>
         <option>Traqueur de la Crevasse</option>
       </select>
+      <button class="btn-sort asc" id="gar-sort-btn" onclick="sortTable('gar-tbody','name','gar-sort-btn')">Nom</button>
+      <button class="btn-sort asc" id="gar-sort-grade-btn" onclick="sortTable('gar-tbody','grade','gar-sort-grade-btn')">Grade</button>
     </div>
     <div class="table-wrap">
       <table><thead><tr><th>Prénom & Nom</th><th>Race</th><th>Grade</th><th>Compagnie</th><th id="gar-act-head" style="display:none;">Actions</th></tr></thead>
@@ -380,6 +388,7 @@ td.act{text-align:center;white-space:nowrap;}
         <option>Mine</option><option>Couture</option><option>Chasse</option>
         <option>Forge</option><option>Alchimie</option><option>Bûcheronnage</option>
       </select>
+      <button class="btn-sort asc" id="com-sort-btn" onclick="sortTable('com-tbody','name','com-sort-btn')">Nom</button>
     </div>
     <div class="table-wrap">
       <table><thead><tr><th>Commerce</th><th>Domaine</th><th>Lieu</th><th>Membres</th><th id="com-act-head" style="display:none;">Actions</th></tr></thead>
@@ -455,6 +464,7 @@ td.act{text-align:center;white-space:nowrap;}
         <option>Mage de la Cour</option><option>Prêtre</option>
         <option>Huscarl</option><option>Juge de la Cour</option>
       </select>
+      <button class="btn-sort asc" id="cour-sort-btn" onclick="sortTable('cour-tbody','name','cour-sort-btn')">Nom</button>
     </div>
     <div class="table-wrap">
       <table><thead><tr><th>Prénom & Nom</th><th>Titre</th><th id="cour-act-head" style="display:none;">Actions</th></tr></thead>
@@ -491,6 +501,7 @@ td.act{text-align:center;white-space:nowrap;}
         <option value="dispo">Disponible</option>
         <option value="vide">Épuisé</option>
       </select>
+      <button class="btn-sort asc" id="inv-sort-btn" onclick="sortTable('inv-tbody','name','inv-sort-btn')">Nom</button>
     </div>
     <div class="table-wrap">
       <table><thead><tr><th>Item</th><th>Quantité</th><th id="inv-act-head" style="display:none;">Actions</th></tr></thead>
@@ -499,7 +510,6 @@ td.act{text-align:center;white-space:nowrap;}
   </div>
 
 </div><!-- /content -->
-</div><!-- /main-layout -->
 
 <!-- ══ PANNEAU ADMIN ══ -->
 <aside class="admin-panel" id="adminPanel">
@@ -861,6 +871,38 @@ async function saveRelation(chatellerie,relation){
 }
 
 // ══════════════════════════════════════════════════════════════════════
+//  TRI
+// ══════════════════════════════════════════════════════════════════════
+const GRADE_ORDER = ['Capitaine','Lieutenant','Sergent','Caporal','Soldat','Recrue'];
+
+function sortTable(tbodyId, mode, btnId) {
+  const tbody = document.getElementById(tbodyId);
+  const btn   = document.getElementById(btnId);
+  if (!tbody || !btn) return;
+
+  const isAsc = btn.classList.contains('asc');
+  const dir   = isAsc ? 'desc' : 'asc';
+  btn.classList.toggle('asc', !isAsc);
+  btn.classList.toggle('desc', isAsc);
+
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  rows.sort((a, b) => {
+    if (mode === 'grade') {
+      const ga = (a.getAttribute('data-grade') || '').trim();
+      const gb = (b.getAttribute('data-grade') || '').trim();
+      const ia = GRADE_ORDER.indexOf(ga) === -1 ? 99 : GRADE_ORDER.indexOf(ga);
+      const ib = GRADE_ORDER.indexOf(gb) === -1 ? 99 : GRADE_ORDER.indexOf(gb);
+      return dir === 'asc' ? ia - ib : ib - ia;
+    } else {
+      const va = (a.getAttribute('data-search') || '').trim();
+      const vb = (b.getAttribute('data-search') || '').trim();
+      return dir === 'asc' ? va.localeCompare(vb,'fr') : vb.localeCompare(va,'fr');
+    }
+  });
+  rows.forEach(tr => tbody.appendChild(tr));
+}
+
+// ══════════════════════════════════════════════════════════════════════
 //  FILTRE / RECHERCHE
 // ══════════════════════════════════════════════════════════════════════
 function filterRows(tbodyId,query){
@@ -945,7 +987,10 @@ function doLogout(){
   document.getElementById('loginPass').value='';
   document.getElementById('loginErr').style.display='none';
   updateAdminUI();
-  togglePanel();
+  // Ferme le panel proprement
+  document.getElementById('adminPanel').classList.remove('open');
+  document.getElementById('adminToggle').classList.remove('active');
+  document.querySelector('.content').classList.remove('panel-open');
   toast('Déconnexion effectuée.');
 }
 
@@ -1156,6 +1201,7 @@ function switchSection(sec,btn){
 function togglePanel(){
   document.getElementById('adminPanel').classList.toggle('open');
   document.getElementById('adminToggle').classList.toggle('active');
+  document.querySelector('.content').classList.toggle('panel-open');
 }
 
 function toggleForm(id){
