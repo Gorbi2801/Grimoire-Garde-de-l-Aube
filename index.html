@@ -215,6 +215,8 @@ td.act{text-align:center;white-space:nowrap;}
     <button class="nav-btn" onclick="switchSection('garde',this)"><span class="nav-icon">⚔️</span>Garde</button>
     <button class="nav-btn" onclick="switchSection('commerces',this)"><span class="nav-icon">🏪</span>Commerces</button>
     <button class="nav-btn" onclick="switchSection('diplomatie',this)"><span class="nav-icon">🗺️</span>Diplomatie</button>
+    <button class="nav-btn" onclick="switchSection('cour',this)"><span class="nav-icon">👑</span>Cour du Jarl</button>
+    <button class="nav-btn" onclick="switchSection('inventaire',this)"><span class="nav-icon">📦</span>Inventaire</button>
   </nav>
 </header>
 
@@ -416,6 +418,90 @@ td.act{text-align:center;white-space:nowrap;}
 
 </div><!-- /content -->
 
+  <!-- ══ COUR DU JARL ══ -->
+  <div class="section-page" id="page-cour" style="display:none;">
+    <div class="sect-header">
+      <h2>👑 Cour du Jarl de Markarth</h2>
+      <p>Membres officiels de la cour et leurs fonctions au sein de la Châtellerie</p>
+      <div class="sect-stats">
+        <div class="stat-chip">Membres : <strong id="cour-total">—</strong></div>
+      </div>
+    </div>
+    <div id="cour-add-wrap" class="add-form-wrap" style="display:none;">
+      <div class="add-form-head" onclick="toggleForm('cour-form')">
+        <span>+ Nommer un membre de la cour</span><span class="chev">▼</span>
+      </div>
+      <div class="add-form-body" id="cour-form">
+        <div class="form-grid">
+          <div class="form-field"><label>Prénom</label><input id="cour-prenom" type="text" placeholder="Prénom..."></div>
+          <div class="form-field"><label>Nom</label><input id="cour-nom" type="text" placeholder="Nom..."></div>
+          <div class="form-field"><label>Titre</label>
+            <select id="cour-titre">
+              <option value="">— Sélectionner —</option>
+              <option>Jarl</option><option>Intendant</option><option>Chambellan</option>
+              <option>Capitaine de la Garde</option><option>Diplomate</option>
+              <option>Mage de la Cour</option><option>Prêtre</option>
+              <option>Huscarl</option><option>Juge de la Cour</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn-submit" onclick="addCour()">Nommer</button>
+      </div>
+    </div>
+    <div class="toolbar">
+      <div class="search-wrap"><span style="color:var(--ink-faint);font-size:0.85rem;">🔍</span><input id="cour-search" type="text" placeholder="Rechercher un membre..." oninput="filterRows('cour-tbody',this.value)"></div>
+      <select class="filter-sel" id="cour-filter-titre" onchange="filterRows('cour-tbody',document.getElementById('cour-search').value)">
+        <option value="">Tous les titres</option>
+        <option>Jarl</option><option>Intendant</option><option>Chambellan</option>
+        <option>Capitaine de la Garde</option><option>Diplomate</option>
+        <option>Mage de la Cour</option><option>Prêtre</option>
+        <option>Huscarl</option><option>Juge de la Cour</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table><thead><tr><th>Prénom & Nom</th><th>Titre</th><th id="cour-act-head" style="display:none;">Actions</th></tr></thead>
+      <tbody id="cour-tbody"></tbody></table>
+    </div>
+  </div>
+
+  <!-- ══ INVENTAIRE ══ -->
+  <div class="section-page" id="page-inventaire" style="display:none;">
+    <div class="sect-header">
+      <h2>📦 Inventaire du Château</h2>
+      <p>Stocks et réserves de la Châtellerie de Markarth</p>
+      <div class="sect-stats">
+        <div class="stat-chip">Références : <strong id="inv-total">—</strong></div>
+        <div class="stat-chip">Épuisé : <strong id="inv-empty">—</strong></div>
+      </div>
+    </div>
+    <div id="inv-add-wrap" class="add-form-wrap" style="display:none;">
+      <div class="add-form-head" onclick="toggleForm('inv-form')">
+        <span>+ Ajouter un item</span><span class="chev">▼</span>
+      </div>
+      <div class="add-form-body" id="inv-form">
+        <div class="form-grid">
+          <div class="form-field"><label>Nom de l'item</label><input id="inv-nom" type="text" placeholder="Nom..."></div>
+          <div class="form-field"><label>Quantité initiale</label><input id="inv-qty" type="number" min="0" value="0"></div>
+        </div>
+        <button class="btn-submit" onclick="addInvItem()">Ajouter au stock</button>
+      </div>
+    </div>
+    <div class="toolbar">
+      <div class="search-wrap"><span style="color:var(--ink-faint);font-size:0.85rem;">🔍</span><input id="inv-search" type="text" placeholder="Rechercher un item..." oninput="filterRows('inv-tbody',this.value)"></div>
+      <select class="filter-sel" id="inv-filter-stock" onchange="filterRows('inv-tbody',document.getElementById('inv-search').value)">
+        <option value="">Tous les stocks</option>
+        <option value="dispo">Disponible</option>
+        <option value="vide">Épuisé</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table><thead><tr><th>Item</th><th>Quantité</th><th id="inv-act-head" style="display:none;">Actions</th></tr></thead>
+      <tbody id="inv-tbody"></tbody></table>
+    </div>
+  </div>
+
+</div><!-- /main-layout -->
+
 <!-- ══ PANNEAU ADMIN ══ -->
 <aside class="admin-panel" id="adminPanel">
 
@@ -453,6 +539,8 @@ td.act{text-align:center;white-space:nowrap;}
             <option value="garde">Garde</option>
             <option value="commerces">Commerces</option>
             <option value="diplomatie">Diplomatie</option>
+            <option value="cour">Cour du Jarl</option>
+            <option value="inventaire">Inventaire</option>
           </select>
           <button class="btn-login" onclick="createAccount()" style="flex-shrink:0;">Créer</button>
         </div>
@@ -556,7 +644,7 @@ async function initSA(){
 }
 
 async function loadAll(){
-  await Promise.all([loadCitoyens(),loadGardes(),loadCommerces(),loadDiplomatie()]);
+  await Promise.all([loadCitoyens(),loadGardes(),loadCommerces(),loadDiplomatie(),loadCour(),loadInventaire()]);
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -793,6 +881,12 @@ function filterRows(tbodyId,query){
   }else if(tbodyId==='com-tbody'){
     const dom=document.getElementById('com-filter-dom').value;
     if(dom)extraFilters.dom=dom;
+  }else if(tbodyId==='cour-tbody'){
+    const titre=document.getElementById('cour-filter-titre').value;
+    if(titre)extraFilters.titre=titre;
+  }else if(tbodyId==='inv-tbody'){
+    const stock=document.getElementById('inv-filter-stock').value;
+    if(stock)extraFilters.stock=stock;
   }
   tbody.querySelectorAll('tr').forEach(tr=>{
     const search=tr.getAttribute('data-search')||'';
@@ -863,8 +957,8 @@ function canEditSection(sec){
 }
 
 function updateAdminUI(){
-  ['citoyens','garde','commerces'].forEach(s=>{
-    const w=document.getElementById(s==='citoyens'?'cit-add-wrap':s==='garde'?'gar-add-wrap':'com-add-wrap');
+  ['citoyens','garde','commerces','cour','inventaire'].forEach(s=>{
+    const w=document.getElementById(s==='citoyens'?'cit-add-wrap':s==='garde'?'gar-add-wrap':s==='commerces'?'com-add-wrap':s==='cour'?'cour-add-wrap':'inv-add-wrap');
     if(w)w.style.display=canEditSection(s)?'block':'none';
   });
   // Re-render pour afficher/cacher les boutons de suppression
@@ -872,7 +966,7 @@ function updateAdminUI(){
 }
 
 function sectionLabel(s){
-  const m={citoyens:'Registre des Citoyens',garde:'Registre de la Garde',commerces:'Registre des Commerces',diplomatie:'Diplomatie',superadmin:'Châtelain Suprême'};
+  const m={citoyens:'Registre des Citoyens',garde:'Registre de la Garde',commerces:'Registre des Commerces',diplomatie:'Diplomatie',cour:'Cour du Jarl',inventaire:'Inventaire',superadmin:'Châtelain Suprême'};
   return m[s]||s;
 }
 
@@ -943,6 +1037,113 @@ async function changeSAPass(){
 }
 
 // ══════════════════════════════════════════════════════════════════════
+//  COUR DU JARL
+// ══════════════════════════════════════════════════════════════════════
+async function loadCour(){
+  try{
+    const rows=await sbGet('mk_cour','?order=titre.asc');
+    renderCour(rows);
+  }catch(e){console.error('loadCour:',e);}
+}
+
+function renderCour(rows){
+  const tbody=document.getElementById('cour-tbody');
+  const canEdit=canEditSection('cour');
+  document.getElementById('cour-total').textContent=rows.length;
+  document.getElementById('cour-act-head').style.display=canEdit?'':'none';
+  tbody.innerHTML=rows.map(r=>`
+    <tr data-search="${esc((r.prenom+' '+r.nom+' '+r.titre).toLowerCase())}" data-titre="${esc(r.titre||'')}">
+      <td class="cell-name">${esc(r.prenom)} ${esc(r.nom)}</td>
+      <td><span class="badge badge-neutre" style="background:rgba(58,92,42,0.1);color:var(--green-dark);border-color:rgba(58,92,42,0.35);">${esc(r.titre)}</span></td>
+      ${canEdit?`<td class="act"><button class="btn-del" onclick="delCour('${r.id}')">Révoquer</button></td>`:''}
+    </tr>
+  `).join('');
+}
+
+async function addCour(){
+  const prenom=document.getElementById('cour-prenom').value.trim();
+  const nom=document.getElementById('cour-nom').value.trim();
+  const titre=document.getElementById('cour-titre').value;
+  if(!prenom||!nom||!titre){toast('Prénom, nom et titre requis.');return;}
+  try{
+    await sbPost('mk_cour',{prenom,nom,titre});
+    document.getElementById('cour-prenom').value='';
+    document.getElementById('cour-nom').value='';
+    document.getElementById('cour-titre').value='';
+    toggleForm('cour-form');
+    await loadCour();
+    toast(`${prenom} ${nom} nommé ${titre}.`);
+  }catch(e){toast('Erreur d\'enregistrement.');}
+}
+
+async function delCour(id){
+  if(!confirm('Révoquer ce membre de la cour ?'))return;
+  try{await sbDelete('mk_cour',`?id=eq.${id}`);await loadCour();toast('Membre révoqué.');}
+  catch(e){toast('Erreur.');}
+}
+
+// ══════════════════════════════════════════════════════════════════════
+//  INVENTAIRE DU CHÂTEAU
+// ══════════════════════════════════════════════════════════════════════
+async function loadInventaire(){
+  try{
+    const rows=await sbGet('mk_inventaire','?order=nom.asc');
+    renderInventaire(rows);
+  }catch(e){console.error('loadInventaire:',e);}
+}
+
+function renderInventaire(rows){
+  const tbody=document.getElementById('inv-tbody');
+  const canEdit=canEditSection('inventaire');
+  const empty=rows.filter(r=>r.quantite<=0).length;
+  document.getElementById('inv-total').textContent=rows.length;
+  document.getElementById('inv-empty').textContent=empty;
+  document.getElementById('inv-act-head').style.display=canEdit?'':'none';
+  tbody.innerHTML=rows.map(r=>`
+    <tr data-search="${esc(r.nom.toLowerCase())}" data-stock="${r.quantite<=0?'vide':'dispo'}">
+      <td class="cell-name">${esc(r.nom)}</td>
+      <td>
+        ${canEdit ? `
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <button class="btn-del" style="border-color:var(--border-g);color:var(--ink-mid);font-size:1rem;width:26px;height:26px;display:flex;align-items:center;justify-content:center;padding:0;" onclick="updateQty('${r.id}',${r.quantite},-1)">−</button>
+          <span style="font-family:'Eagle Lake',serif;font-size:1rem;min-width:2.5rem;text-align:center;color:${r.quantite<=0?'#7A1010':'var(--green-dark)'};">${r.quantite}</span>
+          <button class="btn-del" style="border-color:var(--border-g);color:var(--ink-mid);font-size:1rem;width:26px;height:26px;display:flex;align-items:center;justify-content:center;padding:0;" onclick="updateQty('${r.id}',${r.quantite},1)">+</button>
+        </div>` : `<span style="font-family:'Eagle Lake',serif;font-size:1rem;color:${r.quantite<=0?'#7A1010':'var(--green-dark)'};">${r.quantite}</span>`}
+      </td>
+      ${canEdit?`<td class="act"><button class="btn-del" onclick="delInvItem('${r.id}')">Suppr.</button></td>`:''}
+    </tr>
+  `).join('');
+}
+
+async function addInvItem(){
+  const nom=document.getElementById('inv-nom').value.trim();
+  const quantite=Math.max(0,parseInt(document.getElementById('inv-qty').value)||0);
+  if(!nom){toast('Nom de l\'item requis.');return;}
+  try{
+    await sbPost('mk_inventaire',{nom,quantite});
+    document.getElementById('inv-nom').value='';
+    document.getElementById('inv-qty').value='0';
+    toggleForm('inv-form');
+    await loadInventaire();
+    toast(`${nom} ajouté au stock.`);
+  }catch(e){toast('Erreur d\'enregistrement.');}
+}
+
+async function updateQty(id,current,delta){
+  const newQty=Math.max(0,current+delta);
+  try{
+    await sbPatch('mk_inventaire',`?id=eq.${id}`,{quantite:newQty});
+    await loadInventaire();
+  }catch(e){toast('Erreur de mise à jour.');}
+}
+
+async function delInvItem(id){
+  if(!confirm('Supprimer cet item du stock ?'))return;
+  try{await sbDelete('mk_inventaire',`?id=eq.${id}`);await loadInventaire();toast('Item supprimé.');}
+  catch(e){toast('Erreur.');}
+}
+
+// ══════════════════════════════════════════════════════════════════════
 //  UI HELPERS
 // ══════════════════════════════════════════════════════════════════════
 function switchSection(sec,btn){
@@ -1002,6 +1203,14 @@ async function exportSection(){
       const r=await sbGet('mk_commerces','?order=nom.asc');
       csv='Nom,Domaine,Lieu,Membres\n'+r.map(x=>`"${x.nom}","${x.domaine||''}","${x.lieu||''}","${(x.membres||[]).map(m=>m.role+': '+m.nom).join(' / ')}"`).join('\n');
       filename='commerces_markarth.csv';
+    }else if(activeSection==='cour'){
+      const r=await sbGet('mk_cour','?order=titre.asc');
+      csv='Prénom,Nom,Titre\n'+r.map(x=>`"${x.prenom}","${x.nom}","${x.titre||''}"`).join('\n');
+      filename='cour_markarth.csv';
+    }else if(activeSection==='inventaire'){
+      const r=await sbGet('mk_inventaire','?order=nom.asc');
+      csv='Item,Quantité\n'+r.map(x=>`"${x.nom}",${x.quantite}`).join('\n');
+      filename='inventaire_markarth.csv';
     }else{
       toast('Export non disponible pour cette section.');return;
     }
