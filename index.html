@@ -294,11 +294,19 @@ td.act{text-align:center;white-space:nowrap;}
           <div class="form-field"><label>Grade</label>
             <select id="gar-grade">
               <option value="">— Sélectionner —</option>
-              <option>Recrue</option><option>Garde</option><option>Garde d'élite</option>
-              <option>Sergent</option><option>Lieutenant</option><option>Capitaine</option><option>Commandant</option>
+              <option>Capitaine</option><option>Lieutenant</option><option>Sergent</option>
+              <option>Caporal</option><option>Soldat</option><option>Recrue</option>
             </select>
           </div>
-          <div class="form-field"><label>Compagnie</label><input id="gar-compagnie" type="text" placeholder="Compagnie..."></div>
+          <div class="form-field"><label>Compagnie</label>
+            <select id="gar-compagnie">
+              <option value="">— Sélectionner —</option>
+              <option>Gardien du Roc</option>
+              <option>Milice Urbaine</option>
+              <option>Garde-Frontière</option>
+              <option>Traqueur de la Crevasse</option>
+            </select>
+          </div>
         </div>
         <button class="btn-submit" onclick="addGarde()">Enrôler</button>
       </div>
@@ -307,11 +315,15 @@ td.act{text-align:center;white-space:nowrap;}
       <div class="search-wrap"><span style="color:var(--ink-faint);font-size:0.85rem;">🔍</span><input id="gar-search" type="text" placeholder="Rechercher un garde..." oninput="filterRows('gar-tbody',this.value)"></div>
       <select class="filter-sel" onchange="filterRows('gar-tbody',document.getElementById('gar-search').value)" id="gar-filter-grade">
         <option value="">Tous les grades</option>
-        <option>Recrue</option><option>Garde</option><option>Garde d'élite</option>
-        <option>Sergent</option><option>Lieutenant</option><option>Capitaine</option><option>Commandant</option>
+        <option>Capitaine</option><option>Lieutenant</option><option>Sergent</option>
+        <option>Caporal</option><option>Soldat</option><option>Recrue</option>
       </select>
       <select class="filter-sel" onchange="filterRows('gar-tbody',document.getElementById('gar-search').value)" id="gar-filter-comp">
         <option value="">Toutes les compagnies</option>
+        <option>Gardien du Roc</option>
+        <option>Milice Urbaine</option>
+        <option>Garde-Frontière</option>
+        <option>Traqueur de la Crevasse</option>
       </select>
     </div>
     <div class="table-wrap">
@@ -339,8 +351,8 @@ td.act{text-align:center;white-space:nowrap;}
           <div class="form-field"><label>Domaine</label>
             <select id="com-domaine">
               <option value="">— Sélectionner —</option>
-              <option>Forge</option><option>Mine</option><option>Bûcheron</option>
-              <option>Alchimiste</option><option>Taverne</option><option>Marchand</option><option>Autre</option>
+              <option>Mine</option><option>Couture</option><option>Chasse</option>
+              <option>Forge</option><option>Alchimie</option><option>Bûcheronnage</option>
             </select>
           </div>
           <div class="form-field"><label>Lieu</label><input id="com-lieu" type="text" placeholder="Quartier, rue..."></div>
@@ -363,8 +375,8 @@ td.act{text-align:center;white-space:nowrap;}
       <div class="search-wrap"><span style="color:var(--ink-faint);font-size:0.85rem;">🔍</span><input id="com-search" type="text" placeholder="Rechercher un commerce..." oninput="filterRows('com-tbody',this.value)"></div>
       <select class="filter-sel" onchange="filterRows('com-tbody',document.getElementById('com-search').value)" id="com-filter-dom">
         <option value="">Tous les domaines</option>
-        <option>Forge</option><option>Mine</option><option>Bûcheron</option>
-        <option>Alchimiste</option><option>Taverne</option><option>Marchand</option><option>Autre</option>
+        <option>Mine</option><option>Couture</option><option>Chasse</option>
+        <option>Forge</option><option>Alchimie</option><option>Bûcheronnage</option>
       </select>
     </div>
     <div class="table-wrap">
@@ -603,11 +615,6 @@ async function loadGardes(){
   try{
     const rows=await sbGet('mk_gardes','?order=nom.asc');
     renderGardes(rows);
-    // Mise à jour filtre compagnies
-    const comps=[...new Set(rows.map(r=>r.compagnie).filter(Boolean))];
-    const sel=document.getElementById('gar-filter-comp');
-    const cur=sel.value;
-    sel.innerHTML='<option value="">Toutes les compagnies</option>'+comps.map(c=>`<option${cur===c?' selected':''}>${esc(c)}</option>`).join('');
   }catch(e){console.error('loadGardes:',e);}
 }
 
