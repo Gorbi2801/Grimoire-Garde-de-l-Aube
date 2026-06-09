@@ -482,6 +482,7 @@ td.act{text-align:center;white-space:nowrap;}
         <div class="stat-chip">Épuisé : <strong id="inv-empty">—</strong></div>
       </div>
     </div>
+
     <div id="inv-add-wrap" class="add-form-wrap" style="display:none;">
       <div class="add-form-head" onclick="toggleForm('inv-form')">
         <span>+ Ajouter un item</span><span class="chev">▼</span>
@@ -1158,11 +1159,12 @@ function renderInventaire(rows){
     <tr data-search="${esc(r.nom.toLowerCase())}" data-stock="${r.quantite<=0?'vide':'dispo'}">
       <td class="cell-name">${esc(r.nom)}</td>
       <td>
+        ${canAdmin ? `
         <div style="display:flex;align-items:center;gap:0.5rem;">
           <button class="btn-del" style="border-color:var(--border-g);color:var(--ink-mid);font-size:1rem;width:26px;height:26px;display:flex;align-items:center;justify-content:center;padding:0;" onclick="updateQty('${r.id}','${esc(r.nom)}',${r.quantite},-1)">−</button>
           <span style="font-family:'Eagle Lake',serif;font-size:1rem;min-width:2.5rem;text-align:center;color:${r.quantite<=0?'#7A1010':'var(--green-dark)'};">${r.quantite}</span>
           <button class="btn-del" style="border-color:var(--border-g);color:var(--ink-mid);font-size:1rem;width:26px;height:26px;display:flex;align-items:center;justify-content:center;padding:0;" onclick="updateQty('${r.id}','${esc(r.nom)}',${r.quantite},1)">+</button>
-        </div>
+        </div>` : `<span style="font-family:'Eagle Lake',serif;font-size:1rem;color:${r.quantite<=0?'#7A1010':'var(--green-dark)'};">${r.quantite}</span>`}
       </td>
       ${canAdmin?`<td class="act"><button class="btn-del" onclick="delInvItem('${r.id}')">Suppr.</button></td>`:''}
     </tr>
@@ -1183,28 +1185,27 @@ async function addInvItem(){
   }catch(e){toast('Erreur d\'enregistrement.');}
 }
 
-// Historique inventaire en mémoire (localStorage pour persistance légère)
+// Historique inventaire (localStorage)
 function loadInvHistory(){
   try{ return JSON.parse(localStorage.getItem('mk_inv_history')||'[]'); }catch(e){ return []; }
 }
 function saveInvHistory(h){ try{ localStorage.setItem('mk_inv_history',JSON.stringify(h.slice(0,200))); }catch(e){} }
 
 async function updateQty(id, nom, current, delta){
-  const newQty = Math.max(0, current+delta);
+  const newQty = Math.max(0, current + delta);
   if(newQty === current) return;
   try{
-    await sbPatch('mk_inventaire',`?id=eq.${id}`,{quantite:newQty});
-    // Enregistrer dans l'historique
+    await sbPatch('mk_inventaire', `?id=eq.${id}`, {quantite: newQty});
     const h = loadInvHistory();
     h.unshift({
-      id, nom, oldQty: current, newQty,
-      delta,
+      id, nom, oldQty: current, newQty, delta,
+      player: session ? session.username : '—',
       time: new Date().toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
     });
     saveInvHistory(h);
     await loadInventaire();
     if(isLogged()) renderInvHistory();
-  }catch(e){toast('Erreur de mise à jour.');}
+  }catch(e){ console.error('updateQty:',e); toast('Erreur de mise à jour.'); }
 }
 
 async function delInvItem(id){
@@ -1223,7 +1224,7 @@ function renderInvHistory(){
   list.innerHTML = h.slice(0,100).map((e,idx)=>`
     <div style="background:var(--parch);border:1px solid var(--border-g);border-left:3px solid ${e.delta>0?'var(--green-dark)':'#8B5E00'};padding:0.5rem 0.7rem;font-size:0.82rem;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.15rem;">
-        <span style="font-family:'Eagle Lake',serif;font-size:0.7rem;color:var(--green-dark);">${esc(e.nom)}</span>
+        <span style="font-family:'Eagle Lake',serif;font-size:0.7rem;color:var(--green-dark);">❖ ${esc(e.player||'Inconnu')} — ${esc(e.nom)}</span>
         <div style="display:flex;align-items:center;gap:0.4rem;">
           <span style="font-size:0.7rem;color:var(--ink-faint);font-style:italic;">${e.time}</span>
           <button onclick="revertInvEntry(${idx})" title="Annuler"
