@@ -707,19 +707,36 @@ function hideLoader(){document.getElementById('loader').style.display='none';}
 // ══════════════════════════════════════════════════════════════════════
 async function init(){
   showLoader('Chargement du Livret...');
-  await initSA();
-  await loadAll();
+  // Init SA en arrière-plan sans bloquer l'affichage
+  initSA();
+  // Charger uniquement la section active en priorité, le reste en parallèle
+  await loadSection('citoyens');
   hideLoader();
+  // Charger les autres sections en arrière-plan
+  loadGardes();
+  loadCommerces();
+  loadDiplomatie();
+  loadCour();
+  loadInventaire();
+  loadLois();
 }
 
 async function initSA(){
+  // Ne vérifier qu'une seule fois (flag localStorage)
+  if(localStorage.getItem('mk_sa_init')) return;
   try{
     const rows=await sbGet('mk_accounts',`?username=eq.${SA_ID}`);
     if(rows.length===0){
       const h=await hashPwd('markarth25');
       await sbPost('mk_accounts',{username:SA_ID,password_hash:h,section:'superadmin',first_login:true});
     }
+    localStorage.setItem('mk_sa_init','1');
   }catch(e){console.error('initSA:',e);}
+}
+
+async function loadSection(key){
+  const fn={citoyens:loadCitoyens,garde:loadGardes,commerces:loadCommerces,diplomatie:loadDiplomatie,cour:loadCour,inventaire:loadInventaire,lois:loadLois};
+  if(fn[key]) await fn[key]();
 }
 
 async function loadAll(){
@@ -1391,7 +1408,7 @@ function clearInvHistory(){
 // ══════════════════════════════════════════════════════════════════════
 //  UI HELPERS
 // ══════════════════════════════════════════════════════════════════════
-function switchSection(sec,btn){
+function switchSection(sec, btn){
   document.querySelectorAll('.section-page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+sec).classList.add('active');
