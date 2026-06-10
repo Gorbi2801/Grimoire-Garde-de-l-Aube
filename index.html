@@ -404,88 +404,12 @@ td.act{text-align:center;white-space:nowrap;}
       <p>Relations de la Châtellerie de Markarth avec les provinces voisines</p>
     </div>
 
-    <!-- Popup relation (admin) -->
-    <div id="dipl-popup" style="display:none;position:fixed;z-index:500;background:var(--parch);border:2px solid var(--green);box-shadow:0 4px 16px rgba(42,64,32,0.3);padding:1rem 1.25rem;min-width:220px;">
-      <div style="font-family:'Eagle Lake',serif;font-size:0.85rem;color:var(--green-dark);margin-bottom:0.65rem;" id="dipl-popup-title">—</div>
-      <select id="dipl-popup-sel" class="rel-sel" style="width:100%;margin-bottom:0.65rem;font-size:0.9rem;padding:0.35rem 0.5rem;">
-        <option value="alliance">Alliance</option>
-        <option value="amical">Amical</option>
-        <option value="neutre">Neutre</option>
-        <option value="hostile">Hostile</option>
-        <option value="guerre">Guerre</option>
-      </select>
-      <div style="display:flex;gap:0.5rem;">
-        <button class="btn-action" style="flex:1;" onclick="confirmRelation()">Confirmer</button>
-        <button onclick="closePopup()" style="background:none;border:1px solid var(--border-g);color:var(--ink-faint);font-family:'Eagle Lake',serif;font-size:0.7rem;padding:0.35rem 0.7rem;cursor:pointer;">Annuler</button>
-      </div>
-    </div>
-    <div id="dipl-popup-backdrop" style="display:none;position:fixed;inset:0;z-index:499;" onclick="closePopup()"></div>
-
-    <!-- Carte avec SVG superposé -->
-    <div style="position:relative;display:inline-block;max-width:100%;margin-bottom:1.25rem;">
-      <img id="mapImg" src="https://raw.githubusercontent.com/Gorbi2801/Markarth-Livret/main/assets/carte_diplomatique.jpg" alt="Carte de Skyrim"
-        style="width:100%;max-width:680px;display:block;border:2px solid var(--brown);user-select:none;">
-      <svg id="mapSvg" viewBox="0 0 100 100" preserveAspectRatio="none"
-        style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;">
-
-        <!-- MARKARTH (vert) — bas-gauche — non cliquable -->
-        <polygon
-          points="4,43 6,37 10,34 14,33 18,35 23,34 27,36 30,40 34,43 36,46 36,52 34,58 32,63 30,68 28,72 24,76 20,78 16,78 12,75 8,72 6,68 4,62 3,55 3,48"
-          fill="rgba(70,110,50,0.3)" stroke="rgba(70,110,50,0.7)" stroke-width="0.35"/>
-        <text x="18" y="57" font-size="3.2" fill="rgba(40,80,20,0.95)"
-          font-family="serif" text-anchor="middle" font-weight="bold" style="pointer-events:none;">Markarth</text>
-
-        <!-- SOLITUDE (marron/rouge foncé) — haut-gauche -->
-        <polygon id="zone-solitude"
-          points="6,12 10,9 14,8 18,9 22,10 26,11 30,12 34,13 38,15 40,18 40,22 39,27 37,32 35,37 33,42 30,44 27,43 24,42 20,40 17,38 14,37 11,36 8,34 6,30 5,26 5,20 5,16"
-          fill="rgba(0,0,0,0)" stroke="rgba(120,60,30,0.6)" stroke-width="0.35"
-          style="pointer-events:all;cursor:pointer;" onclick="openPopup('solitude',event)"/>
-        <text id="label-solitude" x="23" y="26" font-size="3.2" fill="rgba(80,30,10,0.9)"
-          font-family="serif" text-anchor="middle" font-weight="bold" style="pointer-events:none;">Solitude</text>
-        <text id="rel-label-solitude" x="23" y="31" font-size="2.5" fill="rgba(80,30,10,0.8)"
-          font-family="serif" text-anchor="middle" font-style="italic" style="pointer-events:none;"></text>
-
-        <!-- FORT-D'HIVER (blanc/gris clair) — haut-centre -->
-        <polygon id="zone-winterhold"
-          points="40,9 44,7 50,7 56,8 62,9 66,10 68,13 68,18 67,23 65,28 62,32 58,35 54,37 50,38 46,37 43,35 40,31 39,26 39,20 39,14"
-          fill="rgba(0,0,0,0)" stroke="rgba(160,160,160,0.6)" stroke-width="0.35"
-          style="pointer-events:all;cursor:pointer;" onclick="openPopup('winterhold',event)"/>
-        <text id="label-winterhold" x="54" y="20" font-size="2.8" fill="rgba(100,100,100,0.9)"
-          font-family="serif" text-anchor="middle" font-weight="bold" style="pointer-events:none;">Fort-d'Hiver</text>
-        <text id="rel-label-winterhold" x="54" y="25" font-size="2.3" fill="rgba(100,100,100,0.8)"
-          font-family="serif" text-anchor="middle" font-style="italic" style="pointer-events:none;"></text>
-
-        <!-- VENDEAUME (bleu) — droite -->
-        <polygon id="zone-whiterun"
-          points="68,14 72,12 76,12 80,13 84,15 87,18 89,22 90,27 90,32 89,37 87,42 84,47 81,51 78,54 74,56 70,56 67,54 65,50 64,45 64,39 64,33 65,27 66,21 67,17"
-          fill="rgba(0,0,0,0)" stroke="rgba(30,100,140,0.6)" stroke-width="0.35"
-          style="pointer-events:all;cursor:pointer;" onclick="openPopup('whiterun',event)"/>
-        <text id="label-whiterun" x="77" y="33" font-size="3.2" fill="rgba(20,70,110,0.9)"
-          font-family="serif" text-anchor="middle" font-weight="bold" style="pointer-events:none;">Vendeaume</text>
-        <text id="rel-label-whiterun" x="77" y="38" font-size="2.5" fill="rgba(20,70,110,0.8)"
-          font-family="serif" text-anchor="middle" font-style="italic" style="pointer-events:none;"></text>
-
-        <!-- BLANCHERIVE (jaune/or) — centre -->
-        <polygon id="zone-riften"
-          points="38,44 42,41 46,40 50,40 54,41 58,43 62,46 64,50 64,56 63,62 61,67 58,72 54,76 50,78 46,78 42,76 39,72 37,67 36,61 36,55 36,49"
-          fill="rgba(0,0,0,0)" stroke="rgba(160,130,20,0.6)" stroke-width="0.35"
-          style="pointer-events:all;cursor:pointer;" onclick="openPopup('riften',event)"/>
-        <text id="label-riften" x="50" y="59" font-size="3.2" fill="rgba(110,85,10,0.9)"
-          font-family="serif" text-anchor="middle" font-weight="bold" style="pointer-events:none;">Blancherive</text>
-        <text id="rel-label-riften" x="50" y="64" font-size="2.5" fill="rgba(110,85,10,0.8)"
-          font-family="serif" text-anchor="middle" font-style="italic" style="pointer-events:none;"></text>
-
-        <!-- FAILLAISE (gris foncé) — bas-droite -->
-        <polygon id="zone-windhelm"
-          points="66,56 70,57 74,57 78,56 82,56 86,58 89,61 91,65 91,70 90,75 87,79 83,82 79,84 75,84 71,83 67,80 64,76 63,71 63,65 64,60"
-          fill="rgba(0,0,0,0)" stroke="rgba(80,80,80,0.6)" stroke-width="0.35"
-          style="pointer-events:all;cursor:pointer;" onclick="openPopup('windhelm',event)"/>
-        <text id="label-windhelm" x="77" y="70" font-size="3.2" fill="rgba(50,50,50,0.9)"
-          font-family="serif" text-anchor="middle" font-weight="bold" style="pointer-events:none;">Faillaise</text>
-        <text id="rel-label-windhelm" x="77" y="75" font-size="2.5" fill="rgba(50,50,50,0.8)"
-          font-family="serif" text-anchor="middle" font-style="italic" style="pointer-events:none;"></text>
-
-      </svg>
+    <!-- Carte -->
+    <div style="margin-bottom:1.5rem;">
+      <img id="mapImg"
+        src="https://raw.githubusercontent.com/Gorbi2801/Markarth-Livret/main/assets/carte_diplomatique.jpg"
+        alt="Carte de Skyrim"
+        style="width:100%;max-width:860px;display:block;border:2px solid var(--brown);box-shadow:0 2px 12px rgba(42,64,32,0.2);">
     </div>
 
     <!-- Légende -->
@@ -495,12 +419,11 @@ td.act{text-align:center;white-space:nowrap;}
       <div class="leg-item"><div class="leg-dot" style="background:#8B6030;"></div>Neutre</div>
       <div class="leg-item"><div class="leg-dot" style="background:#8B5E00;"></div>Hostile</div>
       <div class="leg-item"><div class="leg-dot" style="background:#7A1010;"></div>Guerre</div>
-      <div class="leg-item"><div class="leg-dot" style="background:rgba(107,74,30,0.5);border-radius:2px;"></div>Markarth (nous)</div>
     </div>
 
-    <!-- Grille relation texte -->
+    <!-- Grille relations -->
     <div class="relation-panel">
-      <p style="font-family:'Eagle Lake',serif;font-size:0.8rem;color:var(--green-dark);letter-spacing:0.06em;margin-bottom:0.5rem;">Relations diplomatiques — toutes factions</p>
+      <p style="font-family:'Eagle Lake',serif;font-size:0.8rem;color:var(--green-dark);letter-spacing:0.06em;margin-bottom:0.75rem;">Relations diplomatiques</p>
       <div class="relation-grid" id="relation-grid"></div>
     </div>
   </div>
@@ -1000,31 +923,6 @@ async function delCommerce(id){
 // ══════════════════════════════════════════════════════════════════════
 //  DIPLOMATIE
 // ══════════════════════════════════════════════════════════════════════
-const REL_FILL = {
-  alliance: 'rgba(45,106,45,0.35)',
-  amical:   'rgba(78,122,56,0.30)',
-  neutre:   'rgba(139,96,48,0.20)',
-  hostile:  'rgba(139,94,0,0.32)',
-  guerre:   'rgba(122,16,16,0.38)'
-};
-const REL_STROKE = {
-  alliance: 'rgba(45,106,45,0.7)',
-  amical:   'rgba(78,122,56,0.65)',
-  neutre:   'rgba(139,96,48,0.5)',
-  hostile:  'rgba(139,94,0,0.65)',
-  guerre:   'rgba(122,16,16,0.7)'
-};
-const REL_LABELS = {
-  alliance:'Alliance', amical:'Amical', neutre:'Neutre', hostile:'Hostile', guerre:'Guerre'
-};
-
-// Châtelleries sur la carte (subset — Empire/Thalmor pas sur la carte)
-const MAP_ZONES = ['solitude','whiterun','windhelm','riften','winterhold'];
-// Mapping zone SVG → clé CHATELERIES
-// solitude=Solitude, whiterun=Vendeaume, windhelm=Faillaise, riften=Blancherive, winterhold=Fort-d'Hiver
-
-let diplPopupKey = null;
-
 async function loadDiplomatie(){
   try{
     const rows = await sbGet('mk_diplomatie','');
@@ -1036,58 +934,7 @@ async function loadDiplomatie(){
     }
     const all = await sbGet('mk_diplomatie','');
     renderDiplomatie(all);
-    updateMapZones(all);
   }catch(e){console.error('loadDiplomatie:',e);}
-}
-
-function updateMapZones(rows){
-  MAP_ZONES.forEach(key => {
-    const row = rows.find(r=>r.chatellerie===key) || {relation:'neutre'};
-    const rel = row.relation || 'neutre';
-    const zone = document.getElementById('zone-'+key);
-    const relLabel = document.getElementById('rel-label-'+key);
-    if(zone){
-      zone.setAttribute('fill',   REL_FILL[rel]   || REL_FILL.neutre);
-      zone.setAttribute('stroke', REL_STROKE[rel] || REL_STROKE.neutre);
-    }
-    if(relLabel){
-      relLabel.textContent = REL_LABELS[rel] || '';
-    }
-  });
-}
-
-function openPopup(key, event){
-  if(!canEditSection('diplomatie')) return;
-  diplPopupKey = key;
-  const label = CHATELERIES.find(c=>c.key===key)?.label || key;
-  document.getElementById('dipl-popup-title').textContent = '❖ ' + label;
-  // Pré-sélectionner la relation actuelle
-  const grid = document.getElementById('relation-grid');
-  const card = grid ? grid.querySelector(`.relation-card[data-key="${key}"]`) : null;
-  const curRel = card ? card.getAttribute('data-rel') : 'neutre';
-  document.getElementById('dipl-popup-sel').value = curRel;
-  // Positionner le popup près du clic
-  const popup = document.getElementById('dipl-popup');
-  popup.style.display = 'block';
-  document.getElementById('dipl-popup-backdrop').style.display = 'block';
-  const x = Math.min(event.clientX, window.innerWidth - 250);
-  const y = Math.min(event.clientY, window.innerHeight - 180);
-  popup.style.left = x + 'px';
-  popup.style.top  = y + 'px';
-  event.stopPropagation();
-}
-
-function closePopup(){
-  document.getElementById('dipl-popup').style.display = 'none';
-  document.getElementById('dipl-popup-backdrop').style.display = 'none';
-  diplPopupKey = null;
-}
-
-async function confirmRelation(){
-  if(!diplPopupKey) return;
-  const relation = document.getElementById('dipl-popup-sel').value;
-  await saveRelation(diplPopupKey, relation);
-  closePopup();
 }
 
 function renderDiplomatie(rows){
@@ -1113,7 +960,6 @@ async function saveRelation(chatellerie, relation){
     await sbPatch('mk_diplomatie',`?chatellerie=eq.${chatellerie}`,{relation,updated_at:new Date().toISOString()});
     const all = await sbGet('mk_diplomatie','');
     renderDiplomatie(all);
-    updateMapZones(all);
     toast(`${CHATELERIES.find(c=>c.key===chatellerie)?.label} : ${relation}`);
   }catch(e){toast('Erreur de sauvegarde.');}
 }
