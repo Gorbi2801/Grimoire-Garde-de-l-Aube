@@ -542,167 +542,169 @@ td.act{text-align:center;white-space:nowrap;}
           style="width:100%;display:block;border:2px solid var(--brown);box-shadow:0 2px 12px rgba(42,64,32,0.2);">
         <div id="map-tooltip" style="display:none;position:absolute;background:var(--green-dark);color:var(--gold-light);font-family:'Eagle Lake',serif;font-size:0.72rem;padding:0.3rem 0.6rem;pointer-events:none;white-space:nowrap;z-index:10;border:1px solid var(--gold);letter-spacing:0.04em;"></div>
         
+
       <div class="map-marker" data-num="1" data-label="Portes de la Ville" data-type="Infrastructure"
-        style="left:79.2%;top:23.0%;"
-        onclick="showLieuInfo(1,'Portes de la Ville','Infrastructure')"
+        style="left:79.5%;top:23.5%;"
+        onclick="showLieuInfo(1,this.dataset.label,this.dataset.type)"
         onmouseenter="showTooltip(this,'1) Portes de la Ville')"
         onmouseleave="hideTooltip()">
         <span class="marker-num">1</span>
       </div>
-      <div class="map-marker" data-num="2" data-label="Marché" data-type="Commerce"
-        style="left:73.5%;top:28.5%;"
-        onclick="showLieuInfo(2,'Marché','Commerce')"
-        onmouseenter="showTooltip(this,'2) Marché')"
+      <div class="map-marker" data-num="2" data-label="Marché de Markarth" data-type="Commerce"
+        style="left:72.0%;top:29.5%;"
+        onclick="showLieuInfo(2,this.dataset.label,this.dataset.type)"
+        onmouseenter="showTooltip(this,'2) Marché de Markarth')"
         onmouseleave="hideTooltip()">
         <span class="marker-num">2</span>
       </div>
-      <div class="map-marker" data-num="3" data-label="Arnleif & Fils" data-type="Commerce"
-        style="left:76.8%;top:19.5%;"
-        onclick="showLieuInfo(3,'Arnleif & Fils','Commerce')"
-        onmouseenter="showTooltip(this,'3) Arnleif & Fils')"
+      <div class="map-marker" data-num="3" data-label="Comptoir d'Arnleif & Fils" data-type="Commerce"
+        style="left:77.5%;top:18.0%;"
+        onclick="showLieuInfo(3,this.dataset.label,this.dataset.type)"
+        onmouseenter="showTooltip(this,'3) Comptoir d'Arnleif & Fils')"
         onmouseleave="hideTooltip()">
         <span class="marker-num">3</span>
       </div>
       <div class="map-marker" data-num="4" data-label="Auberge du Sang-d'Argent" data-type="Taverne"
-        style="left:65.5%;top:35.5%;"
-        onclick="showLieuInfo(4,'Auberge du Sang-d'Argent','Taverne')"
+        style="left:64.0%;top:36.5%;"
+        onclick="showLieuInfo(4,this.dataset.label,this.dataset.type)"
         onmouseenter="showTooltip(this,'4) Auberge du Sang-d'Argent')"
         onmouseleave="hideTooltip()">
         <span class="marker-num">4</span>
       </div>
       <div class="map-marker" data-num="5" data-label="Maison Abandonnée" data-type="Habitation"
-        style="left:51.5%;top:22.5%;"
-        onclick="showLieuInfo(5,'Maison Abandonnée','Habitation')"
+        style="left:50.0%;top:23.0%;"
+        onclick="showLieuInfo(5,this.dataset.label,this.dataset.type)"
         onmouseenter="showTooltip(this,'5) Maison Abandonnée')"
         onmouseleave="hideTooltip()">
         <span class="marker-num">5</span>
       </div>
-      <div class="map-marker" data-num="6" data-label="Trésorerie" data-type="Administration"
-        style="left:26.5%;top:22.0%;"
-        onclick="showLieuInfo(6,'Trésorerie','Administration')"
-        onmouseenter="showTooltip(this,'6) Trésorerie')"
+      <div class="map-marker" data-num="6" data-label="Salle du Trésor" data-type="Administration"
+        style="left:27.0%;top:22.5%;"
+        onclick="showLieuInfo(6,this.dataset.label,this.dataset.type)"
+        onmouseenter="showTooltip(this,'6) Salle du Trésor')"
         onmouseleave="hideTooltip()">
         <span class="marker-num">6</span>
       </div>
       <div class="map-marker" data-num="7" data-label="Maison d'Endon" data-type="Habitation"
-        style="left:29.0%;top:32.0%;"
-        onclick="showLieuInfo(7,'Maison d'Endon','Habitation')"
+        style="left:28.5%;top:33.0%;"
+        onclick="showLieuInfo(7,this.dataset.label,this.dataset.type)"
         onmouseenter="showTooltip(this,'7) Maison d'Endon')"
         onmouseleave="hideTooltip()">
         <span class="marker-num">7</span>
       </div>
       <div class="map-marker" data-num="8" data-label="Maison d'Ogmund" data-type="Habitation"
-        style="left:57.5%;top:16.5%;"
-        onclick="showLieuInfo(8,'Maison d'Ogmund','Habitation')"
+        style="left:58.0%;top:17.0%;"
+        onclick="showLieuInfo(8,this.dataset.label,this.dataset.type)"
         onmouseenter="showTooltip(this,'8) Maison d'Ogmund')"
         onmouseleave="hideTooltip()">
         <span class="marker-num">8</span>
       </div>
       <div class="map-marker" data-num="9" data-label="Maison de Nepos" data-type="Habitation"
-        style="left:43.5%;top:12.5%;"
-        onclick="showLieuInfo(9,'Maison de Nepos','Habitation')"
+        style="left:43.0%;top:13.0%;"
+        onclick="showLieuInfo(9,this.dataset.label,this.dataset.type)"
         onmouseenter="showTooltip(this,'9) Maison de Nepos')"
         onmouseleave="hideTooltip()">
         <span class="marker-num">9</span>
       </div>
-      <div class="map-marker" data-num="10" data-label="Salle de Vlindrel" data-type="Habitation"
-        style="left:53.5%;top:6.5%;"
-        onclick="showLieuInfo(10,'Salle de Vlindrel','Habitation')"
-        onmouseenter="showTooltip(this,'10) Salle de Vlindrel')"
+      <div class="map-marker" data-num="10" data-label="Gentilhommière de Vlindrel" data-type="Habitation"
+        style="left:52.0%;top:7.5%;"
+        onclick="showLieuInfo(10,this.dataset.label,this.dataset.type)"
+        onmouseenter="showTooltip(this,'10) Gentilhommière de Vlindrel')"
         onmouseleave="hideTooltip()">
         <span class="marker-num">10</span>
       </div>
-      <div class="map-marker" data-num="11" data-label="Tour de Garde" data-type="Infrastructure"
-        style="left:63.0%;top:44.5%;"
-        onclick="showLieuInfo(11,'Tour de Garde','Infrastructure')"
-        onmouseenter="showTooltip(this,'11) Tour de Garde')"
+      <div class="map-marker" data-num="11" data-label="Tour de Garde de Markarth" data-type="Infrastructure"
+        style="left:62.5%;top:45.5%;"
+        onclick="showLieuInfo(11,this.dataset.label,this.dataset.type)"
+        onmouseenter="showTooltip(this,'11) Tour de Garde de Markarth')"
         onmouseleave="hideTooltip()">
         <span class="marker-num">11</span>
       </div>
       <div class="map-marker" data-num="12" data-label="Temple de Dibella" data-type="Temple"
-        style="left:21.5%;top:45.5%;"
-        onclick="showLieuInfo(12,'Temple de Dibella','Temple')"
+        style="left:22.0%;top:46.0%;"
+        onclick="showLieuInfo(12,this.dataset.label,this.dataset.type)"
         onmouseenter="showTooltip(this,'12) Temple de Dibella')"
         onmouseleave="hideTooltip()">
         <span class="marker-num">12</span>
       </div>
       <div class="map-marker" data-num="13" data-label="Sanctuaire de Talos" data-type="Temple"
-        style="left:42.5%;top:41.0%;"
-        onclick="showLieuInfo(13,'Sanctuaire de Talos','Temple')"
+        style="left:42.5%;top:41.5%;"
+        onclick="showLieuInfo(13,this.dataset.label,this.dataset.type)"
         onmouseenter="showTooltip(this,'13) Sanctuaire de Talos')"
         onmouseleave="hideTooltip()">
         <span class="marker-num">13</span>
       </div>
       <div class="map-marker" data-num="14" data-label="Bord de Rivière" data-type="Zone"
-        style="left:73.5%;top:68.5%;"
-        onclick="showLieuInfo(14,'Bord de Rivière','Zone')"
+        style="left:72.5%;top:69.0%;"
+        onclick="showLieuInfo(14,this.dataset.label,this.dataset.type)"
         onmouseenter="showTooltip(this,'14) Bord de Rivière')"
         onmouseleave="hideTooltip()">
         <span class="marker-num">14</span>
       </div>
-      <div class="map-marker" data-num="15" data-label="Maison du Surveillant" data-type="Habitation"
-        style="left:79.5%;top:75.5%;"
-        onclick="showLieuInfo(15,'Maison du Surveillant','Habitation')"
-        onmouseenter="showTooltip(this,'15) Maison du Surveillant')"
+      <div class="map-marker" data-num="15" data-label="Maison du Surveillant de Fonderie" data-type="Habitation"
+        style="left:79.0%;top:76.0%;"
+        onclick="showLieuInfo(15,this.dataset.label,this.dataset.type)"
+        onmouseenter="showTooltip(this,'15) Maison du Surveillant de Fonderie')"
         onmouseleave="hideTooltip()">
         <span class="marker-num">15</span>
       </div>
-      <div class="map-marker" data-num="16" data-label="Les Stocks & Cage" data-type="Infrastructure"
-        style="left:57.5%;top:70.5%;"
-        onclick="showLieuInfo(16,'Les Stocks & Cage','Infrastructure')"
-        onmouseenter="showTooltip(this,'16) Les Stocks & Cage')"
+      <div class="map-marker" data-num="16" data-label="Les Stocks et la Cage" data-type="Infrastructure"
+        style="left:57.0%;top:71.5%;"
+        onclick="showLieuInfo(16,this.dataset.label,this.dataset.type)"
+        onmouseenter="showTooltip(this,'16) Les Stocks et la Cage')"
         onmouseleave="hideTooltip()">
         <span class="marker-num">16</span>
       </div>
-      <div class="map-marker" data-num="17" data-label="Les Terriers" data-type="Habitation"
-        style="left:49.5%;top:55.0%;"
-        onclick="showLieuInfo(17,'Les Terriers','Habitation')"
-        onmouseenter="showTooltip(this,'17) Les Terriers')"
+      <div class="map-marker" data-num="17" data-label="Les Galeries" data-type="Habitation"
+        style="left:49.0%;top:55.5%;"
+        onclick="showLieuInfo(17,this.dataset.label,this.dataset.type)"
+        onmouseenter="showTooltip(this,'17) Les Galeries')"
         onmouseleave="hideTooltip()">
         <span class="marker-num">17</span>
       </div>
-      <div class="map-marker" data-num="18" data-label="Mine Cidna" data-type="Mine"
-        style="left:56.0%;top:91.0%;"
-        onclick="showLieuInfo(18,'Mine Cidna','Mine')"
-        onmouseenter="showTooltip(this,'18) Mine Cidna')"
+      <div class="map-marker" data-num="18" data-label="Mine de Cidhna" data-type="Mine"
+        style="left:55.5%;top:91.5%;"
+        onclick="showLieuInfo(18,this.dataset.label,this.dataset.type)"
+        onmouseenter="showTooltip(this,'18) Mine de Cidhna')"
         onmouseleave="hideTooltip()">
         <span class="marker-num">18</span>
       </div>
       <div class="map-marker" data-num="19" data-label="Ruines de Markarth" data-type="Zone"
-        style="left:13.5%;top:83.5%;"
-        onclick="showLieuInfo(19,'Ruines de Markarth','Zone')"
+        style="left:13.0%;top:83.5%;"
+        onclick="showLieuInfo(19,this.dataset.label,this.dataset.type)"
         onmouseenter="showTooltip(this,'19) Ruines de Markarth')"
         onmouseleave="hideTooltip()">
         <span class="marker-num">19</span>
       </div>
       <div class="map-marker" data-num="20" data-label="Le Remède de la Sorcière" data-type="Commerce"
-        style="left:42.0%;top:77.0%;"
-        onclick="showLieuInfo(20,'Le Remède de la Sorcière','Commerce')"
+        style="left:41.5%;top:77.5%;"
+        onclick="showLieuInfo(20,this.dataset.label,this.dataset.type)"
         onmouseenter="showTooltip(this,'20) Le Remède de la Sorcière')"
         onmouseleave="hideTooltip()">
         <span class="marker-num">20</span>
       </div>
-      <div class="map-marker" data-num="21" data-label="Scierie & Forge" data-type="Forge"
-        style="left:37.5%;top:66.0%;"
-        onclick="showLieuInfo(21,'Scierie & Forge','Forge')"
-        onmouseenter="showTooltip(this,'21) Scierie & Forge')"
+      <div class="map-marker" data-num="21" data-label="Scierie et Forge de Markarth" data-type="Forge"
+        style="left:36.5%;top:66.5%;"
+        onclick="showLieuInfo(21,this.dataset.label,this.dataset.type)"
+        onmouseenter="showTooltip(this,'21) Scierie et Forge de Markarth')"
         onmouseleave="hideTooltip()">
         <span class="marker-num">21</span>
       </div>
-      <div class="map-marker" data-num="22" data-label="Salle des Morts" data-type="Temple"
-        style="left:21.5%;top:74.0%;"
-        onclick="showLieuInfo(22,'Salle des Morts','Temple')"
-        onmouseenter="showTooltip(this,'22) Salle des Morts')"
+      <div class="map-marker" data-num="22" data-label="Nécropole" data-type="Temple"
+        style="left:21.0%;top:75.0%;"
+        onclick="showLieuInfo(22,this.dataset.label,this.dataset.type)"
+        onmouseenter="showTooltip(this,'22) Nécropole')"
         onmouseleave="hideTooltip()">
         <span class="marker-num">22</span>
       </div>
-      <div class="map-marker" data-num="23" data-label="Donjon Soubassement" data-type="Administration"
-        style="left:8.5%;top:50.5%;"
-        onclick="showLieuInfo(23,'Donjon Soubassement','Administration')"
-        onmouseenter="showTooltip(this,'23) Donjon Soubassement')"
+      <div class="map-marker" data-num="23" data-label="Château Coeur-de-Roche" data-type="Administration"
+        style="left:8.0%;top:51.0%;"
+        onclick="showLieuInfo(23,this.dataset.label,this.dataset.type)"
+        onmouseenter="showTooltip(this,'23) Château Coeur-de-Roche')"
         onmouseleave="hideTooltip()">
         <span class="marker-num">23</span>
       </div>
+
       </div>
 
       <!-- Fiche du lieu sélectionné -->
