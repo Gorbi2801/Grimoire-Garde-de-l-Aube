@@ -114,7 +114,10 @@ tbody td{padding:0.55rem 0.9rem;vertical-align:middle;}
 
 /* ── BADGES ── */
 .badge{display:inline-block;padding:0.15rem 0.55rem;font-family:'Eagle Lake',serif;font-size:0.68rem;letter-spacing:0.04em;border:1px solid;}
-.badge-alliance{background:rgba(45,106,45,0.12);color:#2D5A1A;border-color:rgba(45,106,45,0.4);}
+.badge-libre   { background:rgba(45,106,45,0.1);  color:#2D5A1A; border-color:rgba(45,106,45,0.4); }
+.badge-occupé  { background:rgba(107,74,30,0.1);  color:var(--brown); border-color:rgba(107,74,30,0.35); }
+.badge-saisi   { background:rgba(122,16,16,0.1);  color:#7A1010; border-color:rgba(122,16,16,0.35); }
+.badge-en-vente{ background:rgba(139,94,0,0.1);   color:#6B4500; border-color:rgba(139,94,0,0.35); }
 .badge-amical{background:rgba(58,92,42,0.1);color:#3A5C2A;border-color:rgba(58,92,42,0.35);}
 .badge-neutre{background:rgba(107,74,30,0.1);color:var(--brown);border-color:rgba(107,74,30,0.35);}
 .badge-hostile{background:rgba(139,94,0,0.12);color:#6B4500;border-color:rgba(139,94,0,0.4);}
@@ -254,7 +257,12 @@ td.act{text-align:center;white-space:nowrap;}
               <option>Elfe sombre</option><option>Orque</option><option>Argonien</option><option>Khajiit</option>
             </select>
           </div>
-          <div class="form-field"><label>Métier</label><input id="cit-metier" type="text" placeholder="Forgeron, Marchand..."></div>
+          <div class="form-field"><label>Métier</label><select id="cit-metier">
+              <option value="">— Sélectionner —</option>
+              <option>Mineur</option><option>Menuisier</option><option>Forgeron</option>
+              <option>Alchimiste</option><option>Chasseur</option><option>Cuisinier</option>
+              <option>Couturier</option><option>Guerrier</option><option>Sans métier</option>
+            </select></div>
         </div>
         <button class="btn-submit" onclick="addCitoyen()">Inscrire au registre</button>
       </div>
@@ -346,12 +354,21 @@ td.act{text-align:center;white-space:nowrap;}
   <!-- ══ COMMERCES ══ -->
   <div class="section-page" id="page-commerces">
     <div class="sect-header">
-      <h2>🏪 Registre des Commerces</h2>
-      <p>Établissements et guildes enregistrés auprès de la Châtellerie</p>
+      <h2>🏪 Registre des Commerces & du Foncier</h2>
+      <p>Établissements, guildes et propriétés enregistrés auprès de la Châtellerie</p>
       <div class="sect-stats">
         <div class="stat-chip">Établissements : <strong id="com-total">—</strong></div>
+        <div class="stat-chip">Propriétés : <strong id="fon-total">—</strong></div>
       </div>
     </div>
+
+    <!-- ── COMMERCES ── -->
+    <div style="font-family:'Eagle Lake',serif;font-size:0.78rem;letter-spacing:0.1em;color:var(--green-dark);margin-bottom:0.75rem;display:flex;align-items:center;gap:0.6rem;">
+      <span style="flex:1;height:1px;background:var(--border-g);display:inline-block;"></span>
+      🏪 Commerces & Guildes
+      <span style="flex:1;height:1px;background:var(--border-g);display:inline-block;"></span>
+    </div>
+
     <div id="com-add-wrap" class="add-form-wrap" style="display:none;">
       <div class="add-form-head" onclick="toggleForm('com-form')">
         <span>+ Enregistrer un commerce</span><span class="chev">▼</span>
@@ -362,8 +379,8 @@ td.act{text-align:center;white-space:nowrap;}
           <div class="form-field"><label>Domaine</label>
             <select id="com-domaine">
               <option value="">— Sélectionner —</option>
-              <option>Mine</option><option>Couture</option><option>Chasse</option>
-              <option>Forge</option><option>Alchimie</option><option>Bûcheronnage</option>
+              <option>Minage</option><option>Menuiserie</option><option>Forge</option>
+              <option>Alchimie</option><option>Cuisine</option><option>Couture</option>
             </select>
           </div>
           <div class="form-field"><label>Lieu</label><input id="com-lieu" type="text" placeholder="Quartier, rue..."></div>
@@ -386,14 +403,72 @@ td.act{text-align:center;white-space:nowrap;}
       <div class="search-wrap"><span style="color:var(--ink-faint);font-size:0.85rem;">🔍</span><input id="com-search" type="text" placeholder="Rechercher un commerce..." oninput="filterRows('com-tbody',this.value)"></div>
       <select class="filter-sel" onchange="filterRows('com-tbody',document.getElementById('com-search').value)" id="com-filter-dom">
         <option value="">Tous les domaines</option>
-        <option>Mine</option><option>Couture</option><option>Chasse</option>
-        <option>Forge</option><option>Alchimie</option><option>Bûcheronnage</option>
+        <option>Minage</option><option>Menuiserie</option><option>Forge</option>
+        <option>Alchimie</option><option>Cuisine</option><option>Couture</option>
       </select>
       <button class="btn-sort asc" id="com-sort-btn" onclick="sortTable('com-tbody','name','com-sort-btn')">Nom</button>
     </div>
-    <div class="table-wrap">
+    <div class="table-wrap" style="margin-bottom:2rem;">
       <table><thead><tr><th>Commerce</th><th>Domaine</th><th>Lieu</th><th>Membres</th><th id="com-act-head" style="display:none;">Actions</th></tr></thead>
       <tbody id="com-tbody"></tbody></table>
+    </div>
+
+    <!-- ── FONCIER ── -->
+    <div style="font-family:'Eagle Lake',serif;font-size:0.78rem;letter-spacing:0.1em;color:var(--green-dark);margin-bottom:0.75rem;display:flex;align-items:center;gap:0.6rem;">
+      <span style="flex:1;height:1px;background:var(--border-g);display:inline-block;"></span>
+      🏠 Registre Foncier
+      <span style="flex:1;height:1px;background:var(--border-g);display:inline-block;"></span>
+    </div>
+
+    <div id="fon-add-wrap" class="add-form-wrap" style="display:none;">
+      <div class="add-form-head" onclick="toggleForm('fon-form')">
+        <span>+ Enregistrer une propriété</span><span class="chev">▼</span>
+      </div>
+      <div class="add-form-body" id="fon-form">
+        <div class="form-grid">
+          <div class="form-field"><label>Nom / Adresse</label><input id="fon-nom" type="text" placeholder="Ex : Maison du Forgeron..."></div>
+          <div class="form-field"><label>Type</label>
+            <select id="fon-type">
+              <option value="">— Sélectionner —</option>
+              <option>Maison</option><option>Forge</option><option>Mine</option>
+              <option>Taverne</option><option>Entrepôt</option><option>Écurie</option>
+              <option>Temple</option><option>Tour</option><option>Terrain</option><option>Autre</option>
+            </select>
+          </div>
+          <div class="form-field"><label>Propriétaire</label><input id="fon-proprietaire" type="text" placeholder="Nom du propriétaire..."></div>
+          <div class="form-field"><label>Usage</label><input id="fon-usage" type="text" placeholder="Habitation, forge, stockage..."></div>
+          <div class="form-field"><label>Statut</label>
+            <select id="fon-statut">
+              <option value="libre">Libre</option>
+              <option value="occupé">Occupé</option>
+              <option value="saisi">Saisi</option>
+              <option value="en vente">En vente</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn-submit" onclick="addFoncier()">Enregistrer</button>
+      </div>
+    </div>
+    <div class="toolbar">
+      <div class="search-wrap"><span style="color:var(--ink-faint);font-size:0.85rem;">🔍</span><input id="fon-search" type="text" placeholder="Rechercher une propriété..." oninput="filterRows('fon-tbody',this.value)"></div>
+      <select class="filter-sel" onchange="filterRows('fon-tbody',document.getElementById('fon-search').value)" id="fon-filter-type">
+        <option value="">Tous les types</option>
+        <option>Maison</option><option>Forge</option><option>Mine</option>
+        <option>Taverne</option><option>Entrepôt</option><option>Écurie</option>
+        <option>Temple</option><option>Tour</option><option>Terrain</option><option>Autre</option>
+      </select>
+      <select class="filter-sel" onchange="filterRows('fon-tbody',document.getElementById('fon-search').value)" id="fon-filter-statut">
+        <option value="">Tous les statuts</option>
+        <option value="libre">Libre</option>
+        <option value="occupé">Occupé</option>
+        <option value="saisi">Saisi</option>
+        <option value="en vente">En vente</option>
+      </select>
+      <button class="btn-sort asc" id="fon-sort-btn" onclick="sortTable('fon-tbody','name','fon-sort-btn')">Nom</button>
+    </div>
+    <div class="table-wrap">
+      <table><thead><tr><th>Propriété</th><th>Type</th><th>Propriétaire</th><th>Usage</th><th>Statut</th><th id="fon-act-head" style="display:none;">Actions</th></tr></thead>
+      <tbody id="fon-tbody"></tbody></table>
     </div>
   </div>
 
@@ -740,12 +815,12 @@ async function initSA(){
 }
 
 async function loadSection(key){
-  const fn={citoyens:loadCitoyens,garde:loadGardes,commerces:loadCommerces,diplomatie:loadDiplomatie,cour:loadCour,inventaire:loadInventaire,lois:loadLois};
+  const fn={citoyens:loadCitoyens,garde:loadGardes,commerces:async()=>{await loadCommerces();await loadFoncier();},diplomatie:loadDiplomatie,cour:loadCour,inventaire:loadInventaire,lois:loadLois};
   if(fn[key]) await fn[key]();
 }
 
 async function loadAll(){
-  await Promise.all([loadCitoyens(),loadGardes(),loadCommerces(),loadDiplomatie(),loadCour(),loadInventaire(),loadLois()]);
+  await Promise.all([loadCitoyens(),loadGardes(),loadCommerces(),loadFoncier(),loadDiplomatie(),loadCour(),loadInventaire(),loadLois()]);
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -965,6 +1040,72 @@ async function saveRelation(chatellerie, relation){
 }
 
 // ══════════════════════════════════════════════════════════════════════
+//  FONCIER
+// ══════════════════════════════════════════════════════════════════════
+async function loadFoncier(){
+  try{
+    const rows = await sbGet('mk_foncier','?order=nom.asc');
+    renderFoncier(rows);
+  }catch(e){console.error('loadFoncier:',e);}
+}
+
+function renderFoncier(rows){
+  const tbody   = document.getElementById('fon-tbody');
+  const canEdit = canEditSection('commerces');
+  document.getElementById('fon-total').textContent = rows.length;
+  document.getElementById('fon-act-head').style.display = canEdit ? '' : 'none';
+  tbody.innerHTML = rows.map(r => {
+    const statut  = r.statut || 'libre';
+    const badgeClass = 'badge-' + statut.replace(' ','-');
+    return `<tr data-search="${esc((r.nom+' '+(r.type||'')+' '+(r.proprietaire||'')+' '+(r.usage||'')).toLowerCase())}" data-type="${esc(r.type||'')}" data-statut="${esc(statut)}">
+      <td class="cell-name">${esc(r.nom)}</td>
+      <td class="cell-meta">${esc(r.type||'—')}</td>
+      <td class="cell-meta">${esc(r.proprietaire||'—')}</td>
+      <td class="cell-meta">${esc(r.usage||'—')}</td>
+      <td><span class="badge ${badgeClass}">${esc(statut.charAt(0).toUpperCase()+statut.slice(1))}</span></td>
+      ${canEdit ? `<td class="act">
+        <select onchange="updateFoncierStatut('${r.id}',this.value)" style="background:var(--parch);border:1px solid var(--border-g);color:var(--ink);font-family:'IM Fell English',serif;font-size:0.82rem;padding:0.2rem 0.4rem;">
+          ${['libre','occupé','saisi','en vente'].map(s=>`<option value="${s}"${s===statut?' selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`).join('')}
+        </select>
+        <button class="btn-del" onclick="delFoncier('${r.id}')">Suppr.</button>
+      </td>` : ''}
+    </tr>`;
+  }).join('');
+}
+
+async function addFoncier(){
+  const nom          = document.getElementById('fon-nom').value.trim();
+  const type         = document.getElementById('fon-type').value;
+  const proprietaire = document.getElementById('fon-proprietaire').value.trim();
+  const usage        = document.getElementById('fon-usage').value.trim();
+  const statut       = document.getElementById('fon-statut').value;
+  if(!nom){ toast('Nom de la propriété requis.'); return; }
+  try{
+    await sbPost('mk_foncier',{nom,type,proprietaire,usage,statut});
+    ['fon-nom','fon-proprietaire','fon-usage'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('fon-type').value='';
+    document.getElementById('fon-statut').value='libre';
+    toggleForm('fon-form');
+    await loadFoncier();
+    toast(`${nom} enregistré au registre foncier.`);
+  }catch(e){toast('Erreur d\'enregistrement.');}
+}
+
+async function updateFoncierStatut(id, statut){
+  try{
+    await sbPatch('mk_foncier',`?id=eq.${id}`,{statut});
+    await loadFoncier();
+    toast(`Statut mis à jour : ${statut}`);
+  }catch(e){toast('Erreur de mise à jour.');}
+}
+
+async function delFoncier(id){
+  if(!confirm('Supprimer cette propriété du registre ?'))return;
+  try{await sbDelete('mk_foncier',`?id=eq.${id}`);await loadFoncier();toast('Propriété supprimée.');}
+  catch(e){toast('Erreur.');}
+}
+
+// ══════════════════════════════════════════════════════════════════════
 //  LOIS
 // ══════════════════════════════════════════════════════════════════════
 const PEINE_COLORS = {
@@ -1082,6 +1223,11 @@ function filterRows(tbodyId,query){
   }else if(tbodyId==='com-tbody'){
     const dom=document.getElementById('com-filter-dom').value;
     if(dom)extraFilters.dom=dom;
+  }else if(tbodyId==='fon-tbody'){
+    const type=document.getElementById('fon-filter-type').value;
+    const statut=document.getElementById('fon-filter-statut').value;
+    if(type)extraFilters.type=type;
+    if(statut)extraFilters.statut=statut;
   }else if(tbodyId==='cour-tbody'){
     const titre=document.getElementById('cour-filter-titre').value;
     if(titre)extraFilters.titre=titre;
@@ -1170,6 +1316,9 @@ function updateAdminUI(){
     const w=document.getElementById(ids[s]);
     if(w)w.style.display=canEditSection(s)?'block':'none';
   });
+  // Foncier partagé avec la section commerces
+  const fonWrap=document.getElementById('fon-add-wrap');
+  if(fonWrap) fonWrap.style.display=canEditSection('commerces')?'block':'none';
   // Re-render pour afficher/cacher les boutons de suppression
   loadAll();
 }
@@ -1469,9 +1618,12 @@ async function exportSection(){
       csv='Prénom,Nom,Race,Grade,Compagnie\n'+r.map(x=>`"${x.prenom}","${x.nom}","${x.race||''}","${x.grade||''}","${x.compagnie||''}"`).join('\n');
       filename='garde_markarth.csv';
     }else if(activeSection==='commerces'){
-      const r=await sbGet('mk_commerces','?order=nom.asc');
-      csv='Nom,Domaine,Lieu,Membres\n'+r.map(x=>`"${x.nom}","${x.domaine||''}","${x.lieu||''}","${(x.membres||[]).map(m=>m.role+': '+m.nom).join(' / ')}"`).join('\n');
-      filename='commerces_markarth.csv';
+      const rc=await sbGet('mk_commerces','?order=nom.asc');
+      const rf=await sbGet('mk_foncier','?order=nom.asc');
+      csv='TYPE,Nom,Domaine/Type,Lieu/Propriétaire,Usage,Statut\n';
+      rc.forEach(x=>csv+=`Commerce,"${x.nom}","${x.domaine||''}","${x.lieu||''}","${(x.membres||[]).map(m=>m.role+': '+m.nom).join(' / ')}","—"\n`);
+      rf.forEach(x=>csv+=`Foncier,"${x.nom}","${x.type||''}","${x.proprietaire||''}","${x.usage||''}","${x.statut||''}"\n`);
+      filename='commerces_foncier_markarth.csv';
     }else if(activeSection==='cour'){
       const r=await sbGet('mk_cour','?order=titre.asc');
       csv='Prénom,Nom,Titre\n'+r.map(x=>`"${x.prenom}","${x.nom}","${x.titre||''}"`).join('\n');
