@@ -222,6 +222,7 @@ td.act{text-align:center;white-space:nowrap;}
     <button class="nav-btn" onclick="switchSection('diplomatie',this)"><span class="nav-icon">🗺️</span>Diplomatie</button>
     <button class="nav-btn" onclick="switchSection('cour',this)"><span class="nav-icon">👑</span>Cour du Jarl</button>
     <button class="nav-btn" onclick="switchSection('inventaire',this)"><span class="nav-icon">📦</span>Inventaire</button>
+    <button class="nav-btn" onclick="switchSection('lois',this)"><span class="nav-icon">⚖️</span>Législation</button>
   </nav>
 </header>
 
@@ -510,6 +511,63 @@ td.act{text-align:center;white-space:nowrap;}
     </div>
   </div>
 
+  <!-- ══ LOIS ══ -->
+  <div class="section-page" id="page-lois">
+    <div class="sect-header">
+      <h2>⚖️ Législation de Markarth</h2>
+      <p>Corpus des lois et décrets en vigueur dans la Châtellerie de Markarth</p>
+      <div class="sect-stats">
+        <div class="stat-chip">Lois enregistrées : <strong id="lois-total">—</strong></div>
+      </div>
+    </div>
+    <div id="lois-add-wrap" class="add-form-wrap" style="display:none;">
+      <div class="add-form-head" onclick="toggleForm('lois-form')">
+        <span>+ Promulguer une nouvelle loi</span><span class="chev">▼</span>
+      </div>
+      <div class="add-form-body" id="lois-form">
+        <div class="form-grid">
+          <div class="form-field" style="grid-column:1/-1;"><label>Titre de la loi</label><input id="lois-titre" type="text" placeholder="Intitulé de la loi..."></div>
+          <div class="form-field"><label>Classement de la peine</label>
+            <select id="lois-peine">
+              <option value="">— Sélectionner —</option>
+              <option>Infraction mineure</option>
+              <option>Infraction majeure</option>
+              <option>Crime</option>
+              <option>Crime capital</option>
+              <option>Haute trahison</option>
+            </select>
+          </div>
+          <div class="form-field"><label>Sanction</label><input id="lois-sanction" type="text" placeholder="Amende, emprisonnement, bannissement..."></div>
+          <div class="form-field" style="grid-column:1/-1;"><label>Description</label>
+            <textarea id="lois-description" placeholder="Détails et circonstances de la loi..." rows="3"
+              style="background:var(--parch);border:1px solid var(--border-g);color:var(--ink);font-family:'IM Fell English',serif;font-size:0.9rem;padding:0.35rem 0.6rem;resize:vertical;width:100%;"></textarea>
+          </div>
+        </div>
+        <button class="btn-submit" onclick="addLoi()">Promulguer</button>
+      </div>
+    </div>
+    <div class="toolbar">
+      <div class="search-wrap"><span style="color:var(--ink-faint);font-size:0.85rem;">🔍</span><input id="lois-search" type="text" placeholder="Rechercher une loi..." oninput="filterRows('lois-tbody',this.value)"></div>
+      <select class="filter-sel" id="lois-filter-peine" onchange="filterRows('lois-tbody',document.getElementById('lois-search').value)">
+        <option value="">Toutes les peines</option>
+        <option>Infraction mineure</option>
+        <option>Infraction majeure</option>
+        <option>Crime</option>
+        <option>Crime capital</option>
+        <option>Haute trahison</option>
+      </select>
+      <button class="btn-sort asc" id="lois-sort-btn" onclick="sortTable('lois-tbody','name','lois-sort-btn')">Titre</button>
+      <button class="btn-sort asc" id="lois-sort-peine-btn" onclick="sortTable('lois-tbody','peine','lois-sort-peine-btn')">Gravité</button>
+    </div>
+    <div class="table-wrap">
+      <table><thead><tr>
+        <th>Titre</th><th>Peine</th><th>Sanction</th><th>Description</th>
+        <th id="lois-act-head" style="display:none;">Actions</th>
+      </tr></thead>
+      <tbody id="lois-tbody"></tbody></table>
+    </div>
+  </div>
+
 </div><!-- /content -->
 
 <!-- ══ PANNEAU ADMIN ══ -->
@@ -551,6 +609,7 @@ td.act{text-align:center;white-space:nowrap;}
             <option value="diplomatie">Diplomatie</option>
             <option value="cour">Cour du Jarl</option>
             <option value="inventaire">Inventaire</option>
+            <option value="lois">Législation</option>
           </select>
           <button class="btn-login" onclick="createAccount()" style="flex-shrink:0;">Créer</button>
         </div>
@@ -664,7 +723,7 @@ async function initSA(){
 }
 
 async function loadAll(){
-  await Promise.all([loadCitoyens(),loadGardes(),loadCommerces(),loadDiplomatie(),loadCour(),loadInventaire()]);
+  await Promise.all([loadCitoyens(),loadGardes(),loadCommerces(),loadDiplomatie(),loadCour(),loadInventaire(),loadLois()]);
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -882,9 +941,70 @@ async function saveRelation(chatellerie,relation){
 }
 
 // ══════════════════════════════════════════════════════════════════════
+//  LOIS
+// ══════════════════════════════════════════════════════════════════════
+const PEINE_ORDER = ['Infraction mineure','Infraction majeure','Crime','Crime capital','Haute trahison'];
+const PEINE_COLORS = {
+  'Infraction mineure': {bg:'rgba(58,92,42,0.1)',  color:'var(--green-dark)', border:'rgba(58,92,42,0.35)'},
+  'Infraction majeure': {bg:'rgba(139,94,0,0.1)',   color:'#6B4500',          border:'rgba(139,94,0,0.35)'},
+  'Crime':              {bg:'rgba(122,16,16,0.1)',  color:'#7A1010',          border:'rgba(122,16,16,0.3)'},
+  'Crime capital':      {bg:'rgba(122,16,16,0.15)', color:'#6A0A0A',          border:'rgba(122,16,16,0.4)'},
+  'Haute trahison':     {bg:'rgba(60,0,0,0.18)',    color:'#3C0000',          border:'rgba(60,0,0,0.5)'},
+};
+
+async function loadLois(){
+  try{
+    const rows = await sbGet('mk_lois','?order=created_at.asc');
+    renderLois(rows);
+  }catch(e){ console.error('loadLois:',e); }
+}
+
+function renderLois(rows){
+  const tbody   = document.getElementById('lois-tbody');
+  const canEdit = canEditSection('lois');
+  document.getElementById('lois-total').textContent = rows.length;
+  document.getElementById('lois-act-head').style.display = canEdit ? '' : 'none';
+  tbody.innerHTML = rows.map(r => {
+    const pc = PEINE_COLORS[r.peine] || PEINE_COLORS['Crime'];
+    return `<tr data-search="${esc((r.titre+' '+(r.description||'')+' '+r.peine+' '+r.sanction).toLowerCase())}" data-peine="${esc(r.peine||'')}">
+      <td class="cell-name">${esc(r.titre)}</td>
+      <td><span class="badge" style="background:${pc.bg};color:${pc.color};border-color:${pc.border};">${esc(r.peine)}</span></td>
+      <td class="cell-meta">${esc(r.sanction)}</td>
+      <td class="cell-meta" style="max-width:280px;white-space:pre-wrap;font-style:italic;">${esc(r.description||'—')}</td>
+      ${canEdit ? `<td class="act"><button class="btn-del" onclick="delLoi('${r.id}')">Abroger</button></td>` : ''}
+    </tr>`;
+  }).join('');
+}
+
+async function addLoi(){
+  const titre       = document.getElementById('lois-titre').value.trim();
+  const peine       = document.getElementById('lois-peine').value;
+  const sanction    = document.getElementById('lois-sanction').value.trim();
+  const description = document.getElementById('lois-description').value.trim();
+  if(!titre || !peine || !sanction){ toast('Titre, peine et sanction requis.'); return; }
+  try{
+    await sbPost('mk_lois',{titre,peine,sanction,description});
+    document.getElementById('lois-titre').value       = '';
+    document.getElementById('lois-peine').value       = '';
+    document.getElementById('lois-sanction').value    = '';
+    document.getElementById('lois-description').value = '';
+    toggleForm('lois-form');
+    await loadLois();
+    toast(`Loi « ${titre} » promulguée.`);
+  }catch(e){ toast('Erreur d\'enregistrement.'); }
+}
+
+async function delLoi(id){
+  if(!confirm('Abroger cette loi ?')) return;
+  try{ await sbDelete('mk_lois',`?id=eq.${id}`); await loadLois(); toast('Loi abrogée.'); }
+  catch(e){ toast('Erreur.'); }
+}
+
+// ══════════════════════════════════════════════════════════════════════
 //  TRI
 // ══════════════════════════════════════════════════════════════════════
 const GRADE_ORDER = ['Capitaine','Lieutenant','Sergent','Caporal','Soldat','Recrue'];
+const PEINE_ORDER = ['Infraction mineure','Infraction majeure','Crime','Crime capital','Haute trahison'];
 
 function sortTable(tbodyId, mode, btnId) {
   const tbody = document.getElementById(tbodyId);
@@ -903,6 +1023,12 @@ function sortTable(tbodyId, mode, btnId) {
       const gb = (b.getAttribute('data-grade') || '').trim();
       const ia = GRADE_ORDER.indexOf(ga) === -1 ? 99 : GRADE_ORDER.indexOf(ga);
       const ib = GRADE_ORDER.indexOf(gb) === -1 ? 99 : GRADE_ORDER.indexOf(gb);
+      return dir === 'asc' ? ia - ib : ib - ia;
+    } else if (mode === 'peine') {
+      const pa = (a.getAttribute('data-peine') || '').trim();
+      const pb = (b.getAttribute('data-peine') || '').trim();
+      const ia = PEINE_ORDER.indexOf(pa) === -1 ? 99 : PEINE_ORDER.indexOf(pa);
+      const ib = PEINE_ORDER.indexOf(pb) === -1 ? 99 : PEINE_ORDER.indexOf(pb);
       return dir === 'asc' ? ia - ib : ib - ia;
     } else {
       const va = (a.getAttribute('data-search') || '').trim();
@@ -939,6 +1065,9 @@ function filterRows(tbodyId,query){
   }else if(tbodyId==='inv-tbody'){
     const stock=document.getElementById('inv-filter-stock').value;
     if(stock)extraFilters.stock=stock;
+  }else if(tbodyId==='lois-tbody'){
+    const peine=document.getElementById('lois-filter-peine').value;
+    if(peine)extraFilters.peine=peine;
   }
   tbody.querySelectorAll('tr').forEach(tr=>{
     const search=tr.getAttribute('data-search')||'';
@@ -1013,8 +1142,9 @@ function canEditSection(sec){
 }
 
 function updateAdminUI(){
-  ['citoyens','garde','commerces','cour','inventaire'].forEach(s=>{
-    const w=document.getElementById(s==='citoyens'?'cit-add-wrap':s==='garde'?'gar-add-wrap':s==='commerces'?'com-add-wrap':s==='cour'?'cour-add-wrap':'inv-add-wrap');
+  ['citoyens','garde','commerces','cour','inventaire','lois'].forEach(s=>{
+    const ids={citoyens:'cit-add-wrap',garde:'gar-add-wrap',commerces:'com-add-wrap',cour:'cour-add-wrap',inventaire:'inv-add-wrap',lois:'lois-add-wrap'};
+    const w=document.getElementById(ids[s]);
     if(w)w.style.display=canEditSection(s)?'block':'none';
   });
   // Re-render pour afficher/cacher les boutons de suppression
@@ -1022,7 +1152,7 @@ function updateAdminUI(){
 }
 
 function sectionLabel(s){
-  const m={citoyens:'Registre des Citoyens',garde:'Registre de la Garde',commerces:'Registre des Commerces',diplomatie:'Diplomatie',cour:'Cour du Jarl',inventaire:'Inventaire',superadmin:'Compte de Gestion'};
+  const m={citoyens:'Registre des Citoyens',garde:'Registre de la Garde',commerces:'Registre des Commerces',diplomatie:'Diplomatie',cour:'Cour du Jarl',inventaire:'Inventaire',lois:'Législation',superadmin:'Compte de Gestion'};
   return m[s]||s;
 }
 
@@ -1327,6 +1457,10 @@ async function exportSection(){
       const r=await sbGet('mk_inventaire','?order=nom.asc');
       csv='Item,Quantité\n'+r.map(x=>`"${x.nom}",${x.quantite}`).join('\n');
       filename='inventaire_markarth.csv';
+    }else if(activeSection==='lois'){
+      const r=await sbGet('mk_lois','?order=created_at.asc');
+      csv='Titre,Peine,Sanction,Description\n'+r.map(x=>`"${x.titre}","${x.peine||''}","${x.sanction||''}","${(x.description||'').replace(/"/g,"'")}"`).join('\n');
+      filename='legislation_markarth.csv';
     }else{
       toast('Export non disponible pour cette section.');return;
     }
