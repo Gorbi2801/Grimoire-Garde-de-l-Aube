@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bourse de Markarth — Registre des Commodités</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Eagle+Lake&family=IM+Fell+English:ital@0;1&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080C06;--surface:#0F140C;--card:#141C10;--card2:#1B2415;
+  --border:#1E2C18;--borderb:#2E4224;
+  --gold:#C9A84C;--goldd:#7A6230;--goldg:rgba(201,168,76,.12);
+  --up:#3E7A3E;--upb:#5CB85C;--down:#7A3E3E;--downb:#C05050;
+  --text:#D4C490;--textd:#8A9A62;--textf:#4A5A32;
+  --mono:'JetBrains Mono',monospace;--serif:'Eagle Lake',serif;
+  --body:'IM Fell English',Georgia,serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:14px;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");opacity:.45;}
+
+/* ── LOADER ── */
+#bloader{position:fixed;inset:0;z-index:9000;background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;}
+.bl-ram{font-size:2.5rem;animation:blpulse 1.2s ease-in-out infinite;}
+@keyframes blpulse{0%,100%{opacity:1}50%{opacity:.25}}
+#bl-msg{font-family:var(--serif);font-size:.8rem;color:var(--textd);letter-spacing:.08em;}
+
+/* ── HEADER ── */
+header{background:var(--surface);border-bottom:1px solid var(--borderb);
+  display:flex;align-items:stretch;position:sticky;top:0;z-index:200;height:52px;}
+.logo{padding:0 1.2rem;border-right:1px solid var(--borderb);
+  display:flex;align-items:center;gap:.7rem;flex-shrink:0;min-width:210px;}
+.logo-title{font-family:var(--serif);font-size:.82rem;letter-spacing:.06em;color:var(--gold);line-height:1.2;}
+.logo-sub{font-family:var(--body);font-size:.65rem;font-style:italic;color:var(--textd);letter-spacing:.03em;}
+
+/* TICKER */
+.ticker-wrap{flex:1;overflow:hidden;display:flex;align-items:center;
+  border-right:1px solid var(--borderb);position:relative;}
+.ticker-wrap::before,.ticker-wrap::after{content:'';position:absolute;top:0;bottom:0;
+  width:32px;z-index:1;pointer-events:none;}
+.ticker-wrap::before{left:0;background:linear-gradient(to right,var(--surface),transparent);}
+.ticker-wrap::after{right:0;background:linear-gradient(to left,var(--surface),transparent);}
+.ticker-inner{display:flex;animation:tickscroll 40s linear infinite;white-space:nowrap;will-change:transform;}
+@keyframes tickscroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.tick-item{display:flex;align-items:center;gap:.5rem;padding:0 1.2rem;
+  border-right:1px solid var(--border);cursor:pointer;transition:background .15s;height:52px;flex-shrink:0;}
+.tick-item:hover{background:var(--card);}
+.tick-item.active{background:var(--card2);}
+.tick-sym{font-family:var(--mono);font-size:.7rem;font-weight:600;color:var(--textd);letter-spacing:.07em;}
+.tick-name{font-family:var(--body);font-size:.72rem;font-style:italic;color:var(--textf);}
+.tick-price{font-family:var(--mono);font-size:.85rem;font-weight:600;color:var(--text);}
+.tick-var{font-family:var(--mono);font-size:.72rem;}
+.tick-var.up{color:var(--upb)}.tick-var.dn{color:var(--downb)}
+
+.hdr-right{padding:0 1rem;display:flex;align-items:center;gap:.6rem;flex-shrink:0;}
+.btn-sm{background:transparent;border:1px solid var(--borderb);color:var(--textd);
+  font-family:var(--serif);font-size:.68rem;letter-spacing:.06em;padding:.3rem .7rem;cursor:pointer;transition:all .2s;}
+.btn-sm:hover{border-color:var(--goldd);color:var(--gold);}
+
+/* SB STATUS */
+.sb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.sb-dot.ok{background:var(--upb);box-shadow:0 0 6px rgba(92,184,92,.5);}
+.sb-dot.ko{background:var(--downb);box-shadow:0 0 6px rgba(192,80,80,.5);}
+.sb-dot.wait{background:var(--goldd);animation:blpulse .8s ease-in-out infinite;}
+#sb-label{font-family:var(--mono);font-size:.62rem;color:var(--textf);letter-spacing:.05em;}
+
+/* ── COMMODITY BAR ── */
+.comm-bar{background:var(--surface);border-bottom:1px solid var(--border);
+  padding:.7rem 1.5rem;display:flex;align-items:center;gap:2rem;
+  position:relative;z-index:1;}
+.comm-id{font-family:var(--mono);font-size:.68rem;font-weight:600;color:var(--textf);letter-spacing:.1em;margin-bottom:.2rem;}
+.comm-name{font-family:var(--serif);font-size:1rem;color:var(--gold);letter-spacing:.03em;}
+.comm-desc{font-family:var(--body);font-size:.76rem;font-style:italic;color:var(--textd);margin-top:.15rem;}
+.comm-price-area{margin-left:auto;text-align:right;}
+.comm-price{font-family:var(--mono);font-size:2rem;font-weight:600;color:var(--text);line-height:1;}
+.comm-var{font-family:var(--mono);font-size:.9rem;font-weight:600;}
+.comm-ohlc{font-family:var(--mono);font-size:.68rem;color:var(--textf);margin-top:.2rem;letter-spacing:.03em;}
+
+/* ── MAIN GRID ── */
+.main-grid{display:grid;grid-template-columns:1fr 290px;position:relative;z-index:1;}
+
+/* CHART */
+.chart-section{background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;min-height:460px;}
+.chart-toolbar{padding:.5rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.5rem;flex-shrink:0;}
+.chart-label{font-family:var(--serif);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--textf);}
+.comm-tabs{display:flex;gap:.25rem;margin-left:auto;}
+.ctab{font-family:var(--mono);font-size:.68rem;font-weight:600;letter-spacing:.06em;
+  padding:.2rem .55rem;cursor:pointer;background:transparent;border:1px solid var(--border);color:var(--textd);transition:all .15s;}
+.ctab:hover{border-color:var(--goldd);}
+.ctab.active{background:var(--card2);border-color:var(--goldd);color:var(--gold);}
+.chart-area{flex:1;position:relative;min-height:300px;cursor:crosshair;overflow:hidden;}
+#main-chart{width:100%;height:100%;display:block;}
+.ch-v,.ch-h{position:absolute;pointer-events:none;opacity:0;transition:opacity .08s;}
+.ch-v{width:1px;background:rgba(201,168,76,.25);top:0;bottom:0;}
+.ch-h{height:1px;background:rgba(201,168,76,.25);left:0;right:0;}
+.tt{position:absolute;background:var(--card2);border:1px solid var(--borderb);padding:.5rem .75rem;
+  pointer-events:none;z-index:50;display:none;font-family:var(--mono);font-size:.72rem;line-height:1.7;
+  box-shadow:0 4px 16px rgba(0,0,0,.4);}
+.tt-date{font-size:.66rem;color:var(--textd);margin-bottom:.15rem;font-family:var(--serif);letter-spacing:.04em;}
+.vol-area{height:62px;border-top:1px solid var(--border);flex-shrink:0;}
+#vol-chart{width:100%;height:100%;display:block;}
+.seal{position:absolute;bottom:1rem;right:.75rem;width:72px;height:72px;display:none;z-index:10;
+  animation:seal-pulse 3s ease-in-out infinite;pointer-events:none;}
+.seal.on{display:block;}
+@keyframes seal-pulse{0%,100%{filter:drop-shadow(0 0 3px rgba(201,168,76,.3))}50%{filter:drop-shadow(0 0 10px rgba(201,168,76,.6))}}
+
+/* RIGHT PANEL */
+.right-panel{background:var(--surface);display:flex;flex-direction:column;}
+.rpanel{padding:.9rem 1rem;border-bottom:1px solid var(--border);}
+.rpanel:last-child{border-bottom:none;flex:1;}
+.rp-title{font-family:var(--serif);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:.65rem;}
+.t-row{display:flex;justify-content:space-between;align-items:center;padding:.3rem 0;border-bottom:1px solid var(--border);}
+.t-row:last-of-type{border-bottom:none;}
+.t-label{font-family:var(--body);font-size:.76rem;font-style:italic;color:var(--textd);}
+.t-val{font-family:var(--mono);font-size:.85rem;font-weight:600;}
+.t-val.achat{color:var(--upb)}.t-val.vente{color:var(--downb)}.t-val.marge{color:var(--gold)}
+.t-band-wrap{margin:.65rem 0 .3rem;}
+.t-band-bg{height:6px;background:var(--bg);border-radius:2px;position:relative;overflow:visible;}
+.t-band-fill{position:absolute;top:0;height:100%;
+  background:linear-gradient(to right,rgba(92,184,92,.35),rgba(201,168,76,.35),rgba(192,80,80,.35));
+  border-radius:2px;border:1px solid rgba(201,168,76,.2);}
+.t-cursor{position:absolute;top:-3px;width:2px;height:12px;background:var(--gold);border-radius:1px;transform:translateX(-50%);}
+.t-band-labels{display:flex;justify-content:space-between;margin-top:.2rem;font-family:var(--mono);font-size:.6rem;color:var(--textf);}
+.t-note{font-family:var(--body);font-size:.7rem;font-style:italic;color:var(--textf);border-top:1px solid var(--border);padding-top:.5rem;margin-top:.5rem;line-height:1.5;}
+.cond-badge{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--gold);padding:.55rem .7rem;margin-bottom:.4rem;}
+.cond-badge.penurie{border-left-color:var(--downb)}.cond-badge.faveur{border-left-color:var(--upb)}
+.cond-badge.siege{border-left-color:#8B5500}.cond-badge.route{border-left-color:#7A6A20}.cond-badge.recolte{border-left-color:var(--upb)}
+.cond-titre{font-family:var(--serif);font-size:.76rem;letter-spacing:.03em;margin-bottom:.2rem;}
+.cond-desc{font-family:var(--body);font-size:.72rem;font-style:italic;color:var(--textd);line-height:1.45;}
+.cond-effet{font-family:var(--mono);font-size:.66rem;color:var(--gold);margin-top:.3rem;}
+.cond-period{font-family:var(--mono);font-size:.62rem;color:var(--textf);margin-top:.1rem;}
+.cond-del{background:none;border:none;color:var(--textf);font-size:.65rem;cursor:pointer;float:right;font-family:var(--mono);transition:color .2s;}
+.cond-del:hover{color:var(--downb);}
+.no-cond{font-family:var(--body);font-size:.76rem;font-style:italic;color:var(--textf);line-height:1.5;}
+.ls-grid{font-family:var(--mono);font-size:.74rem;}
+.ls-row{display:flex;justify-content:space-between;gap:.5rem;padding:.15rem 0;}
+.ls-key{color:var(--textf)}.ls-val{color:var(--text)}
+
+/* HISTORY */
+.history{grid-column:1/-1;background:var(--surface);border-top:1px solid var(--borderb);padding:.9rem 1.5rem 1.5rem;position:relative;z-index:1;}
+.hist-title{font-family:var(--serif);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--textf);margin-bottom:.65rem;}
+.hist-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:.76rem;}
+.hist-table th{text-align:left;color:var(--textf);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;padding:.28rem .5rem;border-bottom:1px solid var(--borderb);}
+.hist-table td{padding:.3rem .5rem;border-bottom:1px solid var(--border);color:var(--textd);}
+.hist-table tr:hover td{background:var(--card);}
+.hist-table td.up{color:var(--upb)}.hist-table td.dn{color:var(--downb)}.hist-table td.gold{color:var(--gold)}
+
+/* ADMIN */
+.adm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;display:none;align-items:center;justify-content:center;}
+.adm-overlay.on{display:flex;}
+.adm-modal{background:var(--card);border:1px solid var(--borderb);border-top:2px solid var(--gold);width:520px;max-height:85vh;overflow-y:auto;padding:1.4rem;}
+.adm-title{font-family:var(--serif);font-size:.95rem;color:var(--gold);letter-spacing:.04em;}
+.adm-tabs{display:flex;gap:.35rem;margin:1rem 0 .75rem;border-bottom:1px solid var(--border);padding-bottom:.5rem;}
+.adm-tab{font-family:var(--serif);font-size:.68rem;letter-spacing:.06em;padding:.28rem .7rem;border:1px solid var(--border);cursor:pointer;color:var(--textd);background:transparent;transition:all .15s;}
+.adm-tab.active{border-color:var(--goldd);color:var(--gold);background:var(--card2);}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:.45rem;margin-bottom:.45rem;}
+.frow1{grid-template-columns:1fr;}
+.ff label{font-family:var(--body);font-size:.68rem;font-style:italic;color:var(--textd);display:block;margin-bottom:.18rem;}
+.ff input,.ff select,.ff textarea{width:100%;background:var(--bg);border:1px solid var(--borderb);color:var(--text);font-family:var(--mono);font-size:.8rem;padding:.3rem .45rem;outline:none;transition:border-color .15s;resize:vertical;}
+.ff input:focus,.ff select:focus{border-color:var(--goldd);}
+.btn-main{background:var(--card2);border:1px solid var(--goldd);color:var(--gold);font-family:var(--serif);font-size:.7rem;letter-spacing:.08em;padding:.45rem 1.4rem;cursor:pointer;margin-top:.6rem;transition:all .2s;}
+.btn-main:hover{background:rgba(201,168,76,.12);}
+.btn-danger{background:transparent;border:1px solid var(--downb);color:var(--downb);font-family:var(--serif);font-size:.7rem;letter-spacing:.06em;padding:.4rem 1rem;cursor:pointer;margin-top:.5rem;transition:all .2s;}
+.btn-danger:hover{background:rgba(192,80,80,.1);}
+.adm-err{color:var(--downb);font-size:.7rem;font-style:italic;display:none;margin-top:.25rem;}
+.adm-ok{color:var(--upb);font-size:.7rem;font-style:italic;display:none;margin-top:.25rem;}
+.sql-block{background:var(--bg);border:1px solid var(--border);padding:.6rem;font-family:var(--mono);font-size:.66rem;color:var(--textd);white-space:pre;overflow-x:auto;line-height:1.6;margin:.5rem 0;max-height:180px;overflow-y:auto;}
+.cond-manage-item{display:flex;justify-content:space-between;align-items:center;padding:.3rem 0;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:.72rem;}
+.cond-manage-item:last-child{border-bottom:none;}
+
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--borderb);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="bloader">
+  <div class="bl-ram">🐏</div>
+  <div id="bl-msg">Connexion à Supabase...</div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+      <circle cx="14" cy="14" r="13" stroke="#C9A84C" stroke-width="1.2"/>
+      <circle cx="14" cy="14" r="9" fill="none" stroke="rgba(201,168,76,.3)" stroke-width=".5"/>
+      <text x="14" y="18.5" text-anchor="middle" fill="#C9A84C" font-size="11">🐏</text>
+    </svg>
+    <div>
+      <div class="logo-title">Bourse de Markarth</div>
+      <div class="logo-sub">Bordeciel · Registre des Commodités</div>
+    </div>
+  </div>
+  <div class="ticker-wrap"><div class="ticker-inner" id="ticker"></div></div>
+  <div class="hdr-right">
+    <div class="sb-dot wait" id="sb-dot"></div>
+    <span id="sb-label">connexion...</span>
+    <a href="index.html" class="btn-sm" style="text-decoration:none;">📜 Livret</a>
+    <button class="btn-sm" onclick="openAdmin()">⚙ Jarl</button>
+  </div>
+</header>
+
+<!-- COMMODITY BAR -->
+<div class="comm-bar">
+  <div>
+    <div class="comm-id" id="bar-sym">—</div>
+    <div class="comm-name" id="bar-name">—</div>
+    <div class="comm-desc" id="bar-desc">—</div>
+  </div>
+  <div class="comm-price-area">
+    <div style="display:flex;align-items:baseline;gap:.6rem;justify-content:flex-end;">
+      <div class="comm-price" id="bar-price">—</div>
+      <div class="comm-var" id="bar-var"></div>
+    </div>
+    <div class="comm-ohlc" id="bar-ohlc">O: — H: — B: — C: —</div>
+  </div>
+</div>
+
+<!-- MAIN GRID -->
+<div class="main-grid">
+  <section class="chart-section">
+    <div class="chart-toolbar">
+      <span class="chart-label">Chandeliers — Sessions</span>
+      <div class="comm-tabs" id="comm-tabs"></div>
+    </div>
+    <div class="chart-area" id="chart-area" onmousemove="onMove(event)" onmouseleave="onLeave()">
+      <svg id="main-chart" viewBox="0 0 820 300" preserveAspectRatio="none"></svg>
+      <div class="ch-v" id="ch-v"></div>
+      <div class="ch-h" id="ch-h"></div>
+      <div class="tt" id="tooltip"></div>
+      <div class="seal" id="seal">
+        <svg viewBox="0 0 72 72" fill="none">
+          <circle cx="36" cy="36" r="33" fill="rgba(120,80,10,.55)" stroke="#C9A84C" stroke-width="1.4"/>
+          <circle cx="36" cy="36" r="27" fill="none" stroke="rgba(201,168,76,.4)" stroke-width=".6" stroke-dasharray="3 2.5"/>
+          <text x="36" y="22" text-anchor="middle" fill="#C9A84C" font-size="5.5" font-family="Eagle Lake,serif" letter-spacing=".8">ORDONNANCE</text>
+          <text x="36" y="38" text-anchor="middle" fill="#C9A84C" font-size="17">⚔</text>
+          <text x="36" y="50" text-anchor="middle" fill="#C9A84C" font-size="6" font-family="Eagle Lake,serif" letter-spacing=".5">DU JARL</text>
+          <text x="36" y="60" text-anchor="middle" fill="rgba(201,168,76,.6)" font-size="4.5" font-family="Eagle Lake,serif">MARKARTH</text>
+        </svg>
+      </div>
+    </div>
+    <div class="vol-area"><svg id="vol-chart" viewBox="0 0 820 62" preserveAspectRatio="none"></svg></div>
+  </section>
+
+  <aside class="right-panel">
+    <div class="rpanel">
+      <div class="rp-title">⚖ Tarif de la Châtellerie</div>
+      <div class="t-row"><span class="t-label">Prix d'achat officiel</span><span class="t-val achat" id="t-achat">—</span></div>
+      <div class="t-row"><span class="t-label">Prix de vente autorisé</span><span class="t-val vente" id="t-vente">—</span></div>
+      <div class="t-row" style="border-bottom:none;"><span class="t-label">Marge légale</span><span class="t-val marge" id="t-marge">—</span></div>
+      <div class="t-band-wrap">
+        <div class="t-band-bg">
+          <div class="t-band-fill" id="t-fill" style="left:15%;width:70%;"></div>
+          <div class="t-cursor" id="t-cursor" style="left:50%;"></div>
+        </div>
+        <div class="t-band-labels"><span>Achat</span><span>⟵ Fourchette légale ⟶</span><span>Vente</span></div>
+      </div>
+      <div class="t-note">Prix en septims. Tout écart expose à révocation de licence.</div>
+    </div>
+    <div class="rpanel">
+      <div class="rp-title">📜 Conditions du Marché</div>
+      <div id="cond-list"></div>
+    </div>
+    <div class="rpanel" style="border-bottom:none;">
+      <div class="rp-title">📊 Dernière Session</div>
+      <div class="ls-grid" id="last-sess"></div>
+    </div>
+  </aside>
+
+  <div class="history">
+    <div class="hist-title">Historique des Sessions</div>
+    <table class="hist-table">
+      <thead><tr><th>Session</th><th>Ouverture</th><th>Haut</th><th>Bas</th><th>Clôture</th><th>Variation</th><th>Volume</th></tr></thead>
+      <tbody id="hist-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ADMIN OVERLAY -->
+<div class="adm-overlay" id="adm-overlay">
+  <div class="adm-modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;">
+      <div class="adm-title">🔐 Administration — Bourse de Markarth</div>
+      <button onclick="closeAdmin()" style="background:none;border:none;color:var(--textd);cursor:pointer;font-size:1.1rem;">✕</button>
+    </div>
+
+    <!-- Login -->
+    <div id="adm-login">
+      <div class="frow frow1 ff" style="margin-bottom:.5rem;">
+        <label>Mot de passe du Jarl</label>
+        <input type="password" id="adm-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')checkPass()">
+        <p class="adm-err" id="adm-err">Accès refusé.</p>
+      </div>
+      <button class="btn-main" onclick="checkPass()">Accéder</button>
+    </div>
+
+    <!-- Content -->
+    <div id="adm-content" style="display:none;">
+      <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem;font-family:var(--mono);font-size:.7rem;color:var(--textd);">
+        <div class="sb-dot" id="adm-sb-dot" style="width:7px;height:7px;"></div>
+        <span id="adm-sb-txt">—</span>
+      </div>
+
+      <div class="adm-tabs">
+        <button class="adm-tab active" onclick="admTab('sess',this)">Session</button>
+        <button class="adm-tab" onclick="admTab('tarif',this)">Tarif</button>
+        <button class="adm-tab" onclick="admTab('cond',this)">Ordonnance</button>
+        <button class="adm-tab" onclick="admTab('setup',this)">SQL Setup</button>
+      </div>
+
+      <!-- Session -->
+      <div id="tab-sess">
+        <div class="frow frow1 ff"><label>Commodité</label><select id="a-comm"></select></div>
+        <div class="frow">
+          <div class="ff"><label>Intitulé</label><input id="a-date" placeholder="Sem. 16"></div>
+          <div class="ff"><label>Volume</label><input id="a-vol" type="number" placeholder="150"></div>
+        </div>
+        <div class="frow">
+          <div class="ff"><label>Ouverture (O)</label><input id="a-o" type="number" step="0.01"></div>
+          <div class="ff"><label>Haut (H)</label><input id="a-h" type="number" step="0.01"></div>
+        </div>
+        <div class="frow">
+          <div class="ff"><label>Bas (B)</label><input id="a-l" type="number" step="0.01"></div>
+          <div class="ff"><label>Clôture (C)</label><input id="a-c" type="number" step="0.01"></div>
+        </div>
+        <p class="adm-ok" id="ok-sess">✓ Session enregistrée dans Supabase.</p>
+        <p class="adm-err" id="err-sess">Erreur lors de l'enregistrement.</p>
+        <button class="btn-main" onclick="addSession()">Enregistrer la session</button>
+      </div>
+
+      <!-- Tarif -->
+      <div id="tab-tarif" style="display:none;">
+        <div class="frow frow1 ff" style="margin-bottom:.5rem;"><label>Commodité</label>
+          <select id="a-tc" onchange="loadTarifFields()"></select></div>
+        <div class="frow">
+          <div class="ff"><label>Prix d'achat (sp)</label><input id="a-ta" type="number" step="0.01"></div>
+          <div class="ff"><label>Prix de vente max. (sp)</label><input id="a-tv" type="number" step="0.01"></div>
+        </div>
+        <div class="frow frow1 ff"><label>Statut</label>
+          <select id="a-ts"><option value="normal">Normal</option><option value="penurie">Pénurie</option>
+            <option value="gele">Prix gelé</option><option value="libre">Prix libre</option></select></div>
+        <p class="adm-ok" id="ok-tarif">✓ Tarif appliqué dans Supabase.</p>
+        <p class="adm-err" id="err-tarif">Erreur lors de l'application.</p>
+        <button class="btn-main" onclick="saveTarif()">Appliquer le tarif</button>
+      </div>
+
+      <!-- Ordonnance -->
+      <div id="tab-cond" style="display:none;">
+        <div style="margin-bottom:.75rem;">
+          <div style="font-family:var(--serif);font-size:.7rem;color:var(--textf);letter-spacing:.06em;margin-bottom:.4rem;">CONDITIONS ACTIVES</div>
+          <div id="cond-manage"></div>
+        </div>
+        <div style="border-top:1px solid var(--border);padding-top:.75rem;margin-bottom:.5rem;font-family:var(--serif);font-size:.7rem;color:var(--textf);letter-spacing:.06em;">NOUVELLE ORDONNANCE</div>
+        <div class="frow frow1 ff"><label>Type</label>
+          <select id="a-ct"><option value="penurie">Pénurie</option><option value="faveur">Faveur du Jarl</option>
+            <option value="siege">Siège / Conflit</option><option value="route">Route commerciale coupée</option>
+            <option value="recolte">Récolte abondante</option></select></div>
+        <div class="frow frow1 ff"><label>Titre de l'ordonnance</label>
+          <input id="a-ctit" placeholder="Ex: Pénurie de minerai du Reach"></div>
+        <div class="frow frow1 ff"><label>Description</label>
+          <input id="a-cdesc" placeholder="Détails de la situation..."></div>
+        <div class="frow">
+          <div class="ff"><label>Effet sur les prix</label><input id="a-ceff" placeholder="Plafond FER +30%"></div>
+          <div class="ff"><label>Durée prévue</label><input id="a-cdur" placeholder="Sem. 8 → 12"></div>
+        </div>
+        <p class="adm-ok" id="ok-cond">✓ Ordonnance promulguée dans Supabase.</p>
+        <p class="adm-err" id="err-cond">Erreur lors de la promulgation.</p>
+        <button class="btn-main" onclick="addCond()">Promulguer l'ordonnance</button>
+      </div>
+
+      <!-- SQL Setup -->
+      <div id="tab-setup" style="display:none;">
+        <div style="font-family:var(--body);font-size:.78rem;font-style:italic;color:var(--textd);margin-bottom:.6rem;line-height:1.5;">
+          Exécutez ce SQL dans l'éditeur Supabase pour créer les tables de la bourse,
+          puis cliquez sur "Initialiser" pour peupler les données de départ.
+        </div>
+        <div class="sql-block" id="sql-block"></div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem;">
+          <button class="btn-main" onclick="copySql()">Copier le SQL</button>
+          <button class="btn-main" onclick="seedData()" id="btn-seed">Initialiser les données</button>
+          <button class="btn-danger" onclick="resetData()" id="btn-reset">Vider les tables</button>
+        </div>
+        <p class="adm-ok" id="ok-seed">✓ Données initialisées avec succès.</p>
+        <p class="adm-err" id="err-seed">Erreur — vérifiez que les tables existent.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════
+//  SUPABASE
+// ══════════════════════════════════════════════════
+const SB_URL = 'https://cbfcmtgvxlvfkjhppufq.supabase.co';
+const SB_KEY = 'sb_publishable_LH8TZ7ANKc6SP8eJ4tj7eg_FwJrz9J5';
+const SB_H   = {'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'return=representation'};
+const SB_UP  = {'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'resolution=merge-duplicates,return=representation'};
+
+async function sbGet(t,q=''){const r=await fetch(`${SB_URL}/rest/v1/${t}${q}`,{headers:SB_H});if(!r.ok)throw new Error(await r.text());return r.json();}
+async function sbPost(t,b,up=false){const r=await fetch(`${SB_URL}/rest/v1/${t}`,{method:'POST',headers:up?SB_UP:SB_H,body:JSON.stringify(b)});if(!r.ok)throw new Error(await r.text());return r.json();}
+async function sbPatch(t,q,b){const r=await fetch(`${SB_URL}/rest/v1/${t}${q}`,{method:'PATCH',headers:SB_H,body:JSON.stringify(b)});if(!r.ok)throw new Error(await r.text());return r.json();}
+async function sbDelete(t,q){const r=await fetch(`${SB_URL}/rest/v1/${t}${q}`,{method:'DELETE',headers:SB_H});if(!r.ok)throw new Error(await r.text());}
+
+// ══════════════════════════════════════════════════
+//  DONNÉES PAR DÉFAUT (fallback + seed)
+// ══════════════════════════════════════════════════
+const LOCAL = {
+  AUR:{name:"Lingot d'or",emoji:'🟡',desc:"Métal précieux universel, valeur refuge des Jarls.",tarif:{achat:65,vente:85},statut:'normal',sessions:[
+    {d:'Sem. 1',o:52,h:58,l:48,c:55,v:120},{d:'Sem. 2',o:55,h:62,l:52,c:60,v:85},
+    {d:'Sem. 3',o:60,h:63,l:54,c:56,v:95},{d:'Sem. 4',o:56,h:58,l:50,c:52,v:110},
+    {d:'Sem. 5',o:52,h:55,l:44,c:46,v:200},{d:'Sem. 6',o:46,h:50,l:42,c:48,v:145},
+    {d:'Sem. 7',o:48,h:56,l:47,c:54,v:130},{d:'Sem. 8',o:54,h:66,l:53,c:63,v:180},
+    {d:'Sem. 9',o:63,h:68,l:60,c:65,v:140},{d:'Sem.10',o:65,h:67,l:58,c:61,v:90},
+    {d:'Sem.11',o:61,h:64,l:58,c:62,v:100},{d:'Sem.12',o:62,h:70,l:61,c:68,v:165},
+    {d:'Sem.13',o:68,h:72,l:65,c:70,v:120},{d:'Sem.14',o:70,h:74,l:67,c:72,v:115},
+    {d:'Sem.15',o:72,h:76,l:70,c:74,v:130}]},
+  FER:{name:"Lingot de fer",emoji:'🔩',desc:"Matériau de base. Production locale, sensible aux conditions minières.",tarif:{achat:11,vente:16},statut:'penurie',sessions:[
+    {d:'Sem. 1',o:8.0,h:9.0,l:7.5,c:8.5,v:350},{d:'Sem. 2',o:8.5,h:9.2,l:8.1,c:9.0,v:290},
+    {d:'Sem. 3',o:9.0,h:9.5,l:8.6,c:8.8,v:320},{d:'Sem. 4',o:8.8,h:9.1,l:8.2,c:8.5,v:280},
+    {d:'Sem. 5',o:8.5,h:8.9,l:7.8,c:7.9,v:410},{d:'Sem. 6',o:7.9,h:8.5,l:7.4,c:8.2,v:310},
+    {d:'Sem. 7',o:8.2,h:9.3,l:8.0,c:9.1,v:260},{d:'Sem. 8',o:9.1,h:11.5,l:9.0,c:10.6,v:520},
+    {d:'Sem. 9',o:10.6,h:11.2,l:10.0,c:10.9,v:380},{d:'Sem.10',o:10.9,h:11.8,l:10.2,c:11.2,v:290},
+    {d:'Sem.11',o:11.2,h:12.0,l:10.5,c:11.5,v:310},{d:'Sem.12',o:11.5,h:12.8,l:11.0,c:12.2,v:430},
+    {d:'Sem.13',o:12.2,h:12.9,l:11.5,c:12.5,v:355},{d:'Sem.14',o:12.5,h:13.3,l:12.0,c:13.0,v:300},
+    {d:'Sem.15',o:13.0,h:13.6,l:12.5,c:13.2,v:335}]},
+  ARG:{name:"Lingot d'argent",emoji:'⬜',desc:"Métal noble extrait des veines argentifères du Reach.",tarif:{achat:30,vente:44},statut:'normal',sessions:[
+    {d:'Sem. 1',o:22,h:25,l:20,c:24,v:90},{d:'Sem. 2',o:24,h:27,l:23,c:26,v:75},
+    {d:'Sem. 3',o:26,h:28,l:23,c:25,v:85},{d:'Sem. 4',o:25,h:26,l:21,c:22,v:100},
+    {d:'Sem. 5',o:22,h:23,l:18,c:19,v:165},{d:'Sem. 6',o:19,h:22,l:17,c:21,v:130},
+    {d:'Sem. 7',o:21,h:24,l:20,c:23,v:95},{d:'Sem. 8',o:23,h:28,l:22,c:27,v:145},
+    {d:'Sem. 9',o:27,h:30,l:26,c:29,v:110},{d:'Sem.10',o:29,h:31,l:27,c:30,v:95},
+    {d:'Sem.11',o:30,h:32,l:28,c:31,v:85},{d:'Sem.12',o:31,h:34,l:30,c:33,v:120},
+    {d:'Sem.13',o:33,h:35,l:32,c:34,v:100},{d:'Sem.14',o:34,h:36,l:33,c:35,v:90},
+    {d:'Sem.15',o:35,h:37,l:34,c:36,v:95}]},
+  EMR:{name:"Émeraude",emoji:'💎',desc:"Gemme rare du Reach. Haute valeur spéculative, faible liquidité.",tarif:{achat:850,vente:1100},statut:'normal',sessions:[
+    {d:'Sem. 1',o:780,h:820,l:750,c:800,v:15},{d:'Sem. 2',o:800,h:840,l:778,c:820,v:12},
+    {d:'Sem. 3',o:820,h:850,l:790,c:800,v:18},{d:'Sem. 4',o:800,h:812,l:758,c:768,v:22},
+    {d:'Sem. 5',o:768,h:780,l:695,c:708,v:42},{d:'Sem. 6',o:708,h:752,l:688,c:742,v:30},
+    {d:'Sem. 7',o:742,h:802,l:730,c:792,v:25},{d:'Sem. 8',o:792,h:862,l:780,c:852,v:36},
+    {d:'Sem. 9',o:852,h:900,l:840,c:882,v:28},{d:'Sem.10',o:882,h:912,l:860,c:902,v:20},
+    {d:'Sem.11',o:902,h:922,l:882,c:912,v:18},{d:'Sem.12',o:912,h:962,l:902,c:952,v:33},
+    {d:'Sem.13',o:952,h:982,l:942,c:972,v:26},{d:'Sem.14',o:972,h:1002,l:962,c:992,v:22},
+    {d:'Sem.15',o:992,h:1022,l:982,c:1008,v:20}]},
+  RCA:{name:"Racine de canis",emoji:'🌿',desc:"Ingrédient alchimique courant. Demande stable, offre saisonnière.",tarif:{achat:9,vente:14},statut:'normal',sessions:[
+    {d:'Sem. 1',o:7.5,h:8.5,l:7.2,c:8.0,v:600},{d:'Sem. 2',o:8.0,h:8.8,l:7.8,c:8.5,v:520},
+    {d:'Sem. 3',o:8.5,h:9.0,l:8.2,c:8.3,v:480},{d:'Sem. 4',o:8.3,h:8.6,l:7.9,c:8.0,v:550},
+    {d:'Sem. 5',o:8.0,h:8.3,l:7.4,c:7.6,v:710},{d:'Sem. 6',o:7.6,h:8.1,l:7.3,c:7.9,v:625},
+    {d:'Sem. 7',o:7.9,h:8.6,l:7.7,c:8.4,v:575},{d:'Sem. 8',o:8.4,h:9.2,l:8.2,c:9.0,v:650},
+    {d:'Sem. 9',o:9.0,h:9.5,l:8.8,c:9.2,v:590},{d:'Sem.10',o:9.2,h:9.7,l:8.9,c:9.4,v:540},
+    {d:'Sem.11',o:9.4,h:9.9,l:9.1,c:9.6,v:510},{d:'Sem.12',o:9.6,h:10.3,l:9.4,c:10.0,v:600},
+    {d:'Sem.13',o:10.0,h:10.5,l:9.8,c:10.3,v:560},{d:'Sem.14',o:10.3,h:10.8,l:10.0,c:10.6,v:530},
+    {d:'Sem.15',o:10.6,h:11.0,l:10.4,c:10.9,v:500}]},
+  LUT:{name:"Pied de lutin",emoji:'🍄',desc:"Champignon alchimique rare. Demande fluctuante selon les guildes.",tarif:{achat:30,vente:44},statut:'normal',sessions:[
+    {d:'Sem. 1',o:24,h:26,l:22,c:25,v:180},{d:'Sem. 2',o:25,h:28,l:24,c:27,v:150},
+    {d:'Sem. 3',o:27,h:30,l:26,c:29,v:162},{d:'Sem. 4',o:29,h:31,l:27,c:28,v:205},
+    {d:'Sem. 5',o:28,h:29,l:23,c:24,v:290},{d:'Sem. 6',o:24,h:26,l:22,c:25.5,v:225},
+    {d:'Sem. 7',o:25.5,h:28.5,l:25,c:27.5,v:170},{d:'Sem. 8',o:27.5,h:32,l:27,c:31,v:245},
+    {d:'Sem. 9',o:31,h:34,l:30,c:33,v:190},{d:'Sem.10',o:33,h:35,l:31,c:32,v:165},
+    {d:'Sem.11',o:32,h:33,l:30,c:31,v:155},{d:'Sem.12',o:31,h:34,l:30,c:33,v:182},
+    {d:'Sem.13',o:33,h:36,l:32,c:35,v:168},{d:'Sem.14',o:35,h:37,l:34,c:36,v:158},
+    {d:'Sem.15',o:36,h:38,l:35,c:37,v:148}]}
+};
+
+const LOCAL_COND = [{
+  type:'penurie',titre:'Pénurie de minerai du Reach',
+  desc:'Les galeries nord des mines ont été partiellement inondées. Production réduite de 40%.',
+  effet:'Prix plafond FER & ARG levé de +30%',periode:'Sem. 8 → Sem. 12',actif:true
+}];
+
+const SQL_SETUP = `-- 1. Table des commodités
+CREATE TABLE IF NOT EXISTS mk_bourse_commos (
+  id          text PRIMARY KEY,
+  name        text NOT NULL,
+  emoji       text,
+  description text,
+  tarif_achat numeric(12,2) DEFAULT 0,
+  tarif_vente numeric(12,2) DEFAULT 0,
+  statut      text DEFAULT 'normal'
+);
+
+-- 2. Table des sessions OHLC
+CREATE TABLE IF NOT EXISTS mk_bourse_sessions (
+  id             bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  commodite_id   text REFERENCES mk_bourse_commos(id) ON DELETE CASCADE,
+  session_label  text NOT NULL,
+  ouverture      numeric(12,2) NOT NULL,
+  haut           numeric(12,2) NOT NULL,
+  bas            numeric(12,2) NOT NULL,
+  cloture        numeric(12,2) NOT NULL,
+  volume         integer DEFAULT 0,
+  created_at     timestamptz DEFAULT now()
+);
+
+-- 3. Table des conditions de marché
+CREATE TABLE IF NOT EXISTS mk_bourse_conditions (
+  id          bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  type        text NOT NULL,
+  titre       text NOT NULL,
+  description text,
+  effet       text,
+  periode     text,
+  actif       boolean DEFAULT true,
+  created_at  timestamptz DEFAULT now()
+);`;
+
+// ══════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════
+const PASS = 'jarl_mk';
+let C = {};
+let CONDITIONS = [];
+let cur = 'AUR';
+let loggedIn = false;
+let sbOk = false;
+
+// Chart metrics
+const CM = {PAD:{t:22,r:62,b:24,l:8},W:820,H:300,VOLH:62};
+
+// ══════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════
+async function init(){
+  document.getElementById('sql-block').textContent = SQL_SETUP;
+  setSBStatus('wait','connexion...');
+
+  try {
+    await loadFromSB();
+    sbOk = true;
+    setSBStatus('ok','Supabase connecté');
+  } catch(e){
+    console.warn('Supabase —', e.message || e);
+    useFallback();
+    setSBStatus('ko','hors ligne — données locales');
+  }
+
+  hideBLoader();
+  buildTicker();
+  buildTabs();
+  render(Object.keys(C)[0] || 'AUR');
+}
+
+async function loadFromSB(){
+  const [commos, sessions, conds] = await Promise.all([
+    sbGet('mk_bourse_commos','?order=id.asc'),
+    sbGet('mk_bourse_sessions','?order=commodite_id.asc,id.asc'),
+    sbGet('mk_bourse_conditions','?order=id.asc')
+  ]);
+
+  if(!commos.length){ useFallback(); return; }
+
+  C = {};
+  commos.forEach(co => {
+    C[co.id] = {
+      sym:co.id, name:co.name, emoji:co.emoji||'●', desc:co.description||'',
+      tarif:{achat:+co.tarif_achat, vente:+co.tarif_vente}, statut:co.statut||'normal',
+      sessions: sessions
+        .filter(s => s.commodite_id === co.id)
+        .map(s => ({d:s.session_label,o:+s.ouverture,h:+s.haut,l:+s.bas,c:+s.cloture,v:+s.volume,dbid:s.id}))
+    };
+  });
+
+  CONDITIONS = conds.map(cd => ({
+    dbid:cd.id, type:cd.type, titre:cd.titre,
+    desc:cd.description||'', effet:cd.effet||'', periode:cd.periode||'', actif:cd.actif
+  }));
+}
+
+function useFallback(){
+  C = {};
+  Object.entries(LOCAL).forEach(([k,v]) => { C[k] = JSON.parse(JSON.stringify(v)); C[k].sym = k; });
+  CONDITIONS = JSON.parse(JSON.stringify(LOCAL_COND));
+}
+
+// ══════════════════════════════════════════════════
+//  LOADER / STATUS
+// ══════════════════════════════════════════════════
+function hideBLoader(){
+  const l = document.getElementById('bloader');
+  l.style.opacity='0';l.style.transition='opacity .4s';
+  setTimeout(()=>l.style.display='none',420);
+}
+
+function setSBStatus(state, txt){
+  const dot = document.getElementById('sb-dot');
+  const lbl = document.getElementById('sb-label');
+  dot.className = 'sb-dot '+state;
+  lbl.textContent = txt;
+}
+
+// ══════════════════════════════════════════════════
+//  TICKER
+// ══════════════════════════════════════════════════
+function buildTicker(){
+  const t = document.getElementById('ticker');
+  const items = Object.values(C).map(c=>{
+    if(!c.sessions.length) return '';
+    const last=c.sessions[c.sessions.length-1], prev=c.sessions[c.sessions.length-2];
+    const vp=prev?((last.c-prev.c)/prev.c*100).toFixed(2):'0.00';
+    const up=!prev||last.c>=prev.c;
+    return `<div class="tick-item${c.sym===cur?' active':''}" onclick="render('${c.sym}')" data-sym="${c.sym}">
+      <span class="tick-sym">${c.sym}</span><span class="tick-name">${c.name}</span>
+      <span class="tick-price">${sf(last.c)}</span>
+      <span class="tick-var ${up?'up':'dn'}">${up?'+':''}${vp}%</span>
+    </div>`;
+  }).join('');
+  t.innerHTML = items+items;
+}
+
+// ══════════════════════════════════════════════════
+//  TABS
+// ══════════════════════════════════════════════════
+function buildTabs(){
+  document.getElementById('comm-tabs').innerHTML = Object.keys(C).map(s=>
+    `<button class="ctab${s===cur?' active':''}" id="ctab-${s}" onclick="render('${s}')">${s}</button>`
+  ).join('');
+}
+
+// ══════════════════════════════════════════════════
+//  RENDER
+// ══════════════════════════════════════════════════
+function render(sym){
+  cur = sym;
+  const comm = C[sym];
+  if(!comm) return;
+  const sess = comm.sessions;
+  if(!sess.length) return;
+  const last=sess[sess.length-1], prev=sess[sess.length-2];
+  const dAbs=(last.c-(prev?prev.c:last.c)).toFixed(2);
+  const dPct=prev?((last.c-prev.c)/prev.c*100).toFixed(2):'0.00';
+  const up=!prev||last.c>=prev.c;
+
+  Object.keys(C).forEach(s=>{const t=document.getElementById('ctab-'+s);if(t)t.className='ctab'+(s===sym?' active':'');});
+  document.querySelectorAll('.tick-item').forEach(el=>el.classList.toggle('active',el.dataset.sym===sym));
+
+  document.getElementById('bar-sym').textContent  = sym;
+  document.getElementById('bar-name').textContent = comm.emoji+' '+comm.name;
+  document.getElementById('bar-desc').textContent = comm.desc;
+  document.getElementById('bar-price').textContent= sf(last.c)+' sp';
+  const ve=document.getElementById('bar-var');
+  ve.textContent=`${up?'+':''}${dAbs} sp (${up?'+':''}${dPct}%)`;
+  ve.style.color=up?'var(--upb)':'var(--downb)';
+  document.getElementById('bar-ohlc').textContent=`O: ${sf(last.o)}  H: ${sf(last.h)}  B: ${sf(last.l)}  C: ${sf(last.c)}`;
+
+  const t=comm.tarif;
+  document.getElementById('t-achat').textContent=sf(t.achat)+' sp';
+  document.getElementById('t-vente').textContent=sf(t.vente)+' sp';
+  const mg=t.vente-t.achat;
+  document.getElementById('t-marge').textContent=sf(mg)+' sp ('+((mg/t.achat)*100).toFixed(0)+'%)';
+
+  const allP=sess.flatMap(s=>[s.h,s.l]);
+  const lo=Math.min(...allP)*.95,hi=Math.max(...allP)*1.05,range=hi-lo;
+  const ap=((t.achat-lo)/range*100).toFixed(1);
+  const vp2=((t.vente-lo)/range*100).toFixed(1);
+  const cp=((last.c-lo)/range*100).toFixed(1);
+  document.getElementById('t-fill').style.cssText=`left:${ap}%;width:${vp2-ap}%;`;
+  document.getElementById('t-cursor').style.left=cp+'%';
+
+  renderCond(sym);
+
+  document.getElementById('last-sess').innerHTML=`
+    <div class="ls-row"><span class="ls-key">Session</span><span class="ls-val">${last.d}</span></div>
+    <div class="ls-row"><span class="ls-key">Ouverture</span><span class="ls-val">${sf(last.o)} sp</span></div>
+    <div class="ls-row"><span class="ls-key">Haut</span><span style="color:var(--upb)">${sf(last.h)} sp</span></div>
+    <div class="ls-row"><span class="ls-key">Bas</span><span style="color:var(--downb)">${sf(last.l)} sp</span></div>
+    <div class="ls-row"><span class="ls-key">Clôture</span><span style="color:${up?'var(--upb)':'var(--downb)'}">${sf(last.c)} sp</span></div>
+    <div class="ls-row"><span class="ls-key">Volume</span><span class="ls-val">${last.v} u.</span></div>`;
+
+  document.getElementById('seal').classList.toggle('on', CONDITIONS.some(c=>c.actif));
+  drawChart(sess,t);
+  drawVol(sess);
+  renderHist(sess);
+}
+
+// ══════════════════════════════════════════════════
+//  CONDITIONS
+// ══════════════════════════════════════════════════
+function renderCond(){
+  const el=document.getElementById('cond-list');
+  const active=CONDITIONS.filter(c=>c.actif);
+  if(!active.length){
+    el.innerHTML=`<p class="no-cond">Aucune condition exceptionnelle en vigueur. Les échanges suivent le tarif standard.</p>`;
+    return;
+  }
+  el.innerHTML=active.map(c=>`
+    <div class="cond-badge ${c.type}">
+      <div class="cond-titre">${typeIcon(c.type)} ${c.titre}</div>
+      ${c.desc?`<div class="cond-desc">${c.desc}</div>`:''}
+      ${c.effet?`<div class="cond-effet">⚡ ${c.effet}</div>`:''}
+      ${c.periode?`<div class="cond-period">📅 ${c.periode}</div>`:''}
+    </div>`).join('');
+}
+
+function renderCondManage(){
+  const el=document.getElementById('cond-manage');
+  if(!CONDITIONS.length){el.innerHTML=`<p style="font-family:var(--body);font-size:.72rem;font-style:italic;color:var(--textf);">Aucune condition enregistrée.</p>`;return;}
+  el.innerHTML=CONDITIONS.map((c,i)=>`
+    <div class="cond-manage-item">
+      <span style="color:${c.actif?'var(--text)':'var(--textf)'}">${typeIcon(c.type)} ${c.titre}</span>
+      <div style="display:flex;gap:.5rem;align-items:center;">
+        <span style="font-size:.65rem;color:${c.actif?'var(--upb)':'var(--textf)'}">${c.actif?'ACTIF':'INACTIF'}</span>
+        <button class="cond-del" onclick="toggleCond(${i})">${c.actif?'Désactiver':'Réactiver'}</button>
+      </div>
+    </div>`).join('');
+}
+
+function typeIcon(t){return{penurie:'🔴',faveur:'🟢',siege:'⚔',route:'🟡',recolte:'🌾'}[t]||'●';}
+
+async function toggleCond(i){
+  CONDITIONS[i].actif = !CONDITIONS[i].actif;
+  renderCond(cur);
+  renderCondManage();
+  document.getElementById('seal').classList.toggle('on', CONDITIONS.some(c=>c.actif));
+  if(sbOk && CONDITIONS[i].dbid){
+    try{ await sbPatch('mk_bourse_conditions',`?id=eq.${CONDITIONS[i].dbid}`,{actif:CONDITIONS[i].actif}); }
+    catch(e){ console.error('Patch cond failed:', e.message); }
+  }
+}
+
+// ══════════════════════════════════════════════════
+//  CHART
+// ══════════════════════════════════════════════════
+function drawChart(sess,tarif){
+  const svg=document.getElementById('main-chart');
+  const {PAD,W,H}=CM;
+  const cW=W-PAD.l-PAD.r, cH=H-PAD.t-PAD.b;
+  const n=sess.length, sp=cW/n, bw=sp*0.55;
+  const allP=sess.flatMap(s=>[s.h,s.l]).concat([tarif.achat,tarif.vente]);
+  const lo=Math.min(...allP)*.96, hi=Math.max(...allP)*1.04, pr=hi-lo;
+  const toY=p=>PAD.t+cH-((p-lo)/pr)*cH;
+  const toX=i=>PAD.l+i*sp+sp/2;
+  let h='';
+  for(let i=0;i<=6;i++){
+    const p=lo+pr*(i/6),y=toY(p);
+    h+=`<line x1="${PAD.l}" y1="${y.toFixed(1)}" x2="${W-PAD.r}" y2="${y.toFixed(1)}" stroke="rgba(46,66,36,.5)" stroke-width=".8"/>`;
+    h+=`<text x="${W-PAD.r+4}" y="${(y+4).toFixed(1)}" fill="rgba(138,154,98,.75)" font-size="8.5" font-family="JetBrains Mono,monospace">${sf(p)}</text>`;
+  }
+  const ty1=toY(tarif.vente),ty2=toY(tarif.achat);
+  h+=`<rect x="${PAD.l}" y="${ty1.toFixed(1)}" width="${cW}" height="${(ty2-ty1).toFixed(1)}" fill="rgba(201,168,76,.04)" stroke="rgba(201,168,76,.18)" stroke-width=".7" stroke-dasharray="5 3"/>`;
+  h+=`<text x="${PAD.l+5}" y="${(ty1-3).toFixed(1)}" fill="rgba(201,168,76,.4)" font-size="7.5" font-family="JetBrains Mono,monospace">― Plafond ${sf(tarif.vente)} sp</text>`;
+  h+=`<text x="${PAD.l+5}" y="${(ty2+10).toFixed(1)}" fill="rgba(201,168,76,.4)" font-size="7.5" font-family="JetBrains Mono,monospace">― Achat officiel ${sf(tarif.achat)} sp</text>`;
+  sess.forEach((s,i)=>{
+    const x=toX(i),up=s.c>=s.o;
+    const col=up?'#3E7A3E':'#7A3E3E',bri=up?'#5CB85C':'#C05050';
+    const yO=toY(Math.max(s.o,s.c)),yC=toY(Math.min(s.o,s.c)),bH=Math.max(1.5,yC-yO);
+    h+=`<line x1="${x.toFixed(1)}" y1="${toY(s.h).toFixed(1)}" x2="${x.toFixed(1)}" y2="${toY(s.l).toFixed(1)}" stroke="${bri}" stroke-width="1.4"/>`;
+    h+=`<rect x="${(x-bw/2).toFixed(1)}" y="${yO.toFixed(1)}" width="${bw.toFixed(1)}" height="${bH.toFixed(1)}" fill="${col}" stroke="${bri}" stroke-width=".6" rx=".5"/>`;
+    if(i%3===0||i===n-1) h+=`<text x="${x.toFixed(1)}" y="${(H-5).toFixed(1)}" fill="rgba(138,154,98,.55)" font-size="7.5" font-family="JetBrains Mono,monospace" text-anchor="middle">${s.d}</text>`;
+  });
+  const lc=sess[n-1].c,ly=toY(lc);
+  h+=`<line x1="${PAD.l}" y1="${ly.toFixed(1)}" x2="${W-PAD.r}" y2="${ly.toFixed(1)}" stroke="rgba(201,168,76,.5)" stroke-width="1" stroke-dasharray="7 3"/>`;
+  h+=`<rect x="${(W-PAD.r).toFixed(1)}" y="${(ly-8).toFixed(1)}" width="${(PAD.r-3).toFixed(1)}" height="16" fill="rgba(201,168,76,.12)" stroke="rgba(201,168,76,.4)" stroke-width=".7"/>`;
+  h+=`<text x="${(W-PAD.r+(PAD.r-3)/2).toFixed(1)}" y="${(ly+4.5).toFixed(1)}" fill="#C9A84C" font-size="9" font-weight="600" font-family="JetBrains Mono,monospace" text-anchor="middle">${sf(lc)}</text>`;
+  svg.innerHTML=h;
+  CM.sess=sess;CM.lo=lo;CM.hi=hi;CM.sp=sp;CM.n=n;CM.PAD2=PAD;
+}
+
+function drawVol(sess){
+  const svg=document.getElementById('vol-chart');
+  const W=820,H=62,P={l:8,r:62,t:5,b:14};
+  const cW=W-P.l-P.r,cH=H-P.t-P.b;
+  const n=sess.length,sp=cW/n,bw=sp*0.55,maxV=Math.max(...sess.map(s=>s.v));
+  let h=`<text x="${W-P.r+4}" y="${P.t+10}" fill="rgba(74,90,50,.7)" font-size="8" font-family="JetBrains Mono,monospace">VOL</text>`;
+  sess.forEach((s,i)=>{
+    const x=P.l+i*sp+sp/2,bH=(s.v/maxV)*cH,up=s.c>=s.o;
+    h+=`<rect x="${(x-bw/2).toFixed(1)}" y="${(P.t+cH-bH).toFixed(1)}" width="${bw.toFixed(1)}" height="${bH.toFixed(1)}" fill="${up?'rgba(62,122,62,.45)':'rgba(122,62,62,.45)'}"/>`;
+    if(s.v===maxV) h+=`<text x="${x.toFixed(1)}" y="${(P.t+cH-bH-3).toFixed(1)}" fill="rgba(138,154,98,.55)" font-size="7" font-family="JetBrains Mono,monospace" text-anchor="middle">${s.v}</text>`;
+  });
+  svg.innerHTML=h;
+}
+
+// ══════════════════════════════════════════════════
+//  CHART HOVER
+// ══════════════════════════════════════════════════
+function onMove(e){
+  if(!CM.sess) return;
+  const area=document.getElementById('chart-area'),rect=area.getBoundingClientRect();
+  const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+  const pctX=mx/rect.width,svgX=pctX*CM.W;
+  const idx=Math.floor((svgX-CM.PAD2.l)/CM.sp);
+  document.getElementById('ch-v').style.cssText=`left:${mx}px;opacity:1;`;
+  document.getElementById('ch-h').style.cssText=`top:${my}px;opacity:1;`;
+  const tt=document.getElementById('tooltip');
+  if(idx>=0&&idx<CM.n){
+    const s=CM.sess[idx],up=s.c>=s.o;
+    const va=(s.c-s.o).toFixed(2),vp=((s.c-s.o)/s.o*100).toFixed(2);
+    tt.innerHTML=`<div class="tt-date">${s.d}</div>
+      O <span style="color:var(--text)">${sf(s.o)}</span>&nbsp;&nbsp;H <span style="color:var(--upb)">${sf(s.h)}</span><br>
+      B <span style="color:var(--downb)">${sf(s.l)}</span>&nbsp;&nbsp;C <span style="color:${up?'var(--upb)':'var(--downb)'}">${sf(s.c)}</span><br>
+      Var <span style="color:${up?'var(--upb)':'var(--downb)'}">${up?'+':''}${va} (${up?'+':''}${vp}%)</span>  Vol ${s.v}`;
+    const tx=mx+14,ty=Math.max(4,my-72);
+    tt.style.cssText=`display:block;left:${tx+150>rect.width?mx-170:tx}px;top:${ty}px;`;
+  } else tt.style.display='none';
+}
+function onLeave(){
+  document.getElementById('ch-v').style.opacity='0';
+  document.getElementById('ch-h').style.opacity='0';
+  document.getElementById('tooltip').style.display='none';
+}
+
+// ══════════════════════════════════════════════════
+//  HISTORY
+// ══════════════════════════════════════════════════
+function renderHist(sess){
+  const tbody=document.getElementById('hist-tbody');
+  tbody.innerHTML=[...sess].reverse().map((s,i,arr)=>{
+    const prev=arr[i+1],up=prev?s.c>=prev.c:true;
+    const da=prev?(s.c-prev.c).toFixed(2):'—';
+    const dp=prev?((s.c-prev.c)/prev.c*100).toFixed(2):'—';
+    const vs=prev?`${up?'+':''}${da} sp (${up?'+':''}${dp}%)`:'—';
+    return `<tr><td class="gold">${s.d}</td><td>${sf(s.o)}</td><td class="up">${sf(s.h)}</td>
+      <td class="dn">${sf(s.l)}</td><td style="color:${up?'var(--upb)':'var(--downb)'};font-weight:600;">${sf(s.c)}</td>
+      <td class="${prev?(up?'up':'dn'):''}">${vs}</td><td style="color:var(--textf)">${s.v}</td></tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════
+//  ADMIN
+// ══════════════════════════════════════════════════
+function openAdmin(){
+  document.getElementById('adm-overlay').classList.add('on');
+  if(!loggedIn){
+    document.getElementById('adm-login').style.display='block';
+    document.getElementById('adm-content').style.display='none';
+  } else showAdm();
+}
+function closeAdmin(){ document.getElementById('adm-overlay').classList.remove('on'); }
+
+function checkPass(){
+  if(document.getElementById('adm-pass').value===PASS){
+    loggedIn=true;
+    document.getElementById('adm-pass').value='';
+    document.getElementById('adm-err').style.display='none';
+    document.getElementById('adm-login').style.display='none';
+    showAdm();
+  } else {
+    document.getElementById('adm-err').style.display='block';
+    document.getElementById('adm-pass').value='';
+  }
+}
+
+function showAdm(){
+  document.getElementById('adm-content').style.display='block';
+  const opts=Object.values(C).map(c=>`<option value="${c.sym}">${c.sym} — ${c.name}</option>`).join('');
+  document.getElementById('a-comm').innerHTML=opts;
+  document.getElementById('a-tc').innerHTML=opts;
+  // SB status in modal
+  const dot=document.getElementById('adm-sb-dot');
+  const lbl=document.getElementById('adm-sb-txt');
+  dot.className='sb-dot '+(sbOk?'ok':'ko');
+  lbl.textContent=sbOk?'Supabase connecté — les données seront persistées':'Hors ligne — données locales uniquement';
+  loadTarifFields();
+  renderCondManage();
+}
+
+function admTab(t,btn){
+  ['sess','tarif','cond','setup'].forEach(x=>document.getElementById('tab-'+x).style.display=x===t?'block':'none');
+  document.querySelectorAll('.adm-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(t==='tarif') loadTarifFields();
+  if(t==='cond')  renderCondManage();
+}
+
+function loadTarifFields(){
+  const sym=document.getElementById('a-tc').value;
+  if(!sym||!C[sym]) return;
+  document.getElementById('a-ta').value=C[sym].tarif.achat;
+  document.getElementById('a-tv').value=C[sym].tarif.vente;
+  document.getElementById('a-ts').value=C[sym].statut||'normal';
+}
+
+// ══ Write: SESSION ══
+async function addSession(){
+  const sym=document.getElementById('a-comm').value;
+  const d=document.getElementById('a-date').value||`Sem. ${C[sym].sessions.length+1}`;
+  const o=+document.getElementById('a-o').value;
+  const h=+document.getElementById('a-h').value;
+  const l=+document.getElementById('a-l').value;
+  const c=+document.getElementById('a-c').value;
+  const v=+document.getElementById('a-vol').value||100;
+  if([o,h,l,c].some(isNaN)||!o){ alert('Valeurs OHLC manquantes.'); return; }
+  if(h<Math.max(o,c)||l>Math.min(o,c)){ alert('H ≥ max(O,C) et B ≤ min(O,C) requis.'); return; }
+  C[sym].sessions.push({d,o,h,l,c,v});
+  buildTicker();
+  if(cur===sym) render(sym);
+  flash('ok-sess','err-sess',async()=>{
+    if(!sbOk) return;
+    await sbPost('mk_bourse_sessions',{commodite_id:sym,session_label:d,ouverture:o,haut:h,bas:l,cloture:c,volume:v});
+  });
+}
+
+// ══ Write: TARIF ══
+async function saveTarif(){
+  const sym=document.getElementById('a-tc').value;
+  const a=+document.getElementById('a-ta').value;
+  const v=+document.getElementById('a-tv').value;
+  const st=document.getElementById('a-ts').value;
+  if(!a||!v||v<=a){ alert('Vente doit être > achat.'); return; }
+  C[sym].tarif={achat:a,vente:v};
+  C[sym].statut=st;
+  if(cur===sym) render(sym);
+  flash('ok-tarif','err-tarif',async()=>{
+    if(!sbOk) return;
+    await sbPatch('mk_bourse_commos',`?id=eq.${sym}`,{tarif_achat:a,tarif_vente:v,statut:st});
+  });
+}
+
+// ══ Write: CONDITION ══
+async function addCond(){
+  const titre=document.getElementById('a-ctit').value;
+  const desc=document.getElementById('a-cdesc').value;
+  const effet=document.getElementById('a-ceff').value;
+  const dur=document.getElementById('a-cdur').value;
+  const type=document.getElementById('a-ct').value;
+  if(!titre){ alert('Titre requis.'); return; }
+  const obj={type,titre,desc,effet,periode:dur,actif:true};
+  CONDITIONS.push(obj);
+  renderCond(cur);
+  renderCondManage();
+  document.getElementById('seal').classList.add('on');
+  flash('ok-cond','err-cond',async()=>{
+    if(!sbOk) return;
+    const res=await sbPost('mk_bourse_conditions',{type,titre,description:desc,effet,periode:dur,actif:true});
+    if(res&&res[0]) obj.dbid=res[0].id;
+  });
+}
+
+// ══ Seed ══
+async function seedData(){
+  const btn=document.getElementById('btn-seed');
+  btn.disabled=true;btn.textContent='En cours...';
+  try{
+    for(const [sym,data] of Object.entries(LOCAL)){
+      await sbPost('mk_bourse_commos',[{id:sym,name:data.name,emoji:data.emoji,description:data.desc,tarif_achat:data.tarif.achat,tarif_vente:data.tarif.vente,statut:data.statut}],true);
+      for(const s of data.sessions){
+        await sbPost('mk_bourse_sessions',{commodite_id:sym,session_label:s.d,ouverture:s.o,haut:s.h,bas:s.l,cloture:s.c,volume:s.v});
+      }
+    }
+    for(const cd of LOCAL_COND){
+      await sbPost('mk_bourse_conditions',{type:cd.type,titre:cd.titre,description:cd.desc,effet:cd.effet,periode:cd.periode,actif:cd.actif});
+    }
+    document.getElementById('ok-seed').style.display='block';
+    setTimeout(async()=>{
+      await loadFromSB();
+      buildTicker();buildTabs();render(Object.keys(C)[0]);
+      document.getElementById('ok-seed').style.display='none';
+    },1500);
+  }catch(e){
+    document.getElementById('err-seed').textContent='Erreur : '+e.message;
+    document.getElementById('err-seed').style.display='block';
+    setTimeout(()=>document.getElementById('err-seed').style.display='none',4000);
+  }
+  btn.disabled=false;btn.textContent='Initialiser les données';
+}
+
+async function resetData(){
+  if(!confirm('Vider toutes les tables de la bourse dans Supabase ?')) return;
+  try{
+    await sbDelete('mk_bourse_conditions','?id=gt.0');
+    await sbDelete('mk_bourse_sessions','?id=gt.0');
+    await sbDelete('mk_bourse_commos','?id=gt.0');
+    alert('Tables vidées. Cliquez sur "Initialiser" pour repeupler.');
+  }catch(e){ alert('Erreur : '+e.message); }
+}
+
+function copySql(){
+  navigator.clipboard.writeText(SQL_SETUP).then(()=>alert('SQL copié dans le presse-papiers.'));
+}
+
+// ══════════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════════
+function sf(n){
+  if(typeof n!=='number'||isNaN(n)) return '—';
+  if(n>=1000) return n.toLocaleString('fr-FR',{maximumFractionDigits:0});
+  if(n>=100)  return n.toFixed(0);
+  return n.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+async function flash(okId,errId,fn){
+  try{
+    await fn();
+    const el=document.getElementById(okId);
+    el.style.display='block';
+    setTimeout(()=>el.style.display='none',2500);
+  }catch(e){
+    const el=document.getElementById(errId);
+    el.textContent='Erreur : '+(e.message||'inconnue');
+    el.style.display='block';
+    setTimeout(()=>el.style.display='none',4000);
+    console.error(e);
+  }
+}
+
+document.getElementById('adm-overlay').addEventListener('click',function(e){if(e.target===this)closeAdmin();});
+document.getElementById('adm-pass').addEventListener('keydown',function(e){if(e.key==='Enter')checkPass();});
+
+// ══ GO ══
+init();
+</script>
+</body>
+</html>
