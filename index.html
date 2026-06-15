@@ -86,10 +86,10 @@ header{background:linear-gradient(180deg,var(--green-dark) 0%,var(--green) 100%)
 
 /* ── SECTION HEADER ── */
 .sect-header{margin-bottom:1.5rem;border-bottom:2px solid var(--green);padding-bottom:0.85rem;}
-.sect-header h2{font-family:'Eagle Lake',serif;font-size:1.3rem;color:var(--green-dark);letter-spacing:0.06em;display:flex;align-items:center;gap:0.6rem;}
-.sect-header p{font-size:1rem;color:var(--ink);font-style:italic;margin-top:0.25rem;}
+.sect-header h2{font-family:'Eagle Lake',serif;font-size:1.45rem;color:var(--green-dark);letter-spacing:0.06em;display:flex;align-items:center;gap:0.6rem;}
+.sect-header p{font-size:1.05rem;font-weight:600;color:var(--ink);font-style:italic;margin-top:0.25rem;}
 .sect-stats{display:flex;gap:0.75rem;margin-top:0.75rem;}
-.stat-chip{background:rgba(226,212,168,0.38);border:1px solid var(--border-g);padding:0.28rem 0.8rem;font-family:'Eagle Lake',serif;font-size:0.82rem;color:var(--ink);}
+.stat-chip{background:rgba(226,212,168,0.38);border:1px solid var(--border-g);padding:0.3rem 0.85rem;font-family:'Eagle Lake',serif;font-size:0.88rem;font-weight:700;color:var(--ink);}
 
 /* ── SEARCH & FILTERS ── */
 .toolbar{display:flex;gap:0.6rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap;}
@@ -102,7 +102,7 @@ header{background:linear-gradient(180deg,var(--green-dark) 0%,var(--green) 100%)
 /* ── TABLE ── */
 .table-wrap{border:1px solid var(--border-g);border-top:2px solid var(--green);overflow:hidden;}
 table{width:100%;border-collapse:collapse;font-size:0.9rem;}
-thead th{background:var(--green-dark);font-family:'Eagle Lake',serif;font-size:0.80rem;letter-spacing:0.1em;color:var(--gold-light);padding:0.65rem 0.9rem;text-align:left;border-right:1px solid rgba(201,168,76,0.15);font-weight:400;}
+thead th{background:var(--green-dark);font-family:'Eagle Lake',serif;font-size:0.88rem;letter-spacing:0.1em;color:var(--gold-light);padding:0.65rem 0.9rem;text-align:left;border-right:1px solid rgba(201,168,76,0.15);font-weight:400;}
 thead th:last-child{border-right:none;text-align:center;}
 tbody tr{border-bottom:1px solid var(--border-g);transition:background 0.12s;}
 tbody tr:nth-child(even){background:rgba(226,212,168,0.38);}
@@ -110,7 +110,7 @@ tbody tr:hover{background:rgba(212,194,138,0.55);}
 tbody tr:last-child{border-bottom:none;}
 tbody td{padding:0.55rem 0.9rem;vertical-align:middle;}
 .cell-name{font-weight:600;font-size:1.05rem;}
-.cell-meta{font-size:0.92rem;color:var(--ink);}
+.cell-meta{font-size:1rem;font-weight:600;color:var(--ink);}
 .row-hidden{display:none!important;}
 
 /* ── BADGES ── */
@@ -142,7 +142,7 @@ td.act{text-align:center;white-space:nowrap;}
 .add-form-body.open{display:flex;}
 .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0.6rem;}
 .form-field{display:flex;flex-direction:column;gap:0.2rem;}
-.form-field label{font-family:'Eagle Lake',serif;font-size:0.78rem;letter-spacing:0.08em;color:var(--ink);}
+.form-field label{font-family:'Eagle Lake',serif;font-size:0.85rem;font-weight:700;letter-spacing:0.08em;color:var(--ink);}
 .form-field input,.form-field select{background:var(--parch);border:1px solid var(--border-g);color:var(--ink);font-family:'IM Fell English',serif;font-size:0.9rem;padding:0.32rem 0.55rem;}
 .form-field input:focus,.form-field select:focus{outline:none;border-color:var(--green);}
 .btn-submit{background:var(--green-dark);border:1px solid var(--gold);color:var(--gold-light);font-family:'Eagle Lake',serif;font-size:0.7rem;letter-spacing:0.08em;padding:0.42rem 1.1rem;cursor:pointer;transition:all 0.2s;align-self:flex-end;margin-top:0.2rem;}
@@ -473,8 +473,8 @@ td.act{text-align:center;white-space:nowrap;}
 
           <!-- Obtenir la citoyenneté -->
           <div style="border-left:3px solid var(--green);padding-left:.85rem;">
-            <div style="font-family:'Eagle Lake',serif;font-size:.84rem;letter-spacing:.08em;text-transform:uppercase;color:var(--green-dark);margin-bottom:.5rem;">Obtenir la citoyenneté</div>
-            <ul style="font-family:'IM Fell English',serif;font-size:.92rem;font-style:italic;color:var(--ink);line-height:1.8;list-style:none;padding:0;">
+            <div style="font-family:'Eagle Lake',serif;font-size:.92rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--green-dark);margin-bottom:.5rem;">Obtenir la citoyenneté</div>
+            <ul style="font-family:'IM Fell English',serif;font-size:1rem;font-weight:600;font-style:italic;color:var(--ink);line-height:1.85;list-style:none;padding:0;">
               <li>🩸 <strong style="font-style:normal;color:var(--ink);">Naissance</strong> — deux parents citoyens de la châtellerie</li>
               <li>🛡 <strong style="font-style:normal;color:var(--ink);">Service</strong> — 1 mois dans la Garde de Pierre ou les Rôdeurs</li>
               <li>💰 <strong style="font-style:normal;color:var(--ink);">Investissement</strong> — contribution économique ou militaire jugée significative par le Jarl ou un Intendant</li>
@@ -484,7 +484,7 @@ td.act{text-align:center;white-space:nowrap;}
 
           <!-- Perdre la citoyenneté -->
           <div style="border-left:3px solid var(--brown);padding-left:.85rem;">
-            <div style="font-family:'Eagle Lake',serif;font-size:.84rem;letter-spacing:.08em;text-transform:uppercase;color:var(--brown-dark);margin-bottom:.5rem;">Perdre la citoyenneté</div>
+            <div style="font-family:'Eagle Lake',serif;font-size:.92rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--brown-dark);margin-bottom:.5rem;">Perdre la citoyenneté</div>
             <ul style="font-family:'IM Fell English',serif;font-size:.82rem;font-style:italic;color:var(--ink);line-height:1.75;list-style:none;padding:0;">
               <li>⚔ Trahison ou sympathie parjure avérée → révocation immédiate + expulsion ou Cidhna</li>
               <li>⚖ Trois délits graves non purgés → suspension jusqu'à jugement</li>
@@ -617,11 +617,11 @@ td.act{text-align:center;white-space:nowrap;}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.75rem;">
       <div style="border:1px solid var(--border-g);border-top:3px solid var(--green);padding:1.1rem;background:rgba(226,212,168,0.30);">
         <div style="font-family:'Eagle Lake',serif;font-size:1rem;color:var(--green-dark);margin-bottom:0.6rem;letter-spacing:0.05em;">🛡 La Garde de Pierre</div>
-        <p style="font-size:0.95rem;font-style:italic;color:var(--ink);line-height:1.75;">La Garde de Pierre est l'unité principale dédiée à la sécurité au sein de la ville de Markarth. Elle est en charge de la récolte des taxes, des arrestations dans les murs et de la défense de la cité. Cette Garde est aussi en charge du système carcéral de la Mine de Cidnha et de sa pérennité.</p>
+        <p style="font-size:1.05rem;font-weight:600;font-style:italic;color:var(--ink);line-height:1.8;">La Garde de Pierre est l'unité principale dédiée à la sécurité au sein de la ville de Markarth. Elle est en charge de la récolte des taxes, des arrestations dans les murs et de la défense de la cité. Cette Garde est aussi en charge du système carcéral de la Mine de Cidnha et de sa pérennité.</p>
       </div>
       <div style="border:1px solid var(--border-g);border-top:3px solid var(--brown);padding:1.1rem;background:rgba(226,212,168,0.30);">
         <div style="font-family:'Eagle Lake',serif;font-size:1rem;color:var(--brown-dark);margin-bottom:0.6rem;letter-spacing:0.05em;">⚔ Les Rôdeurs de la Crevasse</div>
-        <p style="font-size:0.95rem;font-style:italic;color:var(--ink);line-height:1.75;">Les Rôdeurs de la Crevasse sont une division de vétéran de la Garde, en nombre restreint, mieux équipés, mieux entraînés et disposant de prérogatives plus étendue. Ils sont chargés de sillonner les routes dangereuses de la Crevasse et de faire régner la Loi.</p>
+        <p style="font-size:1.05rem;font-weight:600;font-style:italic;color:var(--ink);line-height:1.8;">Les Rôdeurs de la Crevasse sont une division de vétéran de la Garde, en nombre restreint, mieux équipés, mieux entraînés et disposant de prérogatives plus étendue. Ils sont chargés de sillonner les routes dangereuses de la Crevasse et de faire régner la Loi.</p>
       </div>
     </div>
     <div id="gar-add-wrap" class="add-form-wrap" style="display:none;">
