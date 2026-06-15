@@ -725,7 +725,7 @@ td.act{text-align:center;white-space:nowrap;}
             <span class="marker-num">4</span>
         </div>
 <div class="map-marker" data-num="5" data-tooltip="5) Maison Abandonnée" data-label="Maison Abandonnée" data-type="Habitation"
-            style="left:49.0%;top:14.1%;"
+            style="left:39.8%;top:22.1%;"
             onclick="showLieuInfo(5,this.dataset.label,this.dataset.type)">
             <span class="marker-num">5</span>
         </div>
@@ -735,7 +735,7 @@ td.act{text-align:center;white-space:nowrap;}
             <span class="marker-num">6</span>
         </div>
 <div class="map-marker" data-num="7" data-tooltip="7) Maison d'Endon" data-label="Maison d'Endon" data-type="Habitation"
-            style="left:40.0%;top:21.8%;"
+            style="left:40.3%;top:14.9%;"
             onclick="showLieuInfo(7,this.dataset.label,this.dataset.type)">
             <span class="marker-num">7</span>
         </div>
@@ -745,7 +745,7 @@ td.act{text-align:center;white-space:nowrap;}
             <span class="marker-num">8</span>
         </div>
 <div class="map-marker" data-num="9" data-tooltip="9) Maison de Nepos" data-label="Maison de Nepos" data-type="Habitation"
-            style="left:40.2%;top:14.1%;"
+            style="left:49.3%;top:8.5%;"
             onclick="showLieuInfo(9,this.dataset.label,this.dataset.type)">
             <span class="marker-num">9</span>
         </div>
@@ -1191,13 +1191,13 @@ function renderOrganigramme(){
   const count = (grades) => grades.reduce((s,g)=>(byGrade[g]||[]).length+s,0);
 
   const LEVELS = [
-    { label:'Haut-Commandement', total:2,  gold:true,  bg:'rgba(42,64,32,.45)', border:'var(--gold)',
+    { label:'Haut-Commandement', total:2,  gold:true,  bg:'rgba(20,35,12,.82)', border:'var(--gold)',
       grades:[['Capitaine',1],['Vice-Capitaine',1]] },
-    { label:'Officier Supérieur', total:2,  gold:false, bg:'rgba(42,64,32,.32)', border:'var(--green)',
+    { label:'Officier Supérieur', total:2,  gold:false, bg:'rgba(20,35,12,.75)', border:'var(--green)',
       grades:[['Lieutenant',2]] },
-    { label:'Sous-Officier',      total:10, gold:false, bg:'rgba(42,64,32,.22)', border:'var(--brown)',
+    { label:'Sous-Officier',      total:10, gold:false, bg:'rgba(20,35,12,.70)', border:'var(--brown)',
       grades:[['Sergent',4],['Caporal',6]] },
-    { label:'Hommes du rang',     total:16, gold:false, bg:'rgba(42,64,32,.12)', border:'rgba(120,100,60,.5)',
+    { label:'Hommes du rang',     total:16, gold:false, bg:'rgba(20,35,12,.65)', border:'rgba(120,100,60,.7)',
       grades:[['Soldat','—'],['Recrue','—']] },
   ];
 
@@ -1649,7 +1649,7 @@ function renderCour(rows){
   document.getElementById('cour-total').textContent=rows.length;document.getElementById('cour-act-head').style.display=canEdit?'':'none';
   tbody.innerHTML=rows.map(r=>`<tr data-search="${esc((r.prenom+' '+r.nom+' '+r.titre).toLowerCase())}" data-titre="${esc(r.titre||'')}">
     <td class="cell-name">${esc(r.prenom)} ${esc(r.nom)}</td>
-    <td><span class="badge" style="background:rgba(58,92,42,0.1);color:var(--green-dark);border-color:rgba(58,92,42,0.35);border:1px solid;">${esc(r.titre)}</span></td>
+    <td class="cell-meta">${esc(r.titre||'—')}</td>
     ${canEdit?`<td class="act"><button class="btn-del" onclick="delCour('${r.id}')">Révoquer</button></td>`:''}</tr>`).join('');
 }
 async function addCour(){
