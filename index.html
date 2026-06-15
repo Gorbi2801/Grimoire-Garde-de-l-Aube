@@ -750,7 +750,7 @@ td.act{text-align:center;white-space:nowrap;}
             <span class="marker-num">9</span>
         </div>
 <div class="map-marker" data-num="10" data-tooltip="10) Gentilhommière de Vlindrel" data-label="Gentilhommière de Vlindrel" data-type="Habitation"
-            style="left:49.7%;top:8.3%;"
+            style="left:54.8%;top:2.6%;"
             onclick="showLieuInfo(10,this.dataset.label,this.dataset.type)">
             <span class="marker-num">10</span>
         </div>
@@ -1486,7 +1486,7 @@ async function addGarde(){
     console.error('addGarde error:',e);
     // Tentative sans les nouvelles colonnes si elles n'existent pas encore
     try{
-      await sbPost('mk_gardes',{prenom,nom,race,grade,compagnie,specialisation});
+      await sbPost('mk_gardes',{prenom,nom,race,grade,compagnie});
       ['gar-prenom','gar-nom','gar-recruteur'].forEach(id=>document.getElementById(id).value='');
       ['gar-race','gar-grade','gar-compagnie','gar-specialisation'].forEach(id=>document.getElementById(id).value='');
       document.getElementById('gar-date-recrutement').value='';
