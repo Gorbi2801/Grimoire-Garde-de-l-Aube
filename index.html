@@ -735,7 +735,7 @@ td.act{text-align:center;white-space:nowrap;}
             <span class="marker-num">6</span>
         </div>
 <div class="map-marker" data-num="7" data-tooltip="7) Maison d'Endon" data-label="Maison d'Endon" data-type="Habitation"
-            style="left:34%;top:19%;"
+            style="left:40.0%;top:21.8%;"
             onclick="showLieuInfo(7,this.dataset.label,this.dataset.type)">
             <span class="marker-num">7</span>
         </div>
@@ -745,12 +745,12 @@ td.act{text-align:center;white-space:nowrap;}
             <span class="marker-num">8</span>
         </div>
 <div class="map-marker" data-num="9" data-tooltip="9) Maison de Nepos" data-label="Maison de Nepos" data-type="Habitation"
-            style="left:47%;top:20%;"
+            style="left:40.2%;top:14.1%;"
             onclick="showLieuInfo(9,this.dataset.label,this.dataset.type)">
             <span class="marker-num">9</span>
         </div>
 <div class="map-marker" data-num="10" data-tooltip="10) Gentilhommière de Vlindrel" data-label="Gentilhommière de Vlindrel" data-type="Habitation"
-            style="left:55%;top:8%;"
+            style="left:49.7%;top:8.3%;"
             onclick="showLieuInfo(10,this.dataset.label,this.dataset.type)">
             <span class="marker-num">10</span>
         </div>
@@ -1482,7 +1482,18 @@ async function addGarde(){
     ['gar-race','gar-grade','gar-compagnie','gar-specialisation'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('gar-date-recrutement').value='';
     toggleForm('gar-form');await loadGardes();toast(`${prenom} ${nom} enrôlé.`);
-  }catch(e){toast('Erreur.');}
+  }catch(e){
+    console.error('addGarde error:',e);
+    // Tentative sans les nouvelles colonnes si elles n'existent pas encore
+    try{
+      await sbPost('mk_gardes',{prenom,nom,race,grade,compagnie,specialisation});
+      ['gar-prenom','gar-nom','gar-recruteur'].forEach(id=>document.getElementById(id).value='');
+      ['gar-race','gar-grade','gar-compagnie','gar-specialisation'].forEach(id=>document.getElementById(id).value='');
+      document.getElementById('gar-date-recrutement').value='';
+      toggleForm('gar-form');await loadGardes();
+      toast(`${prenom} ${nom} enrôlé. ⚠ Colonnes manquantes en base — relancez le SQL Setup.`);
+    }catch(e2){toast('Erreur Supabase : '+( e2.message||e2).slice(0,80));}
+  }
 }
 async function delGarde(id){if(!confirm('Révoquer ce garde ?'))return;try{await sbDelete('mk_gardes',`?id=eq.${id}`);await loadGardes();toast('Garde révoqué.');}catch(e){toast('Erreur.');}}
 async function toggleSalaireGarde(id,current){
