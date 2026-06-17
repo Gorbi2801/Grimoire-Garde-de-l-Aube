@@ -147,7 +147,8 @@ tbody td{padding:0.55rem 0.9rem;vertical-align:middle;}
 .lois-cat-row td{background:var(--green-dark);font-family:'Eagle Lake',serif;font-size:0.74rem;letter-spacing:0.1em;color:var(--gold-light);padding:0.45rem 0.9rem;border-right:none;text-transform:uppercase;}
 
 /* ── BADGES ── */
-.badge{display:inline-block;padding:0.15rem 0.55rem;font-family:'Eagle Lake',serif;font-size:0.68rem;letter-spacing:0.04em;border:1px solid;}
+.badge{display:inline-block;padding:0.15rem 0.55rem;font-family:'Eagle Lake',serif;font-size:0.68rem;letter-spacing:0.04em;border:1px solid;border-radius:3px;}
+.badge-tag{background:rgba(107,74,30,0.08);color:var(--ink-mid);border-color:var(--border-g);}
 .badge-libre   { background:rgba(45,106,45,0.1);  color:#2D5A1A; border-color:rgba(45,106,45,0.4); }
 .badge-occupé  { background:rgba(107,74,30,0.1);  color:var(--brown); border-color:rgba(107,74,30,0.35); }
 .badge-saisi   { background:rgba(122,16,16,0.1);  color:#7A1010; border-color:rgba(122,16,16,0.35); }
@@ -1407,7 +1408,7 @@ function renderCitoyens(rows){
       :'';
     return `<tr data-search="${esc((r.prenom+' '+r.nom+' '+r.race+' '+(r.metier||'')).toLowerCase())}" data-race="${esc(r.race||'')}" data-statut="${esc(statut)}">
       <td class="cell-name">${esc(r.prenom)} ${esc(r.nom)}</td>
-      <td class="cell-meta">${esc(r.race||'—')}</td>
+      <td class="cell-meta">${r.race?`<span class="badge badge-tag">${esc(r.race)}</span>`:'—'}</td>
       <td class="cell-meta">${esc(r.metier||'—')}</td>
       <td class="cell-meta" style="white-space:nowrap;">${voieIcon} ${esc(voie)}</td>
       <td class="cell-meta" style="white-space:nowrap;">${statutBadge}${statutBtn}</td>
@@ -1486,8 +1487,8 @@ function renderGardes(rows){
     const recruteur=r.recruteur?esc(r.recruteur):'—';
     return `<tr data-search="${esc((r.prenom+' '+r.nom+' '+r.race+' '+r.grade).toLowerCase())}" data-grade="${esc(r.grade||'')}">
       <td class="cell-name">${esc(r.prenom)} ${esc(r.nom)}</td>
-      <td class="cell-meta">${esc(r.race||'—')}</td>
-      <td class="cell-meta">${esc(r.grade||'—')}</td>
+      <td class="cell-meta">${r.race?`<span class="badge badge-tag">${esc(r.race)}</span>`:'—'}</td>
+      <td class="cell-meta">${r.grade?`<span class="badge badge-tag">${esc(r.grade)}</span>`:'—'}</td>
       <td class="cell-meta" style="font-family:'Eagle Lake',serif;color:var(--green-dark);white-space:nowrap;">${sal?sal+' sp':'—'}</td>
       <td class="cell-meta" style="white-space:nowrap;">${badge}${btn}</td>
       <td class="cell-meta" style="font-size:.78rem;">
@@ -1620,7 +1621,7 @@ function renderCour(rows){
   document.getElementById('cour-total').textContent=rows.length;document.getElementById('cour-act-head').style.display=canEdit?'':'none';
   tbody.innerHTML=rows.map(r=>`<tr data-search="${esc((r.prenom+' '+r.nom+' '+r.titre).toLowerCase())}" data-titre="${esc(r.titre||'')}">
     <td class="cell-name">${esc(r.prenom)} ${esc(r.nom)}</td>
-    <td class="cell-meta">${esc(r.titre||'—')}</td>
+    <td class="cell-meta">${r.titre?`<span class="badge badge-tag">${esc(r.titre)}</span>`:'—'}</td>
     ${canEdit?`<td class="act"><button class="btn-del" onclick="delCour('${r.id}')">Révoquer</button></td>`:''}</tr>`).join('');
 }
 async function addCour(){
