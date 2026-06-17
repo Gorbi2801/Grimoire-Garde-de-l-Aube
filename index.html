@@ -653,7 +653,7 @@ td.act{text-align:center;white-space:nowrap;}
             <select id="gar-race"><option value="">— Sélectionner —</option><option>Nordique</option><option>Impériale</option><option>Bretonne</option><option>Rougegarde</option><option>Elfe des bois</option><option>Haut-Elfe</option><option>Elfe sombre</option><option>Orque</option><option>Argonien</option><option>Khajiit</option></select>
           </div>
           <div class="form-field"><label>Grade</label>
-            <select id="gar-grade"><option value="">— Sélectionner —</option><option>Commandeur de l'Aube</option><option>Veilleur de l'Aube</option><option>Exécuteur de la Garde</option><option>Traqueur de la Garde</option><option>Patrouilleur de la Garde</option><option>Aspirant de la Garde</option><option>Artisan de la Garde</option><option>Confrère de la Garde</option></select>
+            <select id="gar-grade"><option value="">— Sélectionner —</option><option>Commandeur de l'Aube</option><option>Veilleur de l'Aube</option><option>Exécuteur de la Garde</option><option>Traqueur de la Garde</option><option>Patrouilleur de la Garde</option><option>Aspirant de la Garde</option><optgroup label="Spécialité"><option>Artisan de la Garde</option><option>Confrère de la Garde</option><option>Mage de la Garde</option></optgroup></select>
           </div>
           <div class="form-field"><label>Date de recrutement</label>
             <input id="gar-date-recrutement" type="date">
@@ -668,7 +668,7 @@ td.act{text-align:center;white-space:nowrap;}
     <div class="toolbar">
       <div class="search-wrap"><span style="color:var(--ink-faint);font-size:0.85rem;">🔍</span><input id="gar-search" type="text" placeholder="Rechercher un garde..." oninput="filterRows('gar-tbody',this.value)"></div>
       <select class="filter-sel" id="gar-filter-grade" onchange="filterRows('gar-tbody',document.getElementById('gar-search').value)">
-        <option value="">Tous les grades</option><option>Commandeur de l'Aube</option><option>Veilleur de l'Aube</option><option>Exécuteur de la Garde</option><option>Traqueur de la Garde</option><option>Patrouilleur de la Garde</option><option>Aspirant de la Garde</option><option>Artisan de la Garde</option><option>Confrère de la Garde</option>
+        <option value="">Tous les grades</option><option>Commandeur de l'Aube</option><option>Veilleur de l'Aube</option><option>Exécuteur de la Garde</option><option>Traqueur de la Garde</option><option>Patrouilleur de la Garde</option><option>Aspirant de la Garde</option><optgroup label="Spécialité"><option>Artisan de la Garde</option><option>Confrère de la Garde</option><option>Mage de la Garde</option></optgroup>
       </select>
       <button class="btn-sort asc" id="gar-sort-btn" onclick="sortTable('gar-tbody','name','gar-sort-btn')">Nom</button>
       <button class="btn-sort asc" id="gar-sort-grade-btn" onclick="sortTable('gar-tbody','grade','gar-sort-grade-btn')">Grade</button>
@@ -1204,7 +1204,9 @@ function renderOrganigramme(){
     { label:'Troupe',            total:12, gold:false, bg:'rgba(20,35,12,.65)', border:'rgba(120,100,60,.7)',
       grades:[['Patrouilleur de la Garde',12]] },
     { label:'Rôles non plafonnés', total:null, gold:false, bg:'rgba(20,35,12,.60)', border:'var(--border-g)',
-      grades:[['Aspirant de la Garde','—'],['Artisan de la Garde','—'],['Confrère de la Garde','—']] },
+      grades:[['Aspirant de la Garde','—']] },
+    { label:'Spécialité', total:null, gold:false, bg:'rgba(20,35,12,.55)', border:'var(--border-g)',
+      grades:[['Artisan de la Garde','—'],['Confrère de la Garde','—'],['Mage de la Garde','—']] },
   ];
 
   let h = `
@@ -1252,7 +1254,7 @@ function renderOrganigramme(){
 
   h += `</div>
     <div style="margin-top:2rem;border-top:1px solid var(--border-g);padding-top:1.1rem;">
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:.75rem;">`;
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:.75rem;">`;
 
   LEVELS.forEach(lv => {
     const used = count(lv.grades.map(g=>g[0]));
@@ -1407,7 +1409,7 @@ function renderCitoyens(rows){
       ?`<button onclick="cycleStatut('${r.id}','${statut}')" style="font-size:.68rem;padding:.12rem .45rem;margin-left:.3rem;font-family:'Eagle Lake',serif;cursor:pointer;background:transparent;border:1px solid var(--border-g);color:var(--ink-mid);" title="Changer le statut">↻</button>`
       :'';
     return `<tr data-search="${esc((r.prenom+' '+r.nom+' '+r.race+' '+(r.metier||'')).toLowerCase())}" data-race="${esc(r.race||'')}" data-statut="${esc(statut)}">
-      <td class="cell-name">${esc(r.prenom)} ${esc(r.nom)}</td>
+      <td class="cell-name">${esc(r.prenom)}${r.nom?" "+esc(r.nom):""}</td>
       <td class="cell-meta">${r.race?`<span class="badge badge-tag">${esc(r.race)}</span>`:'—'}</td>
       <td class="cell-meta">${esc(r.metier||'—')}</td>
       <td class="cell-meta" style="white-space:nowrap;">${voieIcon} ${esc(voie)}</td>
@@ -1430,13 +1432,13 @@ async function addCitoyen(){
   const voie_citoyennete=document.getElementById('cit-voie').value;
   const statut_citoyennete=document.getElementById('cit-statut').value||'Protégé';
   const date_obtention=document.getElementById('cit-date-obtention').value||null;
-  if(!prenom||!nom){toast('Prénom et nom requis.');return;}
+  if(!prenom){toast('Prénom requis.');return;}
   try{
     await sbPost('mk_citoyens',{prenom,nom,race,metier,voie_citoyennete,statut_citoyennete,date_obtention,taxe_payee:false});
     ['cit-prenom','cit-nom'].forEach(id=>document.getElementById(id).value='');
     ['cit-race','cit-metier','cit-voie','cit-statut'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('cit-date-obtention').value='';
-    toggleForm('cit-form');await loadCitoyens();toast(`${prenom} ${nom} inscrit.`);
+    toggleForm('cit-form');await loadCitoyens();toast(`${prenom}${nom?' '+nom:''} inscrit.`);
   }catch(e){toast('Erreur.');}
 }
 async function delCitoyen(id){if(!confirm('Radier ce civil ?'))return;try{await sbDelete('mk_citoyens',`?id=eq.${id}`);await loadCitoyens();toast('Radié du registre.');}catch(e){toast('Erreur.');}}
@@ -1446,7 +1448,7 @@ async function delCitoyen(id){if(!confirm('Radier ce civil ?'))return;try{await 
 async function loadGardes(){
   try{const rows=await sbGet('mk_gardes','?order=nom.asc');renderGardes(rows);}catch(e){console.error(e);}
 }
-const SALAIRES={"Commandeur de l'Aube":300,"Veilleur de l'Aube":250,"Exécuteur de la Garde":200,"Traqueur de la Garde":150,"Patrouilleur de la Garde":100,"Aspirant de la Garde":50,"Artisan de la Garde":240,"Confrère de la Garde":240};
+const SALAIRES={"Commandeur de l'Aube":300,"Veilleur de l'Aube":250,"Exécuteur de la Garde":200,"Traqueur de la Garde":150,"Patrouilleur de la Garde":100,"Aspirant de la Garde":50,"Artisan de la Garde":240,"Confrère de la Garde":240,"Mage de la Garde":240};
 
 function renderGardes(rows){
   gardeRows=rows;
@@ -1486,7 +1488,7 @@ function renderGardes(rows){
       :'—';
     const recruteur=r.recruteur?esc(r.recruteur):'—';
     return `<tr data-search="${esc((r.prenom+' '+r.nom+' '+r.race+' '+r.grade).toLowerCase())}" data-grade="${esc(r.grade||'')}">
-      <td class="cell-name">${esc(r.prenom)} ${esc(r.nom)}</td>
+      <td class="cell-name">${esc(r.prenom)}${r.nom?" "+esc(r.nom):""}</td>
       <td class="cell-meta">${r.race?`<span class="badge badge-tag">${esc(r.race)}</span>`:'—'}</td>
       <td class="cell-meta">${r.grade?`<span class="badge badge-tag">${esc(r.grade)}</span>`:'—'}</td>
       <td class="cell-meta" style="font-family:'Eagle Lake',serif;color:var(--green-dark);white-space:nowrap;">${sal?sal+' sp':'—'}</td>
@@ -1506,13 +1508,13 @@ async function addGarde(){
   const grade=document.getElementById('gar-grade').value;
   const date_recrutement=document.getElementById('gar-date-recrutement').value||null;
   const recruteur=document.getElementById('gar-recruteur').value.trim()||null;
-  if(!prenom||!nom){toast('Prénom et nom requis.');return;}
+  if(!prenom){toast('Prénom requis.');return;}
   try{
     await sbPost('mk_gardes',{prenom,nom,race,grade,date_recrutement,recruteur,salaire_paye:false});
     ['gar-prenom','gar-nom','gar-recruteur'].forEach(id=>document.getElementById(id).value='');
     ['gar-race','gar-grade'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('gar-date-recrutement').value='';
-    toggleForm('gar-form');await loadGardes();toast(`${prenom} ${nom} enrôlé.`);
+    toggleForm('gar-form');await loadGardes();toast(`${prenom}${nom?' '+nom:''} enrôlé.`);
   }catch(e){toast('Erreur Supabase : '+(e.message||e).slice(0,80));}
 }
 async function delGarde(id){if(!confirm('Révoquer ce garde ?'))return;try{await sbDelete('mk_gardes',`?id=eq.${id}`);await loadGardes();toast('Garde révoqué.');}catch(e){toast('Erreur.');}}
@@ -1620,14 +1622,14 @@ function renderCour(rows){
   const tbody=document.getElementById('cour-tbody');const canEdit=canEditSection('cour');
   document.getElementById('cour-total').textContent=rows.length;document.getElementById('cour-act-head').style.display=canEdit?'':'none';
   tbody.innerHTML=rows.map(r=>`<tr data-search="${esc((r.prenom+' '+r.nom+' '+r.titre).toLowerCase())}" data-titre="${esc(r.titre||'')}">
-    <td class="cell-name">${esc(r.prenom)} ${esc(r.nom)}</td>
+    <td class="cell-name">${esc(r.prenom)}${r.nom?" "+esc(r.nom):""}</td>
     <td class="cell-meta">${r.titre?`<span class="badge badge-tag">${esc(r.titre)}</span>`:'—'}</td>
     ${canEdit?`<td class="act"><button class="btn-del" onclick="delCour('${r.id}')">Révoquer</button></td>`:''}</tr>`).join('');
 }
 async function addCour(){
   const prenom=document.getElementById('cour-prenom').value.trim();const nom=document.getElementById('cour-nom').value.trim();const titre=document.getElementById('cour-titre').value;
-  if(!prenom||!nom||!titre){toast('Prénom, nom et titre requis.');return;}
-  try{await sbPost('mk_cour',{prenom,nom,titre});document.getElementById('cour-prenom').value='';document.getElementById('cour-nom').value='';document.getElementById('cour-titre').value='';toggleForm('cour-form');await loadCour();toast(`${prenom} ${nom} nommé ${titre}.`);}catch(e){toast('Erreur.');}
+  if(!prenom||!titre){toast('Prénom et titre requis.');return;}
+  try{await sbPost('mk_cour',{prenom,nom,titre});document.getElementById('cour-prenom').value='';document.getElementById('cour-nom').value='';document.getElementById('cour-titre').value='';toggleForm('cour-form');await loadCour();toast(`${prenom}${nom?' '+nom:''} nommé ${titre}.`);}catch(e){toast('Erreur.');}
 }
 async function delCour(id){if(!confirm('Révoquer ce membre ?'))return;try{await sbDelete('mk_cour',`?id=eq.${id}`);await loadCour();toast('Révoqué.');}catch(e){toast('Erreur.');}}
 // ══════════════════════════════════════════════════════════════════════
@@ -1789,7 +1791,7 @@ function lockGarde(){
 // ══════════════════════════════════════════════════════════════════════
 //  TRI
 // ══════════════════════════════════════════════════════════════════════
-const GRADE_ORDER=["Commandeur de l'Aube","Veilleur de l'Aube","Exécuteur de la Garde","Traqueur de la Garde","Patrouilleur de la Garde","Aspirant de la Garde","Artisan de la Garde","Confrère de la Garde"];
+const GRADE_ORDER=["Commandeur de l'Aube","Veilleur de l'Aube","Exécuteur de la Garde","Traqueur de la Garde","Patrouilleur de la Garde","Aspirant de la Garde","Artisan de la Garde","Confrère de la Garde","Mage de la Garde"];
 const PEINE_ORDER=['Infraction mineure','Infraction majeure','Crime','Crime capital','Haute trahison'];
 function sortTable(tbodyId,mode,btnId){
   const tbody=document.getElementById(tbodyId);const btn=document.getElementById(btnId);if(!tbody||!btn)return;
