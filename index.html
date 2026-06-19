@@ -1348,12 +1348,6 @@ function renderOrganigramme(){
     byGrade[g].push((r.prenom||'')+' '+(r.nom||''));
   });
 
-  const noms = (grade) => {
-    const list = byGrade[grade]||[];
-    if(!list.length) return `<span style="font-style:italic;color:var(--ink-faint);font-size:.78rem;">— Vacant —</span>`;
-    return list.map(n=>`<span style="display:block;font-family:'Eagle Lake',serif;font-size:.84rem;color:var(--green-dark);margin-top:.25rem;line-height:1.3;">${n}</span>`).join('');
-  };
-
   const total = gardeRows.length;
   const count = (grades) => grades.reduce((s,g)=>(byGrade[g]||[]).length+s,0);
   const POSTES_ENCADRES = 30;
@@ -1386,7 +1380,6 @@ function renderOrganigramme(){
   LEVELS.forEach((lv, li) => {
     const used = count(lv.grades.map(g=>g[0]));
     const isLast = li===LEVELS.length-1;
-    const multiCard = lv.grades.length > 1;
 
     h += `
       <div style="${li>0?'margin-top:1.6rem;':''}">
@@ -1395,22 +1388,42 @@ function renderOrganigramme(){
           <span style="flex:1;height:1px;background:${lv.accent};opacity:.45;"></span>
           <span style="flex:0 0 auto;font-family:'Eagle Lake',serif;font-size:.78rem;color:${lv.accent};font-weight:700;">${lv.total!==null?used+' / '+lv.total:used}</span>
         </div>
-        <div style="display:flex;gap:.85rem;flex-wrap:wrap;justify-content:flex-start;">`;
+        <div style="display:flex;gap:.7rem;flex-wrap:wrap;justify-content:center;">`;
 
+    // Une carte par membre réellement présent dans le grade — l'ajout d'un
+    // membre en base ajoute donc mécaniquement une carte, sans plafond fixe
+    // à mettre à jour à la main. Un grade sans titulaire affiche une carte
+    // « Vacant » unique pour rester visible dans la hiérarchie.
     lv.grades.forEach(([grade, slots]) => {
       const list = byGrade[grade]||[];
-      const filled = list.length > 0;
       const badge = slots===null ? '' : `
-            <div style="display:inline-block;font-family:'IM Fell English',serif;font-size:.88rem;font-style:italic;font-weight:600;
-                        color:${lv.accent};background:${lv.accentLight};padding:.22rem .8rem;border-radius:2px;margin-bottom:.6rem;">
+            <div style="display:inline-block;font-family:'IM Fell English',serif;font-size:.78rem;font-style:italic;font-weight:600;
+                        color:${lv.accent};background:${lv.accentLight};padding:.18rem .65rem;border-radius:2px;margin-top:.4rem;">
               ${typeof slots==='number'?slots+' poste'+(slots>1?'s':''):'illimité'}</div>`;
-      h += `
-          <div style="flex:1 1 200px;max-width:260px;background:${lv.bg};
-                      border:1px solid var(--border-g);border-top:3px solid ${filled?lv.accent:'var(--border-g)'};
-                      padding:1rem 1.1rem;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.06);">
-            <div style="font-family:'Eagle Lake',serif;font-size:.98rem;color:var(--green-dark);margin-bottom:.3rem;line-height:1.25;">${grade}</div>${badge}
-            <div style="border-top:1px solid var(--border-g);padding-top:.5rem;min-height:1.4rem;">${noms(grade)}</div>
+      const kicker = `<div style="font-family:'IM Fell English',serif;font-size:.66rem;font-style:italic;
+                        text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);margin-bottom:.35rem;">${grade}</div>`;
+
+      if(list.length === 0){
+        // Carte « Vacant » unique pour ce grade
+        h += `
+          <div style="flex:1 1 160px;max-width:200px;background:${lv.bg};
+                      border:1px solid var(--border-g);border-top:3px solid var(--border-g);
+                      padding:.85rem 1rem;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.06);">
+            ${kicker}
+            <div style="font-style:italic;color:var(--ink-faint);font-size:.85rem;">— Vacant —</div>${badge}
           </div>`;
+      } else {
+        // Une carte par titulaire du grade
+        list.forEach(name => {
+          h += `
+          <div style="flex:1 1 160px;max-width:200px;background:${lv.bg};
+                      border:1px solid var(--border-g);border-top:3px solid ${lv.accent};
+                      padding:.85rem 1rem;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.06);">
+            ${kicker}
+            <div style="font-family:'Eagle Lake',serif;font-size:.96rem;color:var(--green-dark);line-height:1.3;">${name}</div>
+          </div>`;
+        });
+      }
     });
 
     h += `</div></div>`;
