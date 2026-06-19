@@ -198,7 +198,9 @@ td.act{text-align:center;white-space:nowrap;}
 .map-label{font-family:'Eagle Lake',serif;font-size:0.72rem;color:#fff;text-shadow:1px 1px 3px rgba(0,0,0,0.8);text-align:center;pointer-events:none;letter-spacing:0.04em;}
 .relation-panel{margin-top:1.25rem;}
 .relation-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.75rem;margin-top:0.75rem;}
-.relation-card{background:var(--parch-dark);border:1px solid var(--border-g);border-left:4px solid var(--green);padding:0.75rem 1rem;display:flex;align-items:center;justify-content:space-between;}
+.relation-card{background:var(--parch-dark);border:1px solid var(--border-g);border-left:4px solid var(--green);padding:0.75rem 1rem;display:flex;flex-direction:column;gap:0.5rem;}
+.relation-card-top{display:flex;align-items:center;justify-content:space-between;}
+.rel-summary{font-family:'IM Fell English',serif;font-size:0.78rem;font-style:italic;color:var(--ink-mid);line-height:1.45;border-top:1px solid var(--border-g);padding-top:0.45rem;}
 .relation-card.alliance{border-left-color:#2D6A2D;}
 .relation-card.amical{border-left-color:var(--green);}
 .relation-card.neutre{border-left-color:var(--brown-light);}
@@ -1477,26 +1479,46 @@ const SA_ID='aube_superadmin';
 //  FACTIONS & CONFIG
 // ══════════════════════════════════════════════════════════════════════
 const CHATELERIES=[
-  {key:'blancherive',label:'Châtellerie de Blancherive',sub:'Blancherive, Rivebois',cat:'chatellerie'},
-  {key:'haafingar',label:'Châtellerie de Haafingar',sub:'Solitude, Pendragon',cat:'chatellerie'},
-  {key:'estemarche',label:"Châtellerie d'Estemarche",sub:'Vendeaume',cat:'chatellerie'},
-  {key:'breche',label:'Châtellerie de la Brèche',sub:'Faillaise, Fort-Hivar, Pierre de Shor',cat:'chatellerie'},
-  {key:'crevasse',label:'Châtellerie de la Crevasse',sub:'Markarth, Folpertuis',cat:'chatellerie'},
-  {key:'legion',label:'Légion Impériale',cat:'faction'},
-  {key:'thalmor',label:'Thalmor',cat:'faction'},
-  {key:'culte_talos',label:'Culte clandestin de Talos',cat:'faction'},
-  {key:'guilde_voleurs',label:'Guilde des Voleurs',cat:'faction'},
-  {key:'confrerie_noire',label:'Confrérie Noire',cat:'faction'},
-  {key:'academie',label:"Académie de Fort-d'Hiver",cat:'faction'},
-  {key:'bardes',label:'Académie des Bardes',cat:'faction'},
-  {key:'compagnons',label:'Les Compagnons',cat:'faction'},
-  {key:'vigiles',label:'Vigiles de Stendarr',cat:'faction'},
-  {key:'main_argent',label:"Main d'Argent",cat:'faction'},
-  {key:'clans_orques',label:'Clans orques',cat:'faction'},
-  {key:'parjure',label:'Parjure',cat:'faction'},
-  {key:'necromanciens',label:'Nécromanciens',cat:'faction'},
-  {key:'falmer',label:'Falmer',cat:'faction'},
-  {key:'cultistes_daedriques',label:'Cultistes daédriques',cat:'faction'},
+  {key:'blancherive',label:'Châtellerie de Blancherive',sub:'Blancherive, Rivebois',cat:'chatellerie',
+    summary:"Carrefour commercial et militaire de Bordeciel. L'Ordre n'y maintient aucune présence officielle, mais croise régulièrement la route de ses marchands et de la Légion."},
+  {key:'haafingar',label:'Châtellerie de Haafingar',sub:'Solitude, Pendragon',cat:'chatellerie',
+    summary:"Siège du pouvoir impérial en Bordeciel. L'Ordre y opère avec une discrétion redoublée, Solitude abritant aussi bien la Légion que l'ambassade Thalmor."},
+  {key:'estemarche',label:"Châtellerie d'Estemarche",sub:'Vendeaume',cat:'chatellerie',
+    summary:"Foyer du conservatisme nordique et du culte clandestin de Talos. L'Ordre y agit prudemment, sans jamais s'associer publiquement à l'un des partis locaux."},
+  {key:'breche',label:'Châtellerie de la Brèche',sub:'Faillaise, Fort-Hivar, Pierre de Shor',cat:'chatellerie',
+    summary:"Terre d'origine de l'Ordre, fondé puis banni en ces lieux par un ancien Jarl. Fort-Aube se dresse toujours à l'est de Faillaise, dans une tolérance tendue avec le pouvoir actuel."},
+  {key:'crevasse',label:'Châtellerie de la Crevasse',sub:'Markarth, Folpertuis',cat:'chatellerie',
+    summary:"Châtellenie marquée par les troubles avec les Parjures et la corruption de ses mines. L'Ordre y intervient rarement, faute de relais fiables sur place."},
+  {key:'legion',label:'Légion Impériale',cat:'faction',
+    summary:"L'Ordre ne sert aucune couronne, mais la Légion tolère ses méthodes tant qu'elles servent, en silence, une stabilité qu'elle peine à garantir seule."},
+  {key:'thalmor',label:'Thalmor',cat:'faction',
+    summary:"Aucune hostilité déclarée, mais une méfiance mutuelle et structurelle. Le Thalmor surveille de près toute organisation armée échappant à son contrôle."},
+  {key:'culte_talos',label:'Culte clandestin de Talos',cat:'faction',
+    summary:"Point de friction latent : l'Ordre n'a aucune raison doctrinale de s'y opposer, mais refuse tout autant de leur servir de bouclier face au Thalmor."},
+  {key:'guilde_voleurs',label:'Guilde des Voleurs',cat:'faction',
+    summary:"Aucun contact établi à ce jour. Leurs intérêts ne se croisent qu'occasionnellement, et l'Ordre n'a pas vocation à se mêler de leurs affaires."},
+  {key:'confrerie_noire',label:'Confrérie Noire',cat:'faction',
+    summary:"Une convergence de moyens, jamais de doctrine. L'Ordre tolère leur existence tant qu'elle ne s'attaque jamais à l'un des siens."},
+  {key:'academie',label:"Académie de Fort-d'Hiver",cat:'faction',
+    summary:"Alliés ponctuels pour la recherche arcanique, en particulier sur les artefacts daedriques. L'Ordre se méfie cependant d'une dépendance excessive à la sorcellerie."},
+  {key:'bardes',label:'Académie des Bardes',cat:'faction',
+    summary:"Aucune relation directe. L'Ordre se tient à distance respectueuse d'une institution qui vit de récits — l'exact inverse de sa propre doctrine du silence."},
+  {key:'compagnons',label:'Les Compagnons',cat:'faction',
+    summary:"Le Cercle dissimule en son sein des lycanthropes volontaires et disciplinés. L'Ordre le sait, et s'abstient d'intervenir tant qu'aucune menace réelle n'en émane."},
+  {key:'vigiles',label:'Vigiles de Stendarr',cat:'faction',
+    summary:"Organisation sœur, née de la même lignée qu'Isran lui-même. Un respect distant subsiste, malgré un désaccord persistant sur les méthodes à employer."},
+  {key:'main_argent',label:"Main d'Argent",cat:'faction',
+    summary:"Anciens chasseurs de loups-garous dégénérés en bande de tortionnaires. L'Ordre les considère comme une menace au même titre que celles qu'ils prétendent combattre."},
+  {key:'clans_orques',label:'Clans orques',cat:'faction',
+    summary:"Peu de contacts directs, mais aucune hostilité de principe. L'Ordre accueille en son sein quiconque, orque ou non, prêt à en payer le prix."},
+  {key:'parjure',label:'Parjure',cat:'faction',
+    summary:"Rébellion enracinée dans la Crevasse. L'Ordre n'a pas vocation politique à s'en mêler, sauf si leurs rites venaient à croiser ceux d'un culte daedrique."},
+  {key:'necromanciens',label:'Nécromanciens',cat:'faction',
+    summary:"Une des cibles directes du mandat de l'Ordre. Aucune négociation possible, aucune tolérance envisagée."},
+  {key:'falmer',label:'Falmer',cat:'faction',
+    summary:"Vestiges corrompus d'un peuple oublié, reclus sous terre. Une menace ancienne, rarement croisée mais jamais sous-estimée."},
+  {key:'cultistes_daedriques',label:'Cultistes daédriques',cat:'faction',
+    summary:"Cœur du mandat de l'Ordre, au même titre que les vampires. Chaque culte recensé fait l'objet d'une surveillance, sinon d'une intervention."},
 ];
 const MAP_PINS=[
   {key:'breche',left:87.1,top:79.9},
@@ -1781,8 +1803,12 @@ function renderDiplomatie(rows){
   const card=c=>{
     const row=rows.find(r=>r.chatellerie===c.key)||{relation:'neutre'};const rel=row.relation||'neutre';
     return`<div class="relation-card ${rel}" data-key="${c.key}" data-rel="${rel}">
-      <div><div class="rel-name">❖ ${c.label}</div>${c.sub?`<div style="font-size:0.72rem;font-style:italic;color:var(--ink-faint);margin-top:0.1rem;">${c.sub}</div>`:''}<span class="badge badge-${rel}" style="margin-top:0.2rem;">${rel.charAt(0).toUpperCase()+rel.slice(1)}</span></div>
-      ${canEdit?`<select class="rel-sel" onchange="saveRelation('${c.key}',this.value)">${['alliance','amical','neutre','hostile','guerre'].map(o=>`<option value="${o}"${o===rel?' selected':''}>${o.charAt(0).toUpperCase()+o.slice(1)}</option>`).join('')}</select>`:''}</div>`;
+      <div class="relation-card-top">
+        <div><div class="rel-name">❖ ${c.label}</div>${c.sub?`<div style="font-size:0.72rem;font-style:italic;color:var(--ink-faint);margin-top:0.1rem;">${c.sub}</div>`:''}<span class="badge badge-${rel}" style="margin-top:0.2rem;">${rel.charAt(0).toUpperCase()+rel.slice(1)}</span></div>
+        ${canEdit?`<select class="rel-sel" onchange="saveRelation('${c.key}',this.value)">${['alliance','amical','neutre','hostile','guerre'].map(o=>`<option value="${o}"${o===rel?' selected':''}>${o.charAt(0).toUpperCase()+o.slice(1)}</option>`).join('')}</select>`:''}
+      </div>
+      ${c.summary?`<p class="rel-summary">${c.summary}</p>`:''}
+    </div>`;
   };
   const chatelleries=CHATELERIES.filter(c=>c.cat==='chatellerie');
   const factions=CHATELERIES.filter(c=>c.cat==='faction');
