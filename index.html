@@ -1350,88 +1350,93 @@ function renderOrganigramme(){
 
   const noms = (grade) => {
     const list = byGrade[grade]||[];
-    if(!list.length) return `<span style="font-style:italic;color:var(--green-dark);font-size:.78rem;">— Vacant —</span>`;
-    return list.map(n=>`<span style="display:block;font-family:'Eagle Lake',serif;font-size:.82rem;color:var(--green-dark);margin-top:.2rem;">${n}</span>`).join('');
+    if(!list.length) return `<span style="font-style:italic;color:var(--ink-faint);font-size:.78rem;">— Vacant —</span>`;
+    return list.map(n=>`<span style="display:block;font-family:'Eagle Lake',serif;font-size:.84rem;color:var(--green-dark);margin-top:.25rem;line-height:1.3;">${n}</span>`).join('');
   };
 
   const total = gardeRows.length;
   const count = (grades) => grades.reduce((s,g)=>(byGrade[g]||[]).length+s,0);
   const POSTES_ENCADRES = 24;
 
+  // Chaque palier porte sa propre teinte d'accent, du plus clair (commandement)
+  // au plus sourd (troupe) — la Spécialité sort de la chaîne et porte une teinte à part.
   const LEVELS = [
-    { label:'Commandement',      total:2,  gold:true,  bg:'rgba(20,35,12,.82)', border:'var(--gold)',
+    { label:'Commandement',       total:2,  accent:'var(--gold)',       accentLight:'var(--gold-light)', bg:'var(--parch)',
       grades:[["Commandeur de l'Aube",1],["Veilleur de l'Aube",1]] },
-    { label:'Officiers',         total:4,  gold:false, bg:'rgba(20,35,12,.75)', border:'var(--brown)',
+    { label:'Officiers',          total:4,  accent:'#A88E5C',           accentLight:'#C9AF7C', bg:'var(--parch)',
       grades:[['Exécuteur de la Garde',4]] },
-    { label:'Sous-officiers',    total:6,  gold:false, bg:'rgba(20,35,12,.70)', border:'var(--brown)',
+    { label:'Sous-officiers',     total:6,  accent:'#8C7857',           accentLight:'#A8916B', bg:'var(--parch)',
       grades:[['Traqueur de la Garde',6]] },
-    { label:'Troupe',            total:12, gold:false, bg:'rgba(20,35,12,.65)', border:'rgba(120,100,60,.7)',
+    { label:'Troupe',             total:12, accent:'#6E5E45',           accentLight:'#897860', bg:'var(--parch)',
       grades:[['Patrouilleur de la Garde',12]] },
-    { label:'Rôles non plafonnés', total:null, gold:false, bg:'rgba(20,35,12,.60)', border:'var(--border-g)',
+    { label:'Rôles non plafonnés', total:null, accent:'var(--ink-mid)', accentLight:'var(--ink-faint)', bg:'var(--parch)',
       grades:[['Aspirant de la Garde','—']] },
-    { label:'Spécialité', total:null, gold:false, bg:'rgba(20,35,12,.55)', border:'var(--border-g)',
+    { label:'Spécialité',         total:null, accent:'#7D6B4E',         accentLight:'#9C8A6A', bg:'var(--parch-dark)',
       grades:[['Artisan de la Garde','—'],['Confrère de la Garde','—'],['Mage de la Garde','—']] },
   ];
 
   let h = `
-    <div style="text-align:center;margin-bottom:1.5rem;">
-      <p style="font-family:'Eagle Lake',serif;font-size:1rem;color:var(--green-dark);letter-spacing:.08em;">HIÉRARCHIE DE LA GARDE DE L'AUBE</p>
-      <p style="font-family:'IM Fell English',serif;font-style:italic;font-size:.86rem;color:var(--ink-mid);margin-top:.2rem;">
+    <div style="text-align:center;margin-bottom:2rem;">
+      <p style="font-family:'Eagle Lake',serif;font-size:1.15rem;color:var(--green-dark);letter-spacing:.1em;">HIÉRARCHIE DE LA GARDE DE L'AUBE</p>
+      <p style="font-family:'IM Fell English',serif;font-style:italic;font-size:.88rem;color:var(--ink-mid);margin-top:.3rem;">
         Effectif actuel : <strong style="color:var(--green-dark);">${total}</strong> membres pour ${POSTES_ENCADRES} postes encadrés (Aspirants et rôles spécialisés illimités à part)
       </p>
-      <div style="height:1px;background:linear-gradient(to right,transparent,var(--green),transparent);margin:.65rem auto;max-width:360px;"></div>
+      <div style="height:2px;background:linear-gradient(to right,transparent,var(--gold),transparent);margin:.85rem auto 0;max-width:300px;"></div>
     </div>
-    <div style="display:flex;flex-direction:column;align-items:center;gap:0;">`;
+    <div style="display:flex;flex-direction:column;align-items:stretch;gap:0;max-width:760px;margin:0 auto;">`;
 
   LEVELS.forEach((lv, li) => {
     const used = count(lv.grades.map(g=>g[0]));
     const isLast = li===LEVELS.length-1;
-    h += `
-      <div style="width:100%;max-width:660px;background:${lv.bg};border:1px solid var(--border-g);
-                  border-top:3px solid ${lv.border};padding:1rem 1.5rem;text-align:center;
-                  position:relative;${li>0?'margin-top:1.4rem;':''}">
-        <div style="font-family:'Eagle Lake',serif;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;
-                    color:${lv.gold?'var(--gold)':'var(--green-dark)'};margin-bottom:.65rem;">
-          ${lv.label}&nbsp;·&nbsp;<span style="color:${lv.gold?'var(--gold)':'var(--green-dark)'};">${lv.total!==null?used+'/'+lv.total:used}</span>
-        </div>
-        <div style="display:flex;justify-content:center;gap:2.5rem;flex-wrap:wrap;align-items:flex-start;">`;
+    const multiCard = lv.grades.length > 1;
 
-    lv.grades.forEach(([grade, slots], gi) => {
-      if(gi>0) h += `<div style="width:1px;background:var(--border-g);min-height:40px;align-self:stretch;"></div>`;
+    h += `
+      <div style="${li>0?'margin-top:1.6rem;':''}">
+        <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.6rem;">
+          <span style="flex:0 0 auto;font-family:'Eagle Lake',serif;font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:${lv.accent};white-space:nowrap;">${lv.label}</span>
+          <span style="flex:1;height:1px;background:${lv.accent};opacity:.45;"></span>
+          <span style="flex:0 0 auto;font-family:'Eagle Lake',serif;font-size:.78rem;color:${lv.accent};font-weight:700;">${lv.total!==null?used+' / '+lv.total:used}</span>
+        </div>
+        <div style="display:flex;gap:.85rem;flex-wrap:wrap;justify-content:${multiCard?'flex-start':'center'};">`;
+
+    lv.grades.forEach(([grade, slots]) => {
+      const list = byGrade[grade]||[];
+      const filled = list.length > 0;
       h += `
-          <div style="min-width:130px;">
-            <div style="font-family:'Eagle Lake',serif;font-size:.88rem;color:var(--green-dark);margin-bottom:.2rem;">${grade}</div>
-            <div style="font-family:'IM Fell English',serif;font-size:.72rem;font-style:italic;color:var(--green-dark);margin-bottom:.35rem;">
+          <div style="flex:1 1 200px;max-width:${multiCard?'240px':'320px'};background:${lv.bg};
+                      border:1px solid var(--border-g);border-top:3px solid ${filled?lv.accent:'var(--border-g)'};
+                      padding:1rem 1.1rem;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.06);">
+            <div style="font-family:'Eagle Lake',serif;font-size:.98rem;color:var(--green-dark);margin-bottom:.3rem;line-height:1.25;">${grade}</div>
+            <div style="display:inline-block;font-family:'IM Fell English',serif;font-size:.7rem;font-style:italic;
+                        color:${lv.accent};background:${lv.accentLight};padding:.12rem .55rem;border-radius:2px;margin-bottom:.55rem;">
               ${typeof slots==='number'?slots+' poste'+(slots>1?'s':''):'illimité'}</div>
-            <div>${noms(grade)}</div>
+            <div style="border-top:1px solid var(--border-g);padding-top:.5rem;min-height:1.4rem;">${noms(grade)}</div>
           </div>`;
     });
 
-    h += `</div>`;
+    h += `</div></div>`;
     if(!isLast) h += `
-        <div style="position:absolute;bottom:-1.3rem;left:50%;transform:translateX(-50%);
-                    width:1px;height:1.3rem;background:var(--border-g);"></div>
-        <div style="position:absolute;bottom:-1.5rem;left:50%;transform:translateX(-50%);
-                    width:7px;height:7px;border-radius:50%;background:var(--border-g);margin-left:-3.5px;"></div>`;
-    h += `</div>`;
+      <div style="display:flex;justify-content:center;margin-top:.5rem;">
+        <span style="font-family:'IM Fell English',serif;font-size:.95rem;color:var(--border-g);line-height:1;">▾</span>
+      </div>`;
   });
 
   h += `</div>
-    <div style="margin-top:2rem;border-top:1px solid var(--border-g);padding-top:1.1rem;">
-      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:.75rem;">`;
+    <div style="margin-top:2.2rem;border-top:1px solid var(--border-g);padding-top:1.2rem;max-width:760px;margin-left:auto;margin-right:auto;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(95px,1fr));gap:.6rem;">`;
 
   LEVELS.forEach(lv => {
     const used = count(lv.grades.map(g=>g[0]));
     h += `
-        <div style="background:${lv.bg};border:1px solid var(--border-g);padding:.65rem;text-align:center;">
-          <div style="font-family:'Eagle Lake',serif;font-size:1.5rem;color:var(--gold);">${used}${lv.total!==null?`<span style="font-size:.9rem;color:var(--green-dark);">/${lv.total}</span>`:''}</div>
-          <div style="font-family:'Eagle Lake',serif;font-size:.6rem;letter-spacing:.06em;color:var(--green-dark);text-transform:uppercase;margin-top:.15rem;">${lv.label}</div>
+        <div style="background:var(--parch);border:1px solid var(--border-g);border-top:3px solid ${lv.accent};padding:.7rem .4rem;text-align:center;">
+          <div style="font-family:'Eagle Lake',serif;font-size:1.4rem;color:${lv.accent};">${used}${lv.total!==null?`<span style="font-size:.85rem;color:var(--ink-faint);">/${lv.total}</span>`:''}</div>
+          <div style="font-family:'Eagle Lake',serif;font-size:.58rem;letter-spacing:.05em;color:var(--ink-mid);text-transform:uppercase;margin-top:.2rem;line-height:1.2;">${lv.label}</div>
         </div>`;
   });
 
   h += `</div>
-      <div style="margin-top:.85rem;text-align:center;font-family:'Eagle Lake',serif;font-size:.8rem;letter-spacing:.08em;color:var(--green-dark);">
-        TOTAL : <span style="color:var(--gold);font-size:.95rem;">${total} MEMBRES</span>
+      <div style="margin-top:1rem;text-align:center;font-family:'Eagle Lake',serif;font-size:.85rem;letter-spacing:.08em;color:var(--green-dark);">
+        TOTAL : <span style="color:var(--gold);font-size:1.05rem;">${total} MEMBRES</span>
       </div>
     </div>`;
 
