@@ -39,7 +39,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opac
 /* ── LOADER ── */
 #loader{position:fixed;inset:0;z-index:9999;background:rgba(10,14,8,0.78);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;backdrop-filter:blur(2px);}
 .loader-ram{font-size:3rem;animation:pulse 1.2s ease-in-out infinite;}
-#loader-msg{font-family:'Eagle Lake',serif;font-size:0.85rem;color:var(--gold);letter-spacing:0.06em;}
+#loader-msg{font-family:'Eagle Lake',serif;font-size:1rem;color:var(--gold);letter-spacing:0.06em;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
 
 /* ── HEADER ── */
@@ -48,14 +48,14 @@ header{background:linear-gradient(180deg,var(--green-dark) 0%,var(--green) 100%)
 .header-emblem{display:flex;align-items:center;gap:1rem;}
 .blason{width:56px;height:56px;background:transparent;border:2px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;}
 .header-title h1{font-family:'Eagle Lake',serif;font-size:1.4rem;color:var(--gold-light);letter-spacing:0.06em;line-height:1.2;}
-.header-title p{font-family:'IM Fell English',serif;font-size:0.82rem;font-style:italic;color:rgba(232,213,163,0.75);letter-spacing:0.06em;}
-.btn-admin{background:rgba(0,0,0,0.25);border:1px solid var(--gold);color:var(--gold-light);font-family:'Eagle Lake',serif;font-size:0.68rem;letter-spacing:0.08em;padding:0.45rem 1rem;cursor:pointer;transition:all 0.2s;}
+.header-title p{font-family:'IM Fell English',serif;font-size:1rem;font-style:italic;color:rgba(232,213,163,0.75);letter-spacing:0.06em;}
+.btn-admin{background:rgba(0,0,0,0.25);border:1px solid var(--gold);color:var(--gold-light);font-family:'Eagle Lake',serif;font-size:1rem;letter-spacing:0.08em;padding:0.45rem 1rem;cursor:pointer;transition:all 0.2s;}
 .btn-admin:hover{background:rgba(0,0,0,0.4);}
 .btn-admin.active{background:var(--brown-dark);border-color:var(--gold-light);}
 
 /* ── NAV SECTIONS ── */
 .nav-sections{display:flex;background:var(--green-dark);border-bottom:2px solid var(--gold);}
-.nav-btn{flex:1;font-family:'Eagle Lake',serif;font-size:0.72rem;letter-spacing:0.08em;padding:0.75rem 0.5rem;cursor:pointer;color:rgba(232,213,163,0.6);background:none;border:none;border-bottom:3px solid transparent;transition:all 0.2s;text-align:center;}
+.nav-btn{flex:1;font-family:'Eagle Lake',serif;font-size:1rem;letter-spacing:0.08em;padding:0.75rem 0.5rem;cursor:pointer;color:rgba(232,213,163,0.6);background:none;border:none;border-bottom:3px solid transparent;transition:all 0.2s;text-align:center;}
 .nav-btn:hover{color:var(--gold-light);background:rgba(255,255,255,0.05);}
 .nav-btn.active{color:var(--gold-light);border-bottom-color:var(--gold);background:rgba(201,168,76,0.08);}
 .nav-btn .nav-icon{display:block;font-size:1.2rem;margin-bottom:0.2rem;}
@@ -70,18 +70,18 @@ header{background:linear-gradient(180deg,var(--green-dark) 0%,var(--green) 100%)
 /* ── ADMIN PANEL ── */
 .admin-panel{width:370px;background:rgba(232,216,168,0.70);border-left:2px solid var(--green);padding:1.5rem;overflow-y:auto;overscroll-behavior:contain;display:none;flex-direction:column;gap:1.1rem;position:fixed;top:128px;right:0;bottom:0;z-index:100;box-shadow:-4px 0 16px rgba(42,64,32,0.2);}
 .admin-panel.open{display:flex;}
-.panel-title{font-family:'Eagle Lake',serif;font-size:0.7rem;letter-spacing:0.12em;color:var(--green-dark);border-bottom:1px solid var(--border-g);padding-bottom:0.45rem;margin-bottom:0.6rem;}
+.panel-title{font-family:'Eagle Lake',serif;font-size:1rem;letter-spacing:0.12em;color:var(--green-dark);border-bottom:1px solid var(--border-g);padding-bottom:0.45rem;margin-bottom:0.6rem;}
 .session-bar{background:var(--green-dark);padding:0.5rem 0.8rem;display:flex;align-items:center;justify-content:space-between;}
-.session-name{font-family:'Eagle Lake',serif;font-size:0.72rem;color:var(--gold-light);letter-spacing:0.06em;}
-.btn-logout{background:none;border:1px solid rgba(232,213,163,0.3);color:var(--gold-light);font-family:'Eagle Lake',serif;font-size:0.62rem;padding:0.2rem 0.55rem;cursor:pointer;}
+.session-name{font-family:'Eagle Lake',serif;font-size:1rem;color:var(--gold-light);letter-spacing:0.06em;}
+.btn-logout{background:none;border:1px solid rgba(232,213,163,0.3);color:var(--gold-light);font-family:'Eagle Lake',serif;font-size:1rem;padding:0.2rem 0.55rem;cursor:pointer;}
 
 /* ── LOGIN ── */
 .login-box{background:rgba(240,230,200,0.58);border:1px solid var(--border-g);padding:1.1rem;}
-.login-box p{font-size:0.85rem;color:var(--ink-mid);margin-bottom:0.7rem;font-style:italic;}
+.login-box p{font-size:1rem;color:var(--ink-mid);margin-bottom:0.7rem;font-style:italic;}
 .login-row{display:flex;gap:0.4rem;margin-bottom:0.4rem;}
-.login-input{flex:1;background:rgba(226,212,168,0.40);border:1px solid var(--border-g);color:var(--ink);font-family:'IM Fell English',serif;font-size:0.9rem;padding:0.38rem 0.65rem;}
+.login-input{flex:1;background:rgba(226,212,168,0.40);border:1px solid var(--border-g);color:var(--ink);font-family:'IM Fell English',serif;font-size:1rem;padding:0.38rem 0.65rem;}
 .login-input:focus{outline:none;border-color:var(--green);}
-.btn-login{background:var(--green-dark);border:1px solid var(--gold);color:var(--gold-light);font-family:'Eagle Lake',serif;font-size:0.68rem;padding:0.38rem 0.85rem;cursor:pointer;transition:all 0.2s;}
+.btn-login{background:var(--green-dark);border:1px solid var(--gold);color:var(--gold-light);font-family:'Eagle Lake',serif;font-size:1rem;padding:0.38rem 0.85rem;cursor:pointer;transition:all 0.2s;}
 .btn-login:hover{background:var(--green);}
 
 /* ── SECTION HEADER ── */
@@ -89,20 +89,20 @@ header{background:linear-gradient(180deg,var(--green-dark) 0%,var(--green) 100%)
 .sect-header h2{font-family:'Eagle Lake',serif;font-size:1.45rem;color:var(--green-dark);letter-spacing:0.06em;display:flex;align-items:center;gap:0.6rem;}
 .sect-header p{font-size:1.05rem;font-weight:600;color:var(--ink);font-style:italic;margin-top:0.25rem;}
 .sect-stats{display:flex;gap:0.75rem;margin-top:0.75rem;}
-.stat-chip{background:rgba(226,212,168,0.38);border:1px solid var(--border-g);padding:0.3rem 0.85rem;font-family:'Eagle Lake',serif;font-size:0.88rem;font-weight:700;color:var(--ink);}
+.stat-chip{background:rgba(226,212,168,0.38);border:1px solid var(--border-g);padding:0.3rem 0.85rem;font-family:'Eagle Lake',serif;font-size:1rem;font-weight:700;color:var(--ink);}
 
 /* ── SEARCH & FILTERS ── */
 .toolbar{display:flex;gap:0.6rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap;}
 .search-wrap{display:flex;align-items:center;gap:0.4rem;background:rgba(226,212,168,0.42);border:1px solid var(--border-g);border-left:3px solid var(--green);padding:0.3rem 0.6rem;flex:1;min-width:200px;}
-.search-wrap input{flex:1;background:none;border:none;color:var(--ink);font-family:'IM Fell English',serif;font-size:0.95rem;outline:none;}
+.search-wrap input{flex:1;background:none;border:none;color:var(--ink);font-family:'IM Fell English',serif;font-size:1rem;outline:none;}
 .search-wrap input::placeholder{color:var(--ink-faint);font-style:italic;}
-.filter-sel{background:rgba(226,212,168,0.42);border:1px solid var(--border-g);color:var(--ink);font-family:'IM Fell English',serif;font-size:0.88rem;padding:0.3rem 0.6rem;cursor:pointer;}
+.filter-sel{background:rgba(226,212,168,0.42);border:1px solid var(--border-g);color:var(--ink);font-family:'IM Fell English',serif;font-size:1rem;padding:0.3rem 0.6rem;cursor:pointer;}
 .filter-sel:focus{outline:none;border-color:var(--green);}
 
 /* ── TABLE ── */
 .table-wrap{border:1px solid var(--border-g);border-top:2px solid var(--green);overflow:hidden;}
-table{width:100%;border-collapse:collapse;font-size:0.9rem;}
-thead th{background:var(--green-dark);font-family:'Eagle Lake',serif;font-size:0.88rem;letter-spacing:0.1em;color:var(--gold-light);padding:0.65rem 0.9rem;text-align:left;border-right:1px solid rgba(201,168,76,0.15);font-weight:400;}
+table{width:100%;border-collapse:collapse;font-size:1rem;}
+thead th{background:var(--green-dark);font-family:'Eagle Lake',serif;font-size:1rem;letter-spacing:0.1em;color:var(--gold-light);padding:0.65rem 0.9rem;text-align:left;border-right:1px solid rgba(201,168,76,0.15);font-weight:400;}
 thead th:last-child{border-right:none;text-align:center;}
 tbody tr{border-bottom:1px solid var(--border-g);transition:background 0.12s;}
 tbody tr:nth-child(even){background:rgba(226,212,168,0.38);}
@@ -119,15 +119,15 @@ tbody td{padding:0.55rem 0.9rem;vertical-align:middle;}
 .diplo-pin.neutre{background:#8B6030;}
 .diplo-pin.hostile{background:#8B5E00;}
 .diplo-pin.guerre{background:#7A1010;}
-#diplo-tooltip{position:absolute;display:none;background:var(--green-dark);color:var(--gold-light);font-family:'Eagle Lake',serif;font-size:0.68rem;letter-spacing:0.03em;padding:0.35rem 0.6rem;border:1px solid var(--gold);white-space:nowrap;z-index:20;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,0.5);transform:translate(-50%,-100%);margin-top:-8px;}
+#diplo-tooltip{position:absolute;display:none;background:var(--green-dark);color:var(--gold-light);font-family:'Eagle Lake',serif;font-size:1rem;letter-spacing:0.03em;padding:0.35rem 0.6rem;border:1px solid var(--gold);white-space:nowrap;z-index:20;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,0.5);transform:translate(-50%,-100%);margin-top:-8px;}
 .relation-card.flash{animation:diploFlash 1s ease;}
 @keyframes diploFlash{0%,100%{box-shadow:none;}50%{box-shadow:0 0 0 3px var(--gold);}}
 .biblio-book{border:1px solid var(--border-g);margin-bottom:1rem;background:rgba(226,212,168,0.12);}
 .biblio-book-head{cursor:pointer;display:flex;align-items:center;gap:0.8rem;padding:0.9rem 1.15rem;}
-.biblio-arr{font-size:0.78rem;color:var(--gold);transition:transform 0.15s;flex-shrink:0;}
+.biblio-arr{font-size:1rem;color:var(--gold);transition:transform 0.15s;flex-shrink:0;}
 .biblio-book.open .biblio-arr{transform:rotate(90deg);}
 .biblio-book-title{font-family:'Eagle Lake',serif;font-size:1.02rem;letter-spacing:0.03em;color:var(--green-dark);display:block;}
-.biblio-book-sub{font-style:italic;font-size:0.78rem;color:var(--ink-faint);display:block;margin-top:0.2rem;}
+.biblio-book-sub{font-style:italic;font-size:1rem;color:var(--ink-faint);display:block;margin-top:0.2rem;}
 .biblio-book-body{display:none;padding:0 1.5rem 1.6rem 1.5rem;border-top:1px solid var(--border-g);}
 .biblio-book.open .biblio-book-body{display:block;padding-top:1.3rem;}
 .biblio-fore{font-style:italic;color:var(--ink-mid);margin-bottom:0.75rem;}
@@ -136,18 +136,18 @@ tbody td{padding:0.55rem 0.9rem;vertical-align:middle;}
 .biblio-intro{margin-bottom:0.9rem;}
 .biblio-creature{margin-bottom:1.7rem;padding-bottom:0.5rem;border-bottom:1px dashed var(--border-g);}
 .biblio-creature-name{font-family:'Eagle Lake',serif;font-size:1.18rem;letter-spacing:0.04em;color:var(--brown);margin-bottom:0.15rem;}
-.biblio-creature-sub{font-style:italic;font-size:0.84rem;color:var(--ink-faint);margin-bottom:0.7rem;}
-.biblio-label{font-weight:700;font-size:0.8rem;letter-spacing:0.05em;text-transform:uppercase;color:var(--ink-mid);margin:0.65rem 0 0.3rem;}
+.biblio-creature-sub{font-style:italic;font-size:1rem;color:var(--ink-faint);margin-bottom:0.7rem;}
+.biblio-label{font-weight:700;font-size:1rem;letter-spacing:0.05em;text-transform:uppercase;color:var(--ink-mid);margin:0.65rem 0 0.3rem;}
 .biblio-body{margin-bottom:0.45rem;}
 .biblio-quote{font-style:italic;color:var(--ink-mid);padding-left:0.85rem;border-left:2px solid var(--border-g);margin-bottom:0.45rem;}
 .biblio-note{font-style:italic;color:var(--brown-dark);padding-left:0.85rem;border-left:2px solid var(--brown);margin-bottom:0.45rem;}
 .biblio-unknowns{padding-left:1.35rem;margin-bottom:0.9rem;}
 .biblio-unknowns li{margin-bottom:0.4rem;}
-.biblio-note{font-style:italic;font-size:0.78rem;color:var(--ink-faint);border-left:2px solid var(--border-g);padding-left:0.7rem;margin:0.5rem 0 0.6rem;}
-.lois-cat-row td{background:var(--green-dark);font-family:'Eagle Lake',serif;font-size:0.74rem;letter-spacing:0.1em;color:var(--gold-light);padding:0.45rem 0.9rem;border-right:none;text-transform:uppercase;}
+.biblio-note{font-style:italic;font-size:1rem;color:var(--ink-faint);border-left:2px solid var(--border-g);padding-left:0.7rem;margin:0.5rem 0 0.6rem;}
+.lois-cat-row td{background:var(--green-dark);font-family:'Eagle Lake',serif;font-size:1rem;letter-spacing:0.1em;color:var(--gold-light);padding:0.45rem 0.9rem;border-right:none;text-transform:uppercase;}
 
 /* ── BADGES ── */
-.badge{display:inline-block;padding:0.15rem 0.55rem;font-family:'Eagle Lake',serif;font-size:0.68rem;letter-spacing:0.04em;border:1px solid;border-radius:3px;}
+.badge{display:inline-block;padding:0.15rem 0.55rem;font-family:'Eagle Lake',serif;font-size:1rem;letter-spacing:0.04em;border:1px solid;border-radius:3px;}
 .badge-tag{background:rgba(107,74,30,0.08);color:var(--ink-mid);border-color:var(--border-g);}
 .badge-libre   { background:rgba(45,106,45,0.1);  color:#2D5A1A; border-color:rgba(45,106,45,0.4); }
 .badge-occupé  { background:rgba(107,74,30,0.1);  color:var(--brown); border-color:rgba(107,74,30,0.35); }
@@ -166,9 +166,9 @@ tbody td{padding:0.55rem 0.9rem;vertical-align:middle;}
 .badge-guerre{background:rgba(122,16,16,0.12);color:#7A1010;border-color:rgba(122,16,16,0.35);}
 
 /* ── BOUTONS ACTION ── */
-.btn-action{background:var(--green-dark);border:1px solid var(--gold);color:var(--gold-light);font-family:'Eagle Lake',serif;font-size:0.66rem;letter-spacing:0.06em;padding:0.32rem 0.75rem;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+.btn-action{background:var(--green-dark);border:1px solid var(--gold);color:var(--gold-light);font-family:'Eagle Lake',serif;font-size:1rem;letter-spacing:0.06em;padding:0.32rem 0.75rem;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
 .btn-action:hover{background:var(--green);}
-.btn-del{background:none;border:1px solid rgba(122,16,16,0.3);color:rgba(122,16,16,0.6);font-family:'Eagle Lake',serif;font-size:0.66rem;padding:0.28rem 0.55rem;cursor:pointer;transition:all 0.15s;margin-left:0.3rem;}
+.btn-del{background:none;border:1px solid rgba(122,16,16,0.3);color:rgba(122,16,16,0.6);font-family:'Eagle Lake',serif;font-size:1rem;padding:0.28rem 0.55rem;cursor:pointer;transition:all 0.15s;margin-left:0.3rem;}
 .btn-del:hover{border-color:#7A1010;color:#7A1010;background:rgba(122,16,16,0.07);}
 td.act{text-align:center;white-space:nowrap;}
 
@@ -176,17 +176,17 @@ td.act{text-align:center;white-space:nowrap;}
 .add-form-wrap{background:var(--parch-dark);border:1px solid var(--border-g);border-top:2px solid var(--green);margin-bottom:1rem;overflow:hidden;}
 .add-form-head{display:flex;align-items:center;justify-content:space-between;padding:0.6rem 1rem;cursor:pointer;user-select:none;transition:background 0.15s;}
 .add-form-head:hover{background:var(--parch-deep);}
-.add-form-head span{font-family:'Eagle Lake',serif;font-size:0.72rem;letter-spacing:0.08em;color:var(--green-dark);}
-.add-form-head .chev{font-size:0.75rem;color:var(--ink-faint);transition:transform 0.2s;}
+.add-form-head span{font-family:'Eagle Lake',serif;font-size:1rem;letter-spacing:0.08em;color:var(--green-dark);}
+.add-form-head .chev{font-size:1rem;color:var(--ink-faint);transition:transform 0.2s;}
 .add-form-head.open .chev{transform:rotate(180deg);}
 .add-form-body{display:none;flex-direction:column;gap:0.6rem;padding:1rem;border-top:1px solid var(--border-g);}
 .add-form-body.open{display:flex;}
 .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0.6rem;}
 .form-field{display:flex;flex-direction:column;gap:0.2rem;}
-.form-field label{font-family:'Eagle Lake',serif;font-size:0.85rem;font-weight:700;letter-spacing:0.08em;color:var(--ink);}
-.form-field input,.form-field select{background:var(--parch);border:1px solid var(--border-g);color:var(--ink);font-family:'IM Fell English',serif;font-size:0.9rem;padding:0.32rem 0.55rem;}
+.form-field label{font-family:'Eagle Lake',serif;font-size:1rem;font-weight:700;letter-spacing:0.08em;color:var(--ink);}
+.form-field input,.form-field select{background:var(--parch);border:1px solid var(--border-g);color:var(--ink);font-family:'IM Fell English',serif;font-size:1rem;padding:0.32rem 0.55rem;}
 .form-field input:focus,.form-field select:focus{outline:none;border-color:var(--green);}
-.btn-submit{background:var(--green-dark);border:1px solid var(--gold);color:var(--gold-light);font-family:'Eagle Lake',serif;font-size:0.7rem;letter-spacing:0.08em;padding:0.42rem 1.1rem;cursor:pointer;transition:all 0.2s;align-self:flex-end;margin-top:0.2rem;}
+.btn-submit{background:var(--green-dark);border:1px solid var(--gold);color:var(--gold-light);font-family:'Eagle Lake',serif;font-size:1rem;letter-spacing:0.08em;padding:0.42rem 1.1rem;cursor:pointer;transition:all 0.2s;align-self:flex-end;margin-top:0.2rem;}
 .btn-submit:hover{background:var(--green);}
 
 /* ── CARTE DIPLOMATIE ── */
@@ -195,40 +195,40 @@ td.act{text-align:center;white-space:nowrap;}
 .map-overlay{position:absolute;inset:0;}
 .map-zone{position:absolute;cursor:pointer;border-radius:4px;transition:all 0.2s;display:flex;align-items:center;justify-content:center;}
 .map-zone:hover{filter:brightness(1.15);}
-.map-label{font-family:'Eagle Lake',serif;font-size:0.72rem;color:#fff;text-shadow:1px 1px 3px rgba(0,0,0,0.8);text-align:center;pointer-events:none;letter-spacing:0.04em;}
+.map-label{font-family:'Eagle Lake',serif;font-size:1rem;color:#fff;text-shadow:1px 1px 3px rgba(0,0,0,0.8);text-align:center;pointer-events:none;letter-spacing:0.04em;}
 .relation-panel{margin-top:1.25rem;}
 .relation-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.75rem;margin-top:0.75rem;}
 .relation-card{background:var(--parch-dark);border:1px solid var(--border-g);border-left:4px solid var(--green);padding:0.75rem 1rem;display:flex;flex-direction:column;gap:0.5rem;}
 .relation-card-top{display:flex;align-items:center;justify-content:space-between;}
-.rel-summary{font-family:'IM Fell English',serif;font-size:0.98rem;font-style:italic;color:var(--ink);line-height:1.55;border-top:1px solid var(--border-g);padding-top:0.5rem;}
+.rel-summary{font-family:'IM Fell English',serif;font-size:1rem;font-style:italic;color:var(--ink);line-height:1.55;border-top:1px solid var(--border-g);padding-top:0.5rem;}
 .relation-card.alliance{border-left-color:#2D6A2D;}
 .relation-card.amical{border-left-color:var(--green);}
 .relation-card.neutre{border-left-color:var(--brown-light);}
 .relation-card.hostile{border-left-color:#8B5E00;}
 .relation-card.guerre{border-left-color:#7A1010;}
-.rel-name{font-family:'Eagle Lake',serif;font-size:0.85rem;color:var(--ink);}
-.rel-sel{background:var(--parch);border:1px solid var(--border-g);color:var(--ink);font-family:'IM Fell English',serif;font-size:0.85rem;padding:0.25rem 0.5rem;cursor:pointer;}
+.rel-name{font-family:'Eagle Lake',serif;font-size:1rem;color:var(--ink);}
+.rel-sel{background:var(--parch);border:1px solid var(--border-g);color:var(--ink);font-family:'IM Fell English',serif;font-size:1rem;padding:0.25rem 0.5rem;cursor:pointer;}
 .rel-sel:focus{outline:none;border-color:var(--green);}
 .map-legend{display:flex;gap:1rem;flex-wrap:wrap;margin-top:0.75rem;}
-.leg-item{display:flex;align-items:center;gap:0.4rem;font-size:0.8rem;color:var(--ink-mid);}
+.leg-item{display:flex;align-items:center;gap:0.4rem;font-size:1rem;color:var(--ink-mid);}
 .leg-dot{width:12px;height:12px;border-radius:2px;flex-shrink:0;}
 
 /* ── MEMBRES COMMERCE ── */
 .membres-list{display:flex;flex-direction:column;gap:0.3rem;margin-top:0.4rem;}
-.membre-row{display:flex;align-items:center;gap:0.5rem;background:var(--parch);border:1px solid var(--border-g);padding:0.3rem 0.6rem;font-size:0.82rem;}
-.membre-role{font-family:'Eagle Lake',serif;font-size:0.65rem;color:var(--green-dark);min-width:70px;}
+.membre-row{display:flex;align-items:center;gap:0.5rem;background:var(--parch);border:1px solid var(--border-g);padding:0.3rem 0.6rem;font-size:1rem;}
+.membre-role{font-family:'Eagle Lake',serif;font-size:1rem;color:var(--green-dark);min-width:70px;}
 
 /* ── SUPERADMIN ── */
 .sa-section{background:var(--parch);border:1px solid var(--border-g);padding:1rem;}
 .sa-row{display:flex;gap:0.4rem;margin-bottom:0.4rem;}
-.sa-input{flex:1;background:var(--parch-dark);border:1px solid var(--border-g);color:var(--ink);font-family:'IM Fell English',serif;font-size:0.88rem;padding:0.35rem 0.6rem;}
+.sa-input{flex:1;background:var(--parch-dark);border:1px solid var(--border-g);color:var(--ink);font-family:'IM Fell English',serif;font-size:1rem;padding:0.35rem 0.6rem;}
 .sa-input:focus{outline:none;border-color:var(--green);}
-.sa-sel{background:var(--parch-dark);border:1px solid var(--border-g);color:var(--ink);font-family:'IM Fell English',serif;font-size:0.88rem;padding:0.35rem 0.6rem;flex:1;cursor:pointer;}
+.sa-sel{background:var(--parch-dark);border:1px solid var(--border-g);color:var(--ink);font-family:'IM Fell English',serif;font-size:1rem;padding:0.35rem 0.6rem;flex:1;cursor:pointer;}
 .admin-entry{display:flex;align-items:center;justify-content:space-between;background:var(--parch);border:1px solid var(--border-g);padding:0.35rem 0.7rem;margin-bottom:0.3rem;}
 .admin-entry-info{display:flex;flex-direction:column;gap:0.1rem;}
-.admin-entry-name{font-family:'Eagle Lake',serif;font-size:0.78rem;color:var(--ink);}
-.admin-entry-section{font-size:0.72rem;color:var(--ink-faint);font-style:italic;}
-.msg{font-size:0.75rem;margin-top:0.3rem;display:none;}
+.admin-entry-name{font-family:'Eagle Lake',serif;font-size:1rem;color:var(--ink);}
+.admin-entry-section{font-size:1rem;color:var(--ink-faint);font-style:italic;}
+.msg{font-size:1rem;margin-top:0.3rem;display:none;}
 
 /* ══ MARQUEURS CARTE ══════════════════════════════════════════════════ */
 .map-marker {
@@ -241,7 +241,7 @@ td.act{text-align:center;white-space:nowrap;}
 }
 .map-marker:hover { transform: translate(-50%,-50%) scale(1.3); background: var(--green-dark); border-color: var(--gold); z-index: 6; }
 .map-marker.selected { background: var(--red); border-color: var(--gold-light); transform: translate(-50%,-50%) scale(1.2); z-index: 7; }
-.marker-num { font-family:'Eagle Lake',serif; font-size:0.6rem; color:var(--gold-light); line-height:1; pointer-events:none; }
+.marker-num { font-family:'Eagle Lake',serif; font-size:1rem; color:var(--gold-light); line-height:1; pointer-events:none; }
 
 /* Couleurs par type */
 .map-marker[data-type="Administration"] { background:rgba(122,16,16,0.85); }
@@ -252,16 +252,16 @@ td.act{text-align:center;white-space:nowrap;}
 .map-marker[data-type="Temple"]         { background:rgba(58,106,138,0.85); }
 .map-marker[data-type="Mine"]           { background:rgba(30,30,30,0.9); }
 .map-marker[data-type="Infrastructure"],.map-marker[data-type="Zone"] { background:rgba(80,80,80,0.85); }
-.btn-sort{background:var(--parch-dark);border:1px solid var(--border-g);color:var(--ink-mid);font-family:'Eagle Lake',serif;font-size:0.68rem;letter-spacing:0.06em;padding:0.3rem 0.7rem;cursor:pointer;transition:all 0.15s;white-space:nowrap;display:flex;align-items:center;gap:0.35rem;}
+.btn-sort{background:var(--parch-dark);border:1px solid var(--border-g);color:var(--ink-mid);font-family:'Eagle Lake',serif;font-size:1rem;letter-spacing:0.06em;padding:0.3rem 0.7rem;cursor:pointer;transition:all 0.15s;white-space:nowrap;display:flex;align-items:center;gap:0.35rem;}
 .btn-sort:hover{border-color:var(--green);color:var(--green-dark);}
 .btn-sort.asc::after{content:' ↑';}
 .btn-sort.desc::after{content:' ↓';}
-.btn-export{background:var(--parch);border:1px solid var(--border-g);color:var(--ink-mid);font-family:'Eagle Lake',serif;font-size:0.67rem;letter-spacing:0.06em;padding:0.38rem 0.8rem;cursor:pointer;transition:all 0.2s;width:100%;margin-top:0.35rem;text-align:left;}
+.btn-export{background:var(--parch);border:1px solid var(--border-g);color:var(--ink-mid);font-family:'Eagle Lake',serif;font-size:1rem;letter-spacing:0.06em;padding:0.38rem 0.8rem;cursor:pointer;transition:all 0.2s;width:100%;margin-top:0.35rem;text-align:left;}
 .btn-export:hover{border-color:var(--green);color:var(--green-dark);}
 
 /* ── TOAST ── */
 #toasts{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:0.5rem;pointer-events:none;}
-.toast{background:var(--parch);border:1px solid var(--green);border-left:3px solid var(--green-dark);padding:0.65rem 1rem;font-family:'Eagle Lake',serif;font-size:0.72rem;color:var(--green-dark);letter-spacing:0.04em;animation:tIn 0.25s ease,tOut 0.3s ease 2.7s forwards;max-width:300px;box-shadow:0 2px 8px rgba(42,64,32,0.2);}
+.toast{background:var(--parch);border:1px solid var(--green);border-left:3px solid var(--green-dark);padding:0.65rem 1rem;font-family:'Eagle Lake',serif;font-size:1rem;color:var(--green-dark);letter-spacing:0.04em;animation:tIn 0.25s ease,tOut 0.3s ease 2.7s forwards;max-width:300px;box-shadow:0 2px 8px rgba(42,64,32,0.2);}
 @keyframes tIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
 @keyframes tOut{from{opacity:1}to{opacity:0}}
 
@@ -318,7 +318,7 @@ td.act{text-align:center;white-space:nowrap;}
   animation:couv-appear 0.8s ease both;
 }
 .couv-overtitle{
-  font-family:'Eagle Lake',serif;font-size:0.90rem;letter-spacing:0.22em;
+  font-family:'Eagle Lake',serif;font-size:1rem;letter-spacing:0.22em;
   color:var(--gold);text-transform:uppercase;
   margin-bottom:0.6rem;
   animation:couv-appear 0.9s ease 0.15s both;
@@ -343,14 +343,14 @@ td.act{text-align:center;white-space:nowrap;}
   animation:couv-appear 1s ease 0.5s both;
 }
 .couv-annot{
-  font-family:'IM Fell English',Georgia,serif;font-size:0.92rem;
+  font-family:'IM Fell English',Georgia,serif;font-size:1rem;
   font-style:italic;color:rgba(201,168,76,0.70);line-height:1.6;
   border-top:1px solid rgba(201,168,76,0.25);border-bottom:1px solid rgba(201,168,76,0.25);
   padding:0.5rem 1.2rem;margin:0 auto 1.2rem;max-width:400px;text-align:center;
   animation:couv-appear 1s ease 0.58s both;
 }
 .couv-devise{
-  font-family:'Eagle Lake',serif;font-size:0.84rem;letter-spacing:0.15em;
+  font-family:'Eagle Lake',serif;font-size:1rem;letter-spacing:0.15em;
   color:rgba(201,168,76,0.55);text-transform:uppercase;
   margin-bottom:2rem;
   animation:couv-appear 1s ease 0.6s both;
@@ -358,7 +358,7 @@ td.act{text-align:center;white-space:nowrap;}
 .couv-btn{
   background:var(--green-dark);border:1px solid var(--gold);
   color:var(--gold-light);font-family:'Eagle Lake',serif;
-  font-size:0.90rem;letter-spacing:0.1em;text-transform:uppercase;
+  font-size:1rem;letter-spacing:0.1em;text-transform:uppercase;
   padding:0.65rem 2rem;cursor:pointer;
   transition:background 0.2s,box-shadow 0.2s;
   position:relative;overflow:hidden;
@@ -429,7 +429,7 @@ td.act{text-align:center;white-space:nowrap;}
     <h1 class="couv-titre">Livret de l'Ordre</h1>
     <div class="couv-divider">
       <span style="width:160px;max-width:160px;"></span>
-      <span style="font-size:0.7rem;color:var(--gold);opacity:0.7;flex-shrink:0;">✦</span>
+      <span style="font-size:1rem;color:var(--gold);opacity:0.7;flex-shrink:0;">✦</span>
       <span style="width:160px;max-width:160px;"></span>
     </div>
     <p class="couv-intro">
@@ -491,32 +491,32 @@ td.act{text-align:center;white-space:nowrap;}
     <div style="margin-bottom:1.25rem;">
       <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.charte-arr').textContent=this.nextElementSibling.style.display==='none'?'▶':'▼';"
         style="cursor:pointer;display:flex;align-items:center;gap:.55rem;font-family:'Eagle Lake',serif;
-               font-size:.8rem;letter-spacing:.06em;color:var(--green-dark);padding:.45rem 0;
+               font-size:1rem;letter-spacing:.06em;color:var(--green-dark);padding:.45rem 0;
                border-bottom:1px solid var(--border-g);">
         <span class="charte-arr">▶</span> Charte d'accueil des civils et alliés
-        <span style="font-family:'IM Fell English',serif;font-style:italic;font-size:.72rem;color:var(--ink-faint);margin-left:.4rem;">(cliquer pour déplier)</span>
+        <span style="font-family:'IM Fell English',serif;font-style:italic;font-size:1rem;color:var(--ink-faint);margin-left:.4rem;">(cliquer pour déplier)</span>
       </div>
       <div style="display:none;margin-top:.75rem;background:rgba(226,212,168,0.25);border:1px solid var(--border-g);padding:1.25rem 1.5rem;">
 
-        <p style="font-family:'Eagle Lake',serif;font-size:.78rem;letter-spacing:.06em;color:var(--green-dark);margin-bottom:.35rem;">Vivre sous la protection de Fort Aube n'est pas un droit — c'est une tolérance qui se mérite et se retire aussi vite qu'elle s'accorde.</p>
+        <p style="font-family:'Eagle Lake',serif;font-size:1rem;letter-spacing:.06em;color:var(--green-dark);margin-bottom:.35rem;">Vivre sous la protection de Fort Aube n'est pas un droit — c'est une tolérance qui se mérite et se retire aussi vite qu'elle s'accorde.</p>
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-top:1rem;">
 
           <!-- Obtenir le statut -->
           <div style="border-left:3px solid var(--green);padding-left:.85rem;">
-            <div style="font-family:'Eagle Lake',serif;font-size:.85rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--green-dark);margin-bottom:.6rem;">Obtenir le statut de protégé</div>
-            <ul style="font-family:'IM Fell English',serif;font-size:.88rem;color:var(--ink);line-height:1.8;list-style:none;padding:0;">
+            <div style="font-family:'Eagle Lake',serif;font-size:1rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--green-dark);margin-bottom:.6rem;">Obtenir le statut de protégé</div>
+            <ul style="font-family:'IM Fell English',serif;font-size:1rem;color:var(--ink);line-height:1.8;list-style:none;padding:0;">
               <li><strong>Service</strong> — un service rendu jugé utile à l'Ordre</li>
               <li><strong>Recommandation</strong> — vouché par un membre de la Garde</li>
               <li><strong>Refuge</strong> — accueilli faute d'alternative, sous surveillance</li>
             </ul>
-            <p style="font-family:'IM Fell English',serif;font-size:.78rem;color:var(--ink-mid);margin-top:.5rem;border-top:1px solid var(--border-g);padding-top:.45rem;">Aucune race n'est écartée d'office. Le statut s'accorde au cas par cas, sur décision du Commandeur ou de son Chancelier.</p>
+            <p style="font-family:'IM Fell English',serif;font-size:1rem;color:var(--ink-mid);margin-top:.5rem;border-top:1px solid var(--border-g);padding-top:.45rem;">Aucune race n'est écartée d'office. Le statut s'accorde au cas par cas, sur décision du Commandeur ou de son Chancelier.</p>
           </div>
 
           <!-- Perdre le statut -->
           <div style="border-left:3px solid var(--brown);padding-left:.85rem;">
-            <div style="font-family:'Eagle Lake',serif;font-size:.85rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--brown-dark);margin-bottom:.6rem;">Perdre le statut</div>
-            <ul style="font-family:'IM Fell English',serif;font-size:.88rem;color:var(--ink);line-height:1.8;list-style:none;padding:0;">
+            <div style="font-family:'Eagle Lake',serif;font-size:1rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--brown-dark);margin-bottom:.6rem;">Perdre le statut</div>
+            <ul style="font-family:'IM Fell English',serif;font-size:1rem;color:var(--ink);line-height:1.8;list-style:none;padding:0;">
               <li>Trahison ou collusion avérée avec une cible de l'Ordre → banni sur-le-champ</li>
               <li>Inutilité prolongée ou abus de la protection accordée → mise sous surveillance puis bannissement</li>
               <li>Départ volontaire → statut levé sans préjudice</li>
@@ -525,8 +525,8 @@ td.act{text-align:center;white-space:nowrap;}
 
           <!-- Droits -->
           <div style="border-left:3px solid var(--gold);padding-left:.85rem;">
-            <div style="font-family:'Eagle Lake',serif;font-size:.85rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#8A6D1F;margin-bottom:.6rem;">Droits du protégé</div>
-            <ul style="font-family:'IM Fell English',serif;font-size:.88rem;color:var(--ink);line-height:1.8;list-style:none;padding:0;">
+            <div style="font-family:'Eagle Lake',serif;font-size:1rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#8A6D1F;margin-bottom:.6rem;">Droits du protégé</div>
+            <ul style="font-family:'IM Fell English',serif;font-size:1rem;color:var(--ink);line-height:1.8;list-style:none;padding:0;">
               <li>Logement dans l'enceinte de Fort Aube</li>
               <li>Accès aux soins du Confrère de la Garde</li>
               <li>Échanger avec les commerces de la garnison</li>
@@ -537,8 +537,8 @@ td.act{text-align:center;white-space:nowrap;}
 
           <!-- Devoirs -->
           <div style="border-left:3px solid var(--ink-mid);padding-left:.85rem;">
-            <div style="font-family:'Eagle Lake',serif;font-size:.85rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink);margin-bottom:.6rem;">Devoirs du protégé</div>
-            <ul style="font-family:'IM Fell English',serif;font-size:.88rem;color:var(--ink);line-height:1.8;list-style:none;padding:0;">
+            <div style="font-family:'Eagle Lake',serif;font-size:1rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink);margin-bottom:.6rem;">Devoirs du protégé</div>
+            <ul style="font-family:'IM Fell English',serif;font-size:1rem;color:var(--ink);line-height:1.8;list-style:none;padding:0;">
               <li>Ne rien répandre de ce qui se voit ou s'entend à Fort Aube</li>
               <li>Apporter une contribution réelle (vivres, métier, renseignement)</li>
               <li>Obéir sans discuter aux consignes de sécurité de la Garde</li>
@@ -572,7 +572,7 @@ td.act{text-align:center;white-space:nowrap;}
           </div>
         </div>
         <div style="border-top:1px solid var(--border-g);padding-top:0.6rem;margin-top:0.4rem;">
-          <p style="font-family:'Eagle Lake',serif;font-size:0.68rem;color:var(--ink-faint);margin-bottom:0.5rem;">Concession d'exploitation (optionnel)</p>
+          <p style="font-family:'Eagle Lake',serif;font-size:1rem;color:var(--ink-faint);margin-bottom:0.5rem;">Concession d'exploitation (optionnel)</p>
           <div class="form-grid">
             <div class="form-field"><label>Type</label>
               <select id="cit-con-type"><option value="">— Aucune —</option><option>Agricole</option><option>Minière</option><option>Artisanale</option><option>Faunique</option></select>
@@ -589,7 +589,7 @@ td.act{text-align:center;white-space:nowrap;}
       </div>
     </div>
     <div class="toolbar">
-      <div class="search-wrap"><span style="color:var(--ink-faint);font-size:0.85rem;">🔍</span><input id="cit-search" type="text" placeholder="Rechercher..." oninput="filterRows('cit-tbody',this.value)"></div>
+      <div class="search-wrap"><span style="color:var(--ink-faint);font-size:1rem;">🔍</span><input id="cit-search" type="text" placeholder="Rechercher..." oninput="filterRows('cit-tbody',this.value)"></div>
       <select class="filter-sel" id="cit-filter-race" onchange="filterRows('cit-tbody',document.getElementById('cit-search').value)">
         <option value="">Toutes les races</option><option>Nordique</option><option>Impériale</option><option>Bretonne</option><option>Rougegarde</option><option>Elfe des bois</option><option>Haut-Elfe</option><option>Elfe sombre</option><option>Orque</option><option>Argonien</option><option>Khajiit</option>
       </select>
@@ -617,12 +617,12 @@ td.act{text-align:center;white-space:nowrap;}
     <!-- Switcher de pages Garde -->
     <div style="display:flex;gap:.5rem;margin-bottom:1.25rem;border-bottom:2px solid var(--border-g);padding-bottom:.75rem;">
       <button id="gar-tab-1" onclick="garSwitchTab(1)"
-        style="font-family:'Eagle Lake',serif;font-size:.78rem;letter-spacing:.05em;padding:.35rem 1rem;
+        style="font-family:'Eagle Lake',serif;font-size:1rem;letter-spacing:.05em;padding:.35rem 1rem;
                background:var(--green-dark);border:1px solid var(--green);color:var(--gold-light);cursor:pointer;">
         📋 Registre des effectifs
       </button>
       <button id="gar-tab-2" onclick="garSwitchTab(2)"
-        style="font-family:'Eagle Lake',serif;font-size:.78rem;letter-spacing:.05em;padding:.35rem 1rem;
+        style="font-family:'Eagle Lake',serif;font-size:1rem;letter-spacing:.05em;padding:.35rem 1rem;
                background:transparent;border:1px solid var(--border-g);color:var(--ink-mid);cursor:pointer;">
         🏛 Organigramme
       </button>
@@ -638,7 +638,7 @@ td.act{text-align:center;white-space:nowrap;}
         <div class="stat-chip" style="color:var(--green-dark);">💰 Masse salariale : <strong id="gar-masse">— sp</strong></div>
         <div class="stat-chip" style="color:var(--green-dark);">✅ Versé : <strong id="gar-verse">— sp</strong></div>
         <div class="stat-chip" style="color:#8B3030;">⏳ Dû : <strong id="gar-du">— sp</strong></div>
-        <button id="gar-reset-sal-btn" onclick="resetSalaires()" style="display:none;font-family:'Eagle Lake',serif;font-size:.68rem;padding:.25rem .7rem;background:transparent;border:1px solid var(--border-g);color:var(--ink-mid);cursor:pointer;margin-left:.5rem;" title="Remettre tous les salaires à Non versé">↺ Réinitialiser</button>
+        <button id="gar-reset-sal-btn" onclick="resetSalaires()" style="display:none;font-family:'Eagle Lake',serif;font-size:1rem;padding:.25rem .7rem;background:transparent;border:1px solid var(--border-g);color:var(--ink-mid);cursor:pointer;margin-left:.5rem;" title="Remettre tous les salaires à Non versé">↺ Réinitialiser</button>
       </div>
     </div>
 
@@ -665,7 +665,7 @@ td.act{text-align:center;white-space:nowrap;}
       </div>
     </div>
     <div class="toolbar">
-      <div class="search-wrap"><span style="color:var(--ink-faint);font-size:0.85rem;">🔍</span><input id="gar-search" type="text" placeholder="Rechercher un garde..." oninput="filterRows('gar-tbody',this.value)"></div>
+      <div class="search-wrap"><span style="color:var(--ink-faint);font-size:1rem;">🔍</span><input id="gar-search" type="text" placeholder="Rechercher un garde..." oninput="filterRows('gar-tbody',this.value)"></div>
       <select class="filter-sel" id="gar-filter-grade" onchange="filterRows('gar-tbody',document.getElementById('gar-search').value)">
         <option value="">Tous les grades</option><option>Commandeur de l'Aube</option><option>Sénéchal de l'Aube</option><option>Exécuteur de la Garde</option><option>Traqueur de la Garde</option><option>Patrouilleur de la Garde</option><option>Aspirant de la Garde</option><optgroup label="Spécialité"><option>Artisan de la Garde</option><option>Confrère de la Garde</option><option>Mage de la Garde</option><option>Barde de la Garde</option></optgroup>
       </select>
@@ -721,7 +721,7 @@ td.act{text-align:center;white-space:nowrap;}
     </div>
 
     <div class="toolbar">
-      <div class="search-wrap"><span style="color:var(--ink-faint);font-size:0.85rem;">🔍</span><input id="com-search" type="text" placeholder="Rechercher..." oninput="filterRows('com-tbody',this.value)"></div>
+      <div class="search-wrap"><span style="color:var(--ink-faint);font-size:1rem;">🔍</span><input id="com-search" type="text" placeholder="Rechercher..." oninput="filterRows('com-tbody',this.value)"></div>
       <select class="filter-sel" id="com-filter-type" onchange="filterRows('com-tbody',document.getElementById('com-search').value)">
         <option value="">Tous les types</option><option>Achat</option><option>Vente</option><option>Troc</option><option>Don</option><option>Contrat de service</option>
       </select>
@@ -753,7 +753,7 @@ td.act{text-align:center;white-space:nowrap;}
       <div class="leg-item"><div class="leg-dot" style="background:#7A1010;"></div>Guerre</div>
     </div>
     <div class="relation-panel" style="max-width:860px;margin:0 auto;">
-      <p style="font-family:'Eagle Lake',serif;font-size:0.8rem;color:var(--green-dark);letter-spacing:0.06em;margin-bottom:0.75rem;">Relations diplomatiques</p>
+      <p style="font-family:'Eagle Lake',serif;font-size:1rem;color:var(--green-dark);letter-spacing:0.06em;margin-bottom:0.75rem;">Relations diplomatiques</p>
       <div id="relation-grid"></div>
     </div>
   </div>
@@ -779,7 +779,7 @@ td.act{text-align:center;white-space:nowrap;}
       </div>
     </div>
     <div class="toolbar">
-      <div class="search-wrap"><span style="color:var(--ink-faint);font-size:0.85rem;">🔍</span><input id="cour-search" type="text" placeholder="Rechercher un membre..." oninput="filterRows('cour-tbody',this.value)"></div>
+      <div class="search-wrap"><span style="color:var(--ink-faint);font-size:1rem;">🔍</span><input id="cour-search" type="text" placeholder="Rechercher un membre..." oninput="filterRows('cour-tbody',this.value)"></div>
       <select class="filter-sel" id="cour-filter-titre" onchange="filterRows('cour-tbody',document.getElementById('cour-search').value)">
         <option value="">Tous les titres</option><option>Intendant de Fort-Aube</option><option>Émissaire de l'Aube</option><option>Trésorier de l'Ordre</option><option>Maître des Secrets</option>
       </select>
@@ -817,7 +817,7 @@ td.act{text-align:center;white-space:nowrap;}
       </div>
     </div>
     <div class="toolbar">
-      <div class="search-wrap"><span style="color:var(--ink-faint);font-size:0.85rem;">🔍</span><input id="inv-search" type="text" placeholder="Rechercher un item..." oninput="filterRows('inv-tbody',this.value)"></div>
+      <div class="search-wrap"><span style="color:var(--ink-faint);font-size:1rem;">🔍</span><input id="inv-search" type="text" placeholder="Rechercher un item..." oninput="filterRows('inv-tbody',this.value)"></div>
       <select class="filter-sel" id="inv-filter-stock" onchange="filterRows('inv-tbody',document.getElementById('inv-search').value)">
         <option value="">Tous les stocks</option><option value="dispo">Disponible</option><option value="vide">Épuisé</option>
       </select>
@@ -842,10 +842,10 @@ td.act{text-align:center;white-space:nowrap;}
     <div style="margin-bottom:1.25rem;">
       <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.charte-arr').textContent=this.nextElementSibling.style.display==='none'?'▶':'▼';"
         style="cursor:pointer;display:flex;align-items:center;gap:.55rem;font-family:'Eagle Lake',serif;
-               font-size:.8rem;letter-spacing:.06em;color:var(--green-dark);padding:.45rem 0;
+               font-size:1rem;letter-spacing:.06em;color:var(--green-dark);padding:.45rem 0;
                border-bottom:1px solid var(--border-g);">
         <span class="charte-arr">▶</span> Le Serment de l'Aube
-        <span style="font-family:'IM Fell English',serif;font-style:italic;font-size:.72rem;color:var(--ink-faint);margin-left:.4rem;">(cliquer pour déplier)</span>
+        <span style="font-family:'IM Fell English',serif;font-style:italic;font-size:1rem;color:var(--ink-faint);margin-left:.4rem;">(cliquer pour déplier)</span>
       </div>
       <div style="display:none;margin-top:.75rem;background:rgba(226,212,168,0.25);border:1px solid var(--border-g);padding:1.5rem 2rem;text-align:center;">
         <p style="font-family:'IM Fell English',serif;font-size:1.58rem;font-style:italic;color:var(--ink);line-height:1.9;max-width:760px;margin:0 auto;">« L'aube se lève, et mon service commence avec elle. Je ne compte pas les moyens, seulement la fin. On me détestera. On me craindra. On me maudira, au village comme à la cour — et je resterai. Je ne sers aucune couronne, aucun temple, aucun dieu. Je sers la lumière, même quand mes mains sont sales pour la défendre. Je suis le couteau dans le noir que personne ne veut voir. Je suis le prix payé pour que d'autres dorment en paix. Tant qu'il y aura un Mal à abattre, je serai là pour l'abattre — par n'importe quel moyen, jusqu'à la dernière lumière du jour. »</p>
@@ -855,13 +855,13 @@ td.act{text-align:center;white-space:nowrap;}
     <div style="margin-bottom:1.25rem;">
       <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.charte-arr').textContent=this.nextElementSibling.style.display==='none'?'▶':'▼';"
         style="cursor:pointer;display:flex;align-items:center;gap:.55rem;font-family:'Eagle Lake',serif;
-               font-size:.8rem;letter-spacing:.06em;color:var(--green-dark);padding:.45rem 0;
+               font-size:1rem;letter-spacing:.06em;color:var(--green-dark);padding:.45rem 0;
                border-bottom:1px solid var(--border-g);">
         <span class="charte-arr">▶</span> Les Titres Honorifiques
-        <span style="font-family:'IM Fell English',serif;font-style:italic;font-size:.72rem;color:var(--ink-faint);margin-left:.4rem;">(cliquer pour déplier)</span>
+        <span style="font-family:'IM Fell English',serif;font-style:italic;font-size:1rem;color:var(--ink-faint);margin-left:.4rem;">(cliquer pour déplier)</span>
       </div>
       <div style="display:none;margin-top:.75rem;">
-        <p style="font-family:'IM Fell English',serif;font-style:italic;font-size:.82rem;color:var(--ink-mid);margin-bottom:1rem;padding:0 .2rem;">Ces titres ne figurent dans aucune charte. Ils ne s'accordent pas, ils se gagnent — et c'est l'Ordre tout entier qui finit par les reconnaître à un membre, rarement le Commandement seul.</p>
+        <p style="font-family:'IM Fell English',serif;font-style:italic;font-size:1rem;color:var(--ink-mid);margin-bottom:1rem;padding:0 .2rem;">Ces titres ne figurent dans aucune charte. Ils ne s'accordent pas, ils se gagnent — et c'est l'Ordre tout entier qui finit par les reconnaître à un membre, rarement le Commandement seul.</p>
 
         <div class="biblio-creature">
           <div class="biblio-creature-name">LAME GRISE</div>
@@ -898,13 +898,13 @@ td.act{text-align:center;white-space:nowrap;}
     <div style="margin-bottom:1.25rem;">
       <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.charte-arr').textContent=this.nextElementSibling.style.display==='none'?'▶':'▼';"
         style="cursor:pointer;display:flex;align-items:center;gap:.55rem;font-family:'Eagle Lake',serif;
-               font-size:.8rem;letter-spacing:.06em;color:var(--green-dark);padding:.45rem 0;
+               font-size:1rem;letter-spacing:.06em;color:var(--green-dark);padding:.45rem 0;
                border-bottom:1px solid var(--border-g);">
         <span class="charte-arr">▶</span> Les Valeurs de la Garde
-        <span style="font-family:'IM Fell English',serif;font-style:italic;font-size:.72rem;color:var(--ink-faint);margin-left:.4rem;">(cliquer pour déplier)</span>
+        <span style="font-family:'IM Fell English',serif;font-style:italic;font-size:1rem;color:var(--ink-faint);margin-left:.4rem;">(cliquer pour déplier)</span>
       </div>
       <div style="display:none;margin-top:.75rem;">
-        <ul style="font-family:'IM Fell English',serif;font-size:.92rem;color:var(--ink);line-height:2;list-style:none;padding:0 .2rem;">
+        <ul style="font-family:'IM Fell English',serif;font-size:1rem;color:var(--ink);line-height:2;list-style:none;padding:0 .2rem;">
           <li><strong>Courage</strong> — affronter ce que personne d'autre n'ose regarder en face.</li>
           <li><strong>Vengeance</strong> — ne jamais laisser un tort impuni, même des années plus tard.</li>
           <li><strong>Sacrifice</strong> — donner ce qu'il faut, y compris soi-même, sans en attendre le mérite.</li>
@@ -924,14 +924,14 @@ td.act{text-align:center;white-space:nowrap;}
           </div>
           <div class="form-field"><label>Sanction</label><input id="lois-sanction" type="text" placeholder="Amende, emprisonnement, bannissement..."></div>
           <div class="form-field" style="grid-column:1/-1;"><label>Description</label>
-            <textarea id="lois-desc" placeholder="Détails et circonstances de la loi..." rows="3" style="background:var(--parch);border:1px solid var(--border-g);color:var(--ink);font-family:'IM Fell English',serif;font-size:0.9rem;padding:0.35rem 0.6rem;resize:vertical;width:100%;"></textarea>
+            <textarea id="lois-desc" placeholder="Détails et circonstances de la loi..." rows="3" style="background:var(--parch);border:1px solid var(--border-g);color:var(--ink);font-family:'IM Fell English',serif;font-size:1rem;padding:0.35rem 0.6rem;resize:vertical;width:100%;"></textarea>
           </div>
         </div>
         <button class="btn-submit" onclick="addLoi()">Promulguer</button>
       </div>
     </div>
     <div class="toolbar">
-      <div class="search-wrap"><span style="color:var(--ink-faint);font-size:0.85rem;">🔍</span><input id="lois-search" type="text" placeholder="Rechercher une loi..." oninput="filterRows('lois-tbody',this.value)"></div>
+      <div class="search-wrap"><span style="color:var(--ink-faint);font-size:1rem;">🔍</span><input id="lois-search" type="text" placeholder="Rechercher une loi..." oninput="filterRows('lois-tbody',this.value)"></div>
       <select class="filter-sel" id="lois-filter-peine" onchange="filterRows('lois-tbody',document.getElementById('lois-search').value)">
         <option value="">Toutes les peines</option><option>Infraction mineure</option><option>Infraction majeure</option><option>Crime</option><option>Crime capital</option><option>Haute trahison</option>
       </select>
@@ -1254,7 +1254,7 @@ td.act{text-align:center;white-space:nowrap;}
         <input class="login-input" id="loginPass" type="password" placeholder="Mot de passe..." onkeydown="if(event.key==='Enter')doLogin()">
         <button class="btn-login" onclick="doLogin()">Entrer</button>
       </div>
-      <p id="loginErr" style="color:#7A1010;font-size:0.78rem;font-style:italic;display:none;margin-top:0.3rem;">Identifiants incorrects.</p>
+      <p id="loginErr" style="color:#7A1010;font-size:1rem;font-style:italic;display:none;margin-top:0.3rem;">Identifiants incorrects.</p>
     </div>
   </div>
   <div id="sessionBlock" style="display:none;flex-direction:column;gap:1rem;">
@@ -1265,26 +1265,26 @@ td.act{text-align:center;white-space:nowrap;}
     <div id="saBlock" style="display:none;">
       <div class="panel-title">Gestion des comptes</div>
       <div class="sa-section">
-        <p style="font-size:0.8rem;color:var(--ink-mid);font-style:italic;margin-bottom:0.6rem;">Créer un compte administrateur</p>
+        <p style="font-size:1rem;color:var(--ink-mid);font-style:italic;margin-bottom:0.6rem;">Créer un compte administrateur</p>
         <div class="sa-row"><input class="sa-input" id="sa-user" type="text" placeholder="Pseudo..." autocomplete="off"></div>
         <div class="sa-row"><input class="sa-input" id="sa-pass" type="password" placeholder="Mot de passe (min. 6 car.)..."></div>
-        <p style="font-family:'Eagle Lake',serif;font-size:0.68rem;color:var(--ink-faint);letter-spacing:0.06em;margin:.5rem 0 .3rem;">Sections accessibles :</p>
+        <p style="font-family:'Eagle Lake',serif;font-size:1rem;color:var(--ink-faint);letter-spacing:0.06em;margin:.5rem 0 .3rem;">Sections accessibles :</p>
         <div id="sa-sections-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:.2rem .8rem;margin-bottom:.5rem;">
-          <label style="display:flex;align-items:center;gap:.4rem;font-size:.8rem;font-style:italic;color:var(--ink-mid);cursor:pointer;"><input type="checkbox" value="citoyens" class="sa-chk"> Citoyens</label>
-          <label style="display:flex;align-items:center;gap:.4rem;font-size:.8rem;font-style:italic;color:var(--ink-mid);cursor:pointer;"><input type="checkbox" value="garde" class="sa-chk"> Garde</label>
-          <label style="display:flex;align-items:center;gap:.4rem;font-size:.8rem;font-style:italic;color:var(--ink-mid);cursor:pointer;"><input type="checkbox" value="commerces" class="sa-chk"> Commerces</label>
-          <label style="display:flex;align-items:center;gap:.4rem;font-size:.8rem;font-style:italic;color:var(--ink-mid);cursor:pointer;"><input type="checkbox" value="diplomatie" class="sa-chk"> Diplomatie</label>
-          <label style="display:flex;align-items:center;gap:.4rem;font-size:.8rem;font-style:italic;color:var(--ink-mid);cursor:pointer;"><input type="checkbox" value="cour" class="sa-chk"> Cour de l'Ordre</label>
-          <label style="display:flex;align-items:center;gap:.4rem;font-size:.8rem;font-style:italic;color:var(--ink-mid);cursor:pointer;"><input type="checkbox" value="inventaire" class="sa-chk"> Inventaire</label>
-          <label style="display:flex;align-items:center;gap:.4rem;font-size:.8rem;font-style:italic;color:var(--ink-mid);cursor:pointer;"><input type="checkbox" value="lois" class="sa-chk"> Codex</label>
+          <label style="display:flex;align-items:center;gap:.4rem;font-size:1rem;font-style:italic;color:var(--ink-mid);cursor:pointer;"><input type="checkbox" value="citoyens" class="sa-chk"> Citoyens</label>
+          <label style="display:flex;align-items:center;gap:.4rem;font-size:1rem;font-style:italic;color:var(--ink-mid);cursor:pointer;"><input type="checkbox" value="garde" class="sa-chk"> Garde</label>
+          <label style="display:flex;align-items:center;gap:.4rem;font-size:1rem;font-style:italic;color:var(--ink-mid);cursor:pointer;"><input type="checkbox" value="commerces" class="sa-chk"> Commerces</label>
+          <label style="display:flex;align-items:center;gap:.4rem;font-size:1rem;font-style:italic;color:var(--ink-mid);cursor:pointer;"><input type="checkbox" value="diplomatie" class="sa-chk"> Diplomatie</label>
+          <label style="display:flex;align-items:center;gap:.4rem;font-size:1rem;font-style:italic;color:var(--ink-mid);cursor:pointer;"><input type="checkbox" value="cour" class="sa-chk"> Cour de l'Ordre</label>
+          <label style="display:flex;align-items:center;gap:.4rem;font-size:1rem;font-style:italic;color:var(--ink-mid);cursor:pointer;"><input type="checkbox" value="inventaire" class="sa-chk"> Inventaire</label>
+          <label style="display:flex;align-items:center;gap:.4rem;font-size:1rem;font-style:italic;color:var(--ink-mid);cursor:pointer;"><input type="checkbox" value="lois" class="sa-chk"> Codex</label>
         </div>
         <button class="btn-login" onclick="createAccount()" style="width:100%;">Créer le compte</button>
         <p id="sa-msg" class="msg"></p>
       </div>
       <div style="margin-top:0.75rem;">
-        <p style="font-family:'Eagle Lake',serif;font-size:0.68rem;color:var(--ink-faint);letter-spacing:0.08em;margin-bottom:0.4rem;">Comptes actifs</p>
+        <p style="font-family:'Eagle Lake',serif;font-size:1rem;color:var(--ink-faint);letter-spacing:0.08em;margin-bottom:0.4rem;">Comptes actifs</p>
         <div id="accountList"></div>
-        <p id="accountListEmpty" style="font-size:0.8rem;color:var(--ink-faint);font-style:italic;">Aucun compte créé.</p>
+        <p id="accountListEmpty" style="font-size:1rem;color:var(--ink-faint);font-style:italic;">Aucun compte créé.</p>
       </div>
       <div style="border-top:1px solid var(--border-g);padding-top:0.75rem;margin-top:0.5rem;">
         <div class="panel-title">Changer le mot de passe superadmin</div>
@@ -1303,10 +1303,10 @@ td.act{text-align:center;white-space:nowrap;}
     <div id="inv-history-block">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;">
         <div class="panel-title" style="margin-bottom:0;">Historique des stocks</div>
-        <button class="btn-export" onclick="clearInvHistory()" style="width:auto;margin-top:0;padding:0.2rem 0.5rem;font-size:0.62rem;color:var(--s-danger);border-color:rgba(122,16,16,0.3);">Effacer</button>
+        <button class="btn-export" onclick="clearInvHistory()" style="width:auto;margin-top:0;padding:0.2rem 0.5rem;font-size:1rem;color:var(--s-danger);border-color:rgba(122,16,16,0.3);">Effacer</button>
       </div>
       <div id="inv-history-list" style="display:flex;flex-direction:column;gap:0.4rem;max-height:40vh;overflow-y:auto;overscroll-behavior:contain;"></div>
-      <p id="inv-history-empty" style="font-size:0.8rem;color:var(--ink-faint);font-style:italic;text-align:center;padding:0.75rem 0;">Aucune modification enregistrée.</p>
+      <p id="inv-history-empty" style="font-size:1rem;color:var(--ink-faint);font-style:italic;text-align:center;padding:0.75rem 0;">Aucune modification enregistrée.</p>
     </div>
   </div>
 </aside>
@@ -1378,7 +1378,7 @@ function renderOrganigramme(){
   let h = `
     <div style="text-align:center;margin-bottom:2rem;">
       <p style="font-family:'Eagle Lake',serif;font-size:1.15rem;color:var(--green-dark);letter-spacing:.1em;">HIÉRARCHIE DE LA GARDE DE L'AUBE</p>
-      <p style="font-family:'IM Fell English',serif;font-style:italic;font-size:.88rem;color:var(--ink-mid);margin-top:.3rem;">
+      <p style="font-family:'IM Fell English',serif;font-style:italic;font-size:1rem;color:var(--ink-mid);margin-top:.3rem;">
         Effectif actuel : <strong style="color:var(--green-dark);">${total}</strong> membres pour ${POSTES_ENCADRES} postes encadrés (Patrouilleurs et Aspirants partagent le même quota de Troupe ; rôles spécialisés illimités à part)
       </p>
       <div style="height:2px;background:linear-gradient(to right,transparent,var(--gold),transparent);margin:.85rem auto 0;max-width:300px;"></div>
@@ -1392,9 +1392,9 @@ function renderOrganigramme(){
     h += `
       <div style="${li>0?'margin-top:1.6rem;':''}">
         <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.6rem;">
-          <span style="flex:0 0 auto;font-family:'Eagle Lake',serif;font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:${lv.accent};white-space:nowrap;">${lv.label}</span>
+          <span style="flex:0 0 auto;font-family:'Eagle Lake',serif;font-size:1rem;letter-spacing:.16em;text-transform:uppercase;color:${lv.accent};white-space:nowrap;">${lv.label}</span>
           <span style="flex:1;height:1px;background:${lv.accent};opacity:.45;"></span>
-          <span style="flex:0 0 auto;font-family:'Eagle Lake',serif;font-size:.78rem;color:${lv.accent};font-weight:700;">${lv.total!==null?used+' / '+lv.total:used}</span>
+          <span style="flex:0 0 auto;font-family:'Eagle Lake',serif;font-size:1rem;color:${lv.accent};font-weight:700;">${lv.total!==null?used+' / '+lv.total:used}</span>
         </div>
         <div style="display:flex;gap:.7rem;flex-wrap:wrap;justify-content:center;">`;
 
@@ -1405,10 +1405,10 @@ function renderOrganigramme(){
     lv.grades.forEach(([grade, slots]) => {
       const list = byGrade[grade]||[];
       const badge = slots===null ? '' : `
-            <div style="display:inline-block;font-family:'IM Fell English',serif;font-size:.78rem;font-style:italic;font-weight:600;
+            <div style="display:inline-block;font-family:'IM Fell English',serif;font-size:1rem;font-style:italic;font-weight:600;
                         color:${lv.accent};background:${lv.accentLight};padding:.18rem .65rem;border-radius:2px;margin-top:.4rem;">
               ${typeof slots==='number'?slots+' poste'+(slots>1?'s':''):'illimité'}</div>`;
-      const kicker = `<div style="font-family:'IM Fell English',serif;font-size:.66rem;font-style:italic;
+      const kicker = `<div style="font-family:'IM Fell English',serif;font-size:1rem;font-style:italic;
                         text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);margin-bottom:.35rem;">${grade}</div>`;
 
       if(list.length === 0){
@@ -1418,7 +1418,7 @@ function renderOrganigramme(){
                       border:1px solid var(--border-g);border-top:3px solid var(--border-g);
                       padding:.85rem 1rem;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.06);">
             ${kicker}
-            <div style="font-style:italic;color:var(--ink-faint);font-size:.85rem;">— Vacant —</div>${badge}
+            <div style="font-style:italic;color:var(--ink-faint);font-size:1rem;">— Vacant —</div>${badge}
           </div>`;
       } else {
         // Une carte par titulaire du grade
@@ -1428,7 +1428,7 @@ function renderOrganigramme(){
                       border:1px solid var(--border-g);border-top:3px solid ${lv.accent};
                       padding:.85rem 1rem;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.06);">
             ${kicker}
-            <div style="font-family:'Eagle Lake',serif;font-size:.96rem;color:var(--green-dark);line-height:1.3;">${name}</div>
+            <div style="font-family:'Eagle Lake',serif;font-size:1rem;color:var(--green-dark);line-height:1.3;">${name}</div>
           </div>`;
         });
       }
@@ -1437,7 +1437,7 @@ function renderOrganigramme(){
     h += `</div></div>`;
     if(!isLast) h += `
       <div style="display:flex;justify-content:center;margin-top:.5rem;">
-        <span style="font-family:'IM Fell English',serif;font-size:.95rem;color:var(--border-g);line-height:1;">▾</span>
+        <span style="font-family:'IM Fell English',serif;font-size:1rem;color:var(--border-g);line-height:1;">▾</span>
       </div>`;
   });
 
@@ -1449,13 +1449,13 @@ function renderOrganigramme(){
     const used = count(lv.grades.map(g=>g[0]));
     h += `
         <div style="background:var(--parch);border:1px solid var(--border-g);border-top:3px solid ${lv.accent};padding:.7rem .4rem;text-align:center;">
-          <div style="font-family:'Eagle Lake',serif;font-size:1.4rem;color:${lv.accent};">${used}${lv.total!==null?`<span style="font-size:.85rem;color:var(--ink-faint);">/${lv.total}</span>`:''}</div>
-          <div style="font-family:'Eagle Lake',serif;font-size:.58rem;letter-spacing:.05em;color:var(--ink-mid);text-transform:uppercase;margin-top:.2rem;line-height:1.2;">${lv.label}</div>
+          <div style="font-family:'Eagle Lake',serif;font-size:1.4rem;color:${lv.accent};">${used}${lv.total!==null?`<span style="font-size:1rem;color:var(--ink-faint);">/${lv.total}</span>`:''}</div>
+          <div style="font-family:'Eagle Lake',serif;font-size:1rem;letter-spacing:.05em;color:var(--ink-mid);text-transform:uppercase;margin-top:.2rem;line-height:1.2;">${lv.label}</div>
         </div>`;
   });
 
   h += `</div>
-      <div style="margin-top:1rem;text-align:center;font-family:'Eagle Lake',serif;font-size:.85rem;letter-spacing:.08em;color:var(--green-dark);">
+      <div style="margin-top:1rem;text-align:center;font-family:'Eagle Lake',serif;font-size:1rem;letter-spacing:.08em;color:var(--green-dark);">
         TOTAL : <span style="color:var(--gold);font-size:1.05rem;">${total} MEMBRES</span>
       </div>
     </div>`;
@@ -1605,19 +1605,19 @@ function renderCitoyens(rows){
   tbody.innerHTML=rows.map(r=>{
     const statut=r.statut_citoyennete||'Protégé';
     const statutBadge=statut==='Protégé'
-      ?`<span style="color:var(--green-dark);font-size:.8rem;">✅ Protégé</span>`
+      ?`<span style="color:var(--green-dark);font-size:1rem;">✅ Protégé</span>`
       :statut==='Surveillance'
-      ?`<span style="color:#8B6030;font-size:.8rem;">⏸ Surveillance</span>`
-      :`<span style="color:#8B3030;font-size:.8rem;">❌ Banni</span>`;
+      ?`<span style="color:#8B6030;font-size:1rem;">⏸ Surveillance</span>`
+      :`<span style="color:#8B3030;font-size:1rem;">❌ Banni</span>`;
     const voie=r.voie_citoyennete||'—';
     const voieIcon=voie==='Service'?'🛡':voie==='Recommandation'?'📜':voie==='Refuge'?'🏠':'—';
     const dateObt=r.date_obtention?new Date(r.date_obtention).toLocaleDateString('fr-FR'):'—';
     const statutBtn=canEdit
-      ?`<button onclick="cycleStatut('${r.id}','${statut}')" style="font-size:.68rem;padding:.12rem .45rem;margin-left:.3rem;font-family:'Eagle Lake',serif;cursor:pointer;background:transparent;border:1px solid var(--border-g);color:var(--ink-mid);" title="Changer le statut">↻</button>`
+      ?`<button onclick="cycleStatut('${r.id}','${statut}')" style="font-size:1rem;padding:.12rem .45rem;margin-left:.3rem;font-family:'Eagle Lake',serif;cursor:pointer;background:transparent;border:1px solid var(--border-g);color:var(--ink-mid);" title="Changer le statut">↻</button>`
       :'';
     const conStatut=r.concession_statut||'';
-    const conBadge=conStatut?`<span class="badge badge-${conStatut.replace(' ','-')}">${conStatut.charAt(0).toUpperCase()+conStatut.slice(1)}</span>`:'<span style="color:var(--ink-faint);font-size:.8rem;">—</span>';
-    const conDetail=r.concession_type?`<span class="badge badge-tag">${esc(r.concession_type)}</span><div style="font-size:.72rem;font-style:italic;color:var(--ink-faint);margin-top:.2rem;max-width:220px;">${esc(r.concession_ressource||'')}${r.concession_contrepartie?' — '+esc(r.concession_contrepartie):''}</div>`:'<span style="color:var(--ink-faint);font-size:.8rem;">—</span>';
+    const conBadge=conStatut?`<span class="badge badge-${conStatut.replace(' ','-')}">${conStatut.charAt(0).toUpperCase()+conStatut.slice(1)}</span>`:'<span style="color:var(--ink-faint);font-size:1rem;">—</span>';
+    const conDetail=r.concession_type?`<span class="badge badge-tag">${esc(r.concession_type)}</span><div style="font-size:1rem;font-style:italic;color:var(--ink-faint);margin-top:.2rem;max-width:220px;">${esc(r.concession_ressource||'')}${r.concession_contrepartie?' — '+esc(r.concession_contrepartie):''}</div>`:'<span style="color:var(--ink-faint);font-size:1rem;">—</span>';
     return `<tr data-search="${esc((r.prenom+' '+r.nom+' '+r.race+' '+(r.metier||'')).toLowerCase())}" data-race="${esc(r.race||'')}" data-statut="${esc(statut)}" data-con-statut="${esc(conStatut)}">
       <td class="cell-name">${esc(r.prenom)}${r.nom?" "+esc(r.nom):""}</td>
       <td class="cell-meta">${r.race?`<span class="badge badge-tag">${esc(r.race)}</span>`:'—'}</td>
@@ -1697,10 +1697,10 @@ function renderGardes(rows){
     const sal=SALAIRES[r.grade]||0;
     const sp=!!r.salaire_paye;
     const badge=sp
-      ?`<span style="color:var(--green-dark);font-size:.82rem;">✅ Versé</span>`
-      :`<span style="color:#8B3030;font-size:.82rem;">❌ Dû</span>`;
+      ?`<span style="color:var(--green-dark);font-size:1rem;">✅ Versé</span>`
+      :`<span style="color:#8B3030;font-size:1rem;">❌ Dû</span>`;
     const btn=canEdit
-      ?`<button onclick="toggleSalaireGarde('${r.id}',${sp})" style="font-size:.68rem;padding:.12rem .45rem;margin-left:.4rem;font-family:'Eagle Lake',serif;cursor:pointer;background:transparent;border:1px solid var(--border-g);color:var(--ink-mid);">${sp?'Annuler':'Valider'}</button>`
+      ?`<button onclick="toggleSalaireGarde('${r.id}',${sp})" style="font-size:1rem;padding:.12rem .45rem;margin-left:.4rem;font-family:'Eagle Lake',serif;cursor:pointer;background:transparent;border:1px solid var(--border-g);color:var(--ink-mid);">${sp?'Annuler':'Valider'}</button>`
       :'';
     const dateRecr=r.date_recrutement
       ?new Date(r.date_recrutement).toLocaleDateString('fr-FR')
@@ -1712,9 +1712,9 @@ function renderGardes(rows){
       <td class="cell-meta">${r.grade?`<span class="badge badge-tag">${esc(r.grade)}</span>`:'—'}</td>
       <td class="cell-meta" style="font-family:'Eagle Lake',serif;color:var(--green-dark);white-space:nowrap;">${sal?sal+' sp':'—'}</td>
       <td class="cell-meta" style="white-space:nowrap;">${badge}${btn}</td>
-      <td class="cell-meta" style="font-size:.78rem;">
+      <td class="cell-meta" style="font-size:1rem;">
         <span style="display:block;">${dateRecr}</span>
-        <span style="color:var(--ink-faint);font-style:italic;font-size:.72rem;">par ${recruteur}</span>
+        <span style="color:var(--ink-faint);font-style:italic;font-size:1rem;">par ${recruteur}</span>
       </td>
       ${canEdit?`<td class="act"><button class="btn-del" onclick="delGarde('${r.id}')">Révoquer</button></td>`:''}
     </tr>`;
@@ -1766,7 +1766,7 @@ function renderCommerces(rows){
       <td class="cell-meta">${esc(r.valeur||'—')}</td>
       <td><span class="badge ${bc}">${esc(statut.charAt(0).toUpperCase()+statut.slice(1))}</span></td>
       ${canEdit?`<td class="act">
-        <select onchange="updateCommerceStatut('${r.id}',this.value)" style="background:var(--parch);border:1px solid var(--border-g);color:var(--ink);font-family:'IM Fell English',serif;font-size:0.82rem;padding:0.2rem 0.4rem;margin-bottom:0.25rem;">${['conclue','en cours','annulée','litigieuse'].map(s=>`<option value="${s}"${s===statut?' selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`).join('')}</select>
+        <select onchange="updateCommerceStatut('${r.id}',this.value)" style="background:var(--parch);border:1px solid var(--border-g);color:var(--ink);font-family:'IM Fell English',serif;font-size:1rem;padding:0.2rem 0.4rem;margin-bottom:0.25rem;">${['conclue','en cours','annulée','litigieuse'].map(s=>`<option value="${s}"${s===statut?' selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`).join('')}</select>
         <button class="btn-del" onclick="delCommerce('${r.id}')">Suppr.</button>
       </td>`:''}
     </tr>`;
@@ -1810,7 +1810,7 @@ function renderDiplomatie(rows){
     const row=rows.find(r=>r.chatellerie===c.key)||{relation:'neutre'};const rel=row.relation||'neutre';
     return`<div class="relation-card ${rel}" data-key="${c.key}" data-rel="${rel}">
       <div class="relation-card-top">
-        <div><div class="rel-name">❖ ${c.label}</div>${c.sub?`<div style="font-size:0.72rem;font-style:italic;color:var(--ink-faint);margin-top:0.1rem;">${c.sub}</div>`:''}<span class="badge badge-${rel}" style="margin-top:0.2rem;">${rel.charAt(0).toUpperCase()+rel.slice(1)}</span></div>
+        <div><div class="rel-name">❖ ${c.label}</div>${c.sub?`<div style="font-size:1rem;font-style:italic;color:var(--ink-faint);margin-top:0.1rem;">${c.sub}</div>`:''}<span class="badge badge-${rel}" style="margin-top:0.2rem;">${rel.charAt(0).toUpperCase()+rel.slice(1)}</span></div>
         ${canEdit?`<select class="rel-sel" onchange="saveRelation('${c.key}',this.value)">${['alliance','amical','neutre','hostile','guerre'].map(o=>`<option value="${o}"${o===rel?' selected':''}>${o.charAt(0).toUpperCase()+o.slice(1)}</option>`).join('')}</select>`:''}
       </div>
       ${c.summary?`<p class="rel-summary">${c.summary}</p>`:''}
@@ -1819,9 +1819,9 @@ function renderDiplomatie(rows){
   const chatelleries=CHATELERIES.filter(c=>c.cat==='chatellerie');
   const factions=CHATELERIES.filter(c=>c.cat==='faction');
   grid.innerHTML=
-    `<p style="font-family:'Eagle Lake',serif;font-size:0.72rem;letter-spacing:0.08em;color:var(--green-dark);margin:0.5rem 0 0.5rem;">🏰 CHÂTELLERIES</p>`+
+    `<p style="font-family:'Eagle Lake',serif;font-size:1rem;letter-spacing:0.08em;color:var(--green-dark);margin:0.5rem 0 0.5rem;">🏰 CHÂTELLERIES</p>`+
     `<div class="relation-grid">${chatelleries.map(card).join('')}</div>`+
-    `<p style="font-family:'Eagle Lake',serif;font-size:0.72rem;letter-spacing:0.08em;color:var(--green-dark);margin:1.25rem 0 0.5rem;">⚔ AUTRES FACTIONS</p>`+
+    `<p style="font-family:'Eagle Lake',serif;font-size:1rem;letter-spacing:0.08em;color:var(--green-dark);margin:1.25rem 0 0.5rem;">⚔ AUTRES FACTIONS</p>`+
     `<div class="relation-grid">${factions.map(card).join('')}</div>`;
   renderDiploPins(rows);
 }
@@ -1843,7 +1843,7 @@ function renderCour(rows){
   document.getElementById('cour-total').textContent=rows.length;document.getElementById('cour-act-head').style.display=canEdit?'':'none';
   tbody.innerHTML=rows.map(r=>`<tr data-search="${esc((r.prenom+' '+r.nom+' '+r.titre).toLowerCase())}" data-titre="${esc(r.titre||'')}">
     <td class="cell-name">${esc(r.prenom)}${r.nom?" "+esc(r.nom):""}</td>
-    <td class="cell-meta">${r.titre?`<span class="badge badge-tag">${esc(r.titre)}</span>${TITRE_DESC[r.titre]?`<div style="font-size:.72rem;font-style:italic;color:var(--ink-faint);margin-top:.25rem;max-width:280px;">${esc(TITRE_DESC[r.titre])}</div>`:''}`:'—'}</td>
+    <td class="cell-meta">${r.titre?`<span class="badge badge-tag">${esc(r.titre)}</span>${TITRE_DESC[r.titre]?`<div style="font-size:1rem;font-style:italic;color:var(--ink-faint);margin-top:.25rem;max-width:280px;">${esc(TITRE_DESC[r.titre])}</div>`:''}`:'—'}</td>
     ${canEdit?`<td class="act"><button class="btn-del" onclick="delCour('${r.id}')">Révoquer</button></td>`:''}</tr>`).join('');
 }
 async function addCour(){
@@ -1882,11 +1882,11 @@ function renderInvHistory(){
   const list=document.getElementById('inv-history-list');const empty=document.getElementById('inv-history-empty');if(!list)return;
   const h=loadInvHistory();if(h.length===0){list.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
-  list.innerHTML=h.slice(0,100).map((e,idx)=>`<div style="background:var(--parch);border:1px solid var(--border-g);border-left:3px solid ${e.delta>0?'var(--green-dark)':'#8B5E00'};padding:0.5rem 0.7rem;font-size:0.82rem;">
+  list.innerHTML=h.slice(0,100).map((e,idx)=>`<div style="background:var(--parch);border:1px solid var(--border-g);border-left:3px solid ${e.delta>0?'var(--green-dark)':'#8B5E00'};padding:0.5rem 0.7rem;font-size:1rem;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.15rem;">
-      <span style="font-family:'Eagle Lake',serif;font-size:0.7rem;color:var(--green-dark);">${esc(e.nom)}</span>
-      <div style="display:flex;align-items:center;gap:0.4rem;"><span style="font-size:0.7rem;color:var(--ink-faint);font-style:italic;">${e.time}</span>
-      <button onclick="revertInvEntry(${idx})" style="background:none;border:1px solid rgba(122,16,16,0.3);color:#7A1010;font-size:0.65rem;width:18px;height:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;" onmouseover="this.style.background='rgba(122,16,16,0.1)'" onmouseout="this.style.background='none'">✕</button></div></div>
+      <span style="font-family:'Eagle Lake',serif;font-size:1rem;color:var(--green-dark);">${esc(e.nom)}</span>
+      <div style="display:flex;align-items:center;gap:0.4rem;"><span style="font-size:1rem;color:var(--ink-faint);font-style:italic;">${e.time}</span>
+      <button onclick="revertInvEntry(${idx})" style="background:none;border:1px solid rgba(122,16,16,0.3);color:#7A1010;font-size:1rem;width:18px;height:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;" onmouseover="this.style.background='rgba(122,16,16,0.1)'" onmouseout="this.style.background='none'">✕</button></div></div>
     <span style="color:var(--ink-mid);">${e.oldQty} → ${e.newQty} <strong style="color:${e.delta>0?'var(--green-dark)':'#8B5E00'}">(${e.delta>0?'+':''}${e.delta})</strong></span></div>`).join('');
 }
 async function revertInvEntry(idx){
@@ -1936,7 +1936,7 @@ function renderLois(rows){
         <td class="cell-name">${esc(r.titre)}</td>
         <td><span class="badge" style="background:${pc.bg};color:${pc.color};border:1px solid ${pc.border};">${esc(r.peine)}</span></td>
         <td class="cell-meta">${esc(r.sanction||'—')}</td>
-        <td class="cell-meta" style="max-width:200px;font-size:0.82rem;">${esc(r.description||'—')}</td>
+        <td class="cell-meta" style="max-width:200px;font-size:1rem;">${esc(r.description||'—')}</td>
         ${canEdit?`<td class="act"><button class="btn-del" onclick="delLoi('${r.id}')">Abroger</button></td>`:''}</tr>`;
     }).join('');
   });
@@ -2072,24 +2072,24 @@ async function renderAccountList(){
             <span class="admin-entry-section">${sectionLabel(r.section)}</span>
           </div>
           <div style="display:flex;gap:.35rem;">
-            <button class="btn-del" style="background:transparent;border:1px solid var(--border-g);color:var(--ink-mid);font-size:.68rem;" onclick="toggleEditAccess('edit-${esc(r.username)}')">Modifier</button>
+            <button class="btn-del" style="background:transparent;border:1px solid var(--border-g);color:var(--ink-mid);font-size:1rem;" onclick="toggleEditAccess('edit-${esc(r.username)}')">Modifier</button>
             <button class="btn-del" onclick="deleteAccount('${esc(r.username)}')">Suppr.</button>
           </div>
         </div>
         <div id="edit-${esc(r.username)}" style="display:none;border-top:1px solid var(--border-g);padding-top:.4rem;">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:.15rem .8rem;margin-bottom:.4rem;">
             ${['citoyens','garde','commerces','diplomatie','cour','inventaire','lois'].map(sec=>
-              `<label style="display:flex;align-items:center;gap:.35rem;font-size:.76rem;font-style:italic;color:var(--ink-mid);cursor:pointer;">
+              `<label style="display:flex;align-items:center;gap:.35rem;font-size:1rem;font-style:italic;color:var(--ink-mid);cursor:pointer;">
                 <input type="checkbox" class="edit-chk-${esc(r.username)}" value="${sec}" ${r.section.split(',').map(s=>s.trim()).includes(sec)?'checked':''}>
                 ${sectionLabel(sec)}
               </label>`
             ).join('')}
           </div>
-          <button class="btn-login" style="font-size:.72rem;padding:.3rem .8rem;" onclick="saveAccess('${esc(r.username)}')">Sauvegarder les accès</button>
+          <button class="btn-login" style="font-size:1rem;padding:.3rem .8rem;" onclick="saveAccess('${esc(r.username)}')">Sauvegarder les accès</button>
           <p id="msg-${esc(r.username)}" class="msg" style="margin-top:.2rem;"></p>
         </div>
       </div>`).join('');
-  }catch(e){list.innerHTML='<p style="color:#7A1010;font-size:0.8rem;">Erreur.</p>';}
+  }catch(e){list.innerHTML='<p style="color:#7A1010;font-size:1rem;">Erreur.</p>';}
 }
 // ══════════════════════════════════════════════════════════════════════
 //  UI HELPERS
