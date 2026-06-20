@@ -1849,7 +1849,7 @@ function renderInventaire(rows){
   tbody.innerHTML=rows.map(r=>`<tr data-search="${esc(r.nom.toLowerCase())}" data-stock="${r.quantite<=0?'vide':'dispo'}" data-cat="${esc(r.categorie||'')}">
     <td class="cell-name">${esc(r.nom)}</td>
     <td class="cell-meta">${r.categorie?`<span class="badge badge-${CAT_SLUG[r.categorie]||'tag'}">${esc(r.categorie)}</span>`:'—'}</td>
-    <td>${canAdmin?`<div style="display:flex;align-items:center;gap:0.5rem;"><button class="btn-del" style="border-color:var(--border-g);color:var(--ink-mid);font-size:1rem;width:26px;height:26px;display:flex;align-items:center;justify-content:center;padding:0;" onclick="updateQty('${r.id}','${esc(r.nom)}',${r.quantite},-1)">−</button><span style="font-family:'Eagle Lake',serif;font-size:1rem;min-width:2.5rem;text-align:center;color:${r.quantite<=0?'#7A1010':'var(--green-dark)'};">${r.quantite}</span><button class="btn-del" style="border-color:var(--border-g);color:var(--ink-mid);font-size:1rem;width:26px;height:26px;display:flex;align-items:center;justify-content:center;padding:0;" onclick="updateQty('${r.id}','${esc(r.nom)}',${r.quantite},1)">+</button></div>`:`<span style="font-family:'Eagle Lake',serif;font-size:1rem;color:${r.quantite<=0?'#7A1010':'var(--green-dark)'};">${r.quantite}</span>`}</td>
+    <td>${canAdmin?`<div style="display:flex;align-items:center;gap:0.5rem;"><button class="btn-del" style="border-color:var(--border-g);color:var(--ink-mid);font-size:1rem;width:26px;height:26px;display:flex;align-items:center;justify-content:center;padding:0;" onclick="updateQty('${r.id}','${esc(r.nom)}',${r.quantite},-1)">−</button><input type="number" min="0" value="${r.quantite}" style="width:3.4rem;text-align:center;font-family:'Eagle Lake',serif;font-size:1rem;background:var(--parch);border:1px solid var(--border-g);color:${r.quantite<=0?'#7A1010':'var(--green-dark)'};padding:.15rem 0;" onchange="setQty('${r.id}','${esc(r.nom)}',${r.quantite},this.value)"><button class="btn-del" style="border-color:var(--border-g);color:var(--ink-mid);font-size:1rem;width:26px;height:26px;display:flex;align-items:center;justify-content:center;padding:0;" onclick="updateQty('${r.id}','${esc(r.nom)}',${r.quantite},1)">+</button></div>`:`<span style="font-family:'Eagle Lake',serif;font-size:1rem;color:${r.quantite<=0?'#7A1010':'var(--green-dark)'};">${r.quantite}</span>`}</td>
     ${canAdmin?`<td class="act"><button class="btn-del" onclick="delInvItem('${r.id}')">Suppr.</button></td>`:''}</tr>`).join('');
 }
 async function addInvItem(){
@@ -1857,10 +1857,13 @@ async function addInvItem(){
   if(!nom){toast('Nom requis.');return;}
   try{await sbPost('mk_inventaire',{nom,categorie,quantite});document.getElementById('inv-nom').value='';document.getElementById('inv-categorie').value='';document.getElementById('inv-qty').value='0';toggleForm('inv-form');await loadInventaire();toast(`${nom} ajouté.`);}catch(e){toast('Erreur.');}
 }
-async function updateQty(id,nom,current,delta){
-  const newQty=Math.max(0,current+delta);if(newQty===current)return;
+async function applyQty(id,nom,current,newQty){
+  newQty=Math.max(0,newQty);if(newQty===current)return;
+  const delta=newQty-current;
   try{await sbPatch('mk_inventaire',`?id=eq.${id}`,{quantite:newQty});const h=loadInvHistory();h.unshift({id,nom,oldQty:current,newQty,delta,player:session?session.username:'—',time:new Date().toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})});saveInvHistory(h);await loadInventaire();if(isLogged())renderInvHistory();}catch(e){console.error(e);toast('Erreur de mise à jour.');}
 }
+async function updateQty(id,nom,current,delta){await applyQty(id,nom,current,current+delta);}
+async function setQty(id,nom,current,newValueRaw){await applyQty(id,nom,current,parseInt(newValueRaw)||0);}
 async function delInvItem(id){if(!confirm('Supprimer ?'))return;try{await sbDelete('mk_inventaire',`?id=eq.${id}`);await loadInventaire();}catch(e){toast('Erreur.');}}
 function renderInvHistory(){
   const list=document.getElementById('inv-history-list');const empty=document.getElementById('inv-history-empty');if(!list)return;
@@ -2037,7 +2040,8 @@ async function createAccount(){
 async function deleteAccount(user){if(!confirm(`Supprimer "${user}" ?`))return;try{await sbDelete('mk_accounts',`?username=eq.${encodeURIComponent(user)}`);await renderAccountList();toast(`Compte "${user}" supprimé.`);}catch(e){toast('Erreur.');}}
 function toggleEditAccess(id){const el=document.getElementById(id);if(el)el.style.display=el.style.display==='none'?'block':'none';}
 async function saveAccess(user){
-  const chks=[...document.querySelectorAll(`.edit-chk-${user}:checked`)].map(c=>c.value);
+  const container=document.getElementById(`edit-${user}`);
+  const chks=container?[...container.querySelectorAll('input[type=checkbox]:checked')].map(c=>c.value):[];
   const msg=document.getElementById(`msg-${user}`);
   if(!chks.length){showMsg(msg,'error','Au moins une section requise.');return;}
   const section=chks.join(',');
@@ -2064,7 +2068,7 @@ async function renderAccountList(){
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:.15rem .8rem;margin-bottom:.4rem;">
             ${['citoyens','garde','commerces','diplomatie','cour','inventaire','lois'].map(sec=>
               `<label style="display:flex;align-items:center;gap:.35rem;font-size:1rem;font-style:italic;color:var(--ink-mid);cursor:pointer;">
-                <input type="checkbox" class="edit-chk-${esc(r.username)}" value="${sec}" ${r.section.split(',').map(s=>s.trim()).includes(sec)?'checked':''}>
+                <input type="checkbox" value="${sec}" ${r.section.split(',').map(s=>s.trim()).includes(sec)?'checked':''}>
                 ${sectionLabel(sec)}
               </label>`
             ).join('')}
