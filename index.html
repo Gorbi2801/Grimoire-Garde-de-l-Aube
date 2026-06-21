@@ -850,6 +850,32 @@ td.act{text-align:center;white-space:nowrap;}
       <table><thead><tr><th>Objet</th><th>Catégorie</th><th>Quantité</th><th id="inv-act-head" style="display:none;">Actions</th></tr></thead>
       <tbody id="inv-tbody"></tbody></table>
     </div>
+    <!-- ══ RECETTES ══ -->
+    <div style="margin-top:1.5rem;">
+      <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.charte-arr').textContent=this.nextElementSibling.style.display==='none'?'▶':'▼';"
+        style="cursor:pointer;display:flex;align-items:center;gap:.55rem;font-family:'Eagle Lake',serif;
+               font-size:1rem;letter-spacing:.06em;color:var(--green-dark);padding:.45rem 0;
+               border-bottom:1px solid var(--border-g);">
+        <span class="charte-arr">▶</span> Recettes
+        <span style="font-family:'IM Fell English',serif;font-style:italic;font-size:.95rem;color:var(--ink-faint);margin-left:.4rem;">(cliquer pour déplier)</span>
+      </div>
+      <div style="display:none;margin-top:.75rem;">
+        <div id="recette-add-wrap" class="add-form-wrap" style="display:none;">
+          <div class="add-form-head" onclick="toggleForm('recette-form')"><span>+ Ajouter une recette</span><span class="chev">▼</span></div>
+          <div class="add-form-body" id="recette-form">
+            <div class="form-grid">
+              <div class="form-field"><label>Nom de l'objet</label><input id="recette-objet" type="text" placeholder="Nom de l'objet à fabriquer..."></div>
+            </div>
+            <div class="form-field" style="margin-top:0.6rem;">
+              <label>Recette (ingrédients / composants nécessaires)</label>
+              <textarea id="recette-texte" rows="3" placeholder="Ex: 3 lingots de fer, 1 morceau de cuir, 1 manche en bois..." style="width:100%;font-family:'IM Fell English',serif;font-size:1rem;background:var(--parch-dark);border:1px solid var(--border-g);color:var(--ink);padding:0.5rem;resize:vertical;box-sizing:border-box;"></textarea>
+            </div>
+            <button class="btn-submit" id="recette-submit-btn" onclick="addRecette()">Enregistrer</button>
+          </div>
+        </div>
+        <div id="recettes-list" style="display:flex;flex-direction:column;gap:0.6rem;margin-top:0.8rem;"></div>
+      </div>
+    </div>
   </div>
   </div>
   <div class="section-page" id="page-lois">
@@ -2024,6 +2050,36 @@ async function incrementOrdreFab(id,current,delta){await applyOrdreFabAvancement
 async function setOrdreFabAvancement(id,current,newValRaw){await applyOrdreFabAvancement(id,current,parseInt(newValRaw)||0);}
 async function delOrdreFab(id){if(!confirm('Supprimer cet ordre de fabrication ?'))return;try{await sbDelete('mk_ordres_fabrication',`?id=eq.${id}`);await loadOrdresFab();toast('Ordre supprimé.');}catch(e){toast('Erreur.');}}
 async function loadInventaire(){try{const rows=await sbGet('mk_inventaire','?order=nom.asc');renderInventaire(rows);}catch(e){console.error(e);}}
+// ══════════════════════════════════════════════════════════════════════
+//  RECETTES
+// ══════════════════════════════════════════════════════════════════════
+let recettesRows=[];
+async function loadRecettes(){
+  try{const rows=await sbGet('mk_recettes','?order=objet.asc');renderRecettes(rows);}catch(e){console.error(e);}
+}
+function renderRecettes(rows){
+  recettesRows=rows;
+  const canEdit=canEditSection('inventaire');
+  const list=document.getElementById('recettes-list');if(!list)return;
+  list.innerHTML=rows.map(r=>`<div style="background:var(--parch);border:1px solid var(--border-g);border-left:4px solid var(--gold);padding:0.65rem 1rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.3rem;">
+      <span style="font-family:'Eagle Lake',serif;font-size:1rem;color:var(--green-dark);">${esc(r.objet)}</span>
+      ${canEdit?`<button class="btn-del" onclick="delRecette('${r.id}')">Suppr.</button>`:''}
+    </div>
+    <p style="font-family:'IM Fell English',serif;font-size:1rem;color:var(--ink-mid);white-space:pre-wrap;margin:0;">${esc(r.recette)}</p>
+  </div>`).join('') || `<p style="font-family:'IM Fell English',serif;font-style:italic;color:var(--ink-faint);font-size:1rem;padding:0.5rem 0.2rem;">Aucune recette enregistrée.</p>`;
+}
+async function addRecette(){
+  const objet=document.getElementById('recette-objet').value.trim();
+  const recette=document.getElementById('recette-texte').value.trim();
+  if(!objet||!recette){toast('Objet et recette requis.');return;}
+  try{
+    await sbPost('mk_recettes',{objet,recette});
+    document.getElementById('recette-objet').value='';document.getElementById('recette-texte').value='';
+    toggleForm('recette-form');await loadRecettes();toast(`Recette enregistrée : ${objet}.`);
+  }catch(e){toast('Erreur.');}
+}
+async function delRecette(id){if(!confirm('Supprimer cette recette ?'))return;try{await sbDelete('mk_recettes',`?id=eq.${id}`);await loadRecettes();toast('Recette supprimée.');}catch(e){toast('Erreur.');}}
 const CAT_SLUG={'Équipement':'cat-equip','Potions':'cat-potions','Nourriture':'cat-nourriture','Ingrédient':'cat-ingredient','Livres':'cat-livres','Matériaux':'cat-materiaux'};
 function renderInventaire(rows){
   invRows=rows;
@@ -2205,9 +2261,10 @@ function updateAdminUI(){
   ['citoyens','garde','commerces','cour','inventaire','lois'].forEach(s=>{const w=document.getElementById(ids[s]);if(w)w.style.display=canEditSection(s)?'block':'none';});
   const fonWrap=document.getElementById('fon-add-wrap');if(fonWrap)fonWrap.style.display=canEditSection('commerces')?'block':'none';
   const ordreFabWrap=document.getElementById('ordre-fab-wrap');if(ordreFabWrap)ordreFabWrap.style.display=canEditSection('inventaire')?'block':'none';
+  const recetteWrap=document.getElementById('recette-add-wrap');if(recetteWrap)recetteWrap.style.display=canEditSection('inventaire')?'block':'none';
   loadAll();
 }
-async function loadAll(){await Promise.all([loadCitoyens(),loadGardes(),loadCommerces(),loadDiplomatie(),loadCour(),loadInventaire(),loadLois(),loadOrdresFab()]);}
+async function loadAll(){await Promise.all([loadCitoyens(),loadGardes(),loadCommerces(),loadDiplomatie(),loadCour(),loadInventaire(),loadLois(),loadOrdresFab(),loadRecettes()]);}
 // ══════════════════════════════════════════════════════════════════════
 //  GESTION COMPTES
 // ══════════════════════════════════════════════════════════════════════
