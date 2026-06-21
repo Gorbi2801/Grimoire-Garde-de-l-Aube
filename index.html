@@ -637,10 +637,6 @@ td.act{text-align:center;white-space:nowrap;}
       <p>Effectifs de la Garde de l'Aube</p>
       <div class="sect-stats">
         <div class="stat-chip">Effectif total : <strong id="gar-total">—</strong></div>
-        <div class="stat-chip" style="color:var(--green-dark);">💰 Masse salariale : <strong id="gar-masse">— sp</strong></div>
-        <div class="stat-chip" style="color:var(--green-dark);">✅ Versé : <strong id="gar-verse">— sp</strong></div>
-        <div class="stat-chip" style="color:#8B3030;">⏳ Dû : <strong id="gar-du">— sp</strong></div>
-        <button id="gar-reset-sal-btn" onclick="resetSalaires()" style="display:none;font-family:'Eagle Lake',serif;font-size:1rem;padding:.25rem .7rem;background:transparent;border:1px solid var(--border-g);color:var(--ink-mid);cursor:pointer;margin-left:.5rem;" title="Remettre tous les salaires à Non versé">↺ Réinitialiser</button>
       </div>
     </div>
 
@@ -686,7 +682,7 @@ td.act{text-align:center;white-space:nowrap;}
       <button class="btn-sort asc" id="gar-sort-grade-btn" onclick="sortTable('gar-tbody','grade','gar-sort-grade-btn')">Grade</button>
     </div>
     <div class="table-wrap">
-      <table><thead><tr><th>Prénom &amp; Nom</th><th>Race</th><th>Grade</th><th>Salaire</th><th>Versé</th><th>Recrutement</th><th>Spécialité</th><th>Arbalétrier</th><th id="gar-act-head" style="display:none;">Actions</th></tr></thead>
+      <table><thead><tr><th>Prénom &amp; Nom</th><th>Race</th><th>Grade</th><th>Recrutement</th><th>Spécialité</th><th>Arbalétrier</th><th id="gar-act-head" style="display:none;">Actions</th></tr></thead>
       <tbody id="gar-tbody"></tbody></table>
     </div>
     </div><!-- /gar-page-1 -->
@@ -1742,7 +1738,6 @@ async function addCitoyen(){
 async function loadGardes(){
   try{const rows=await sbGet('mk_gardes','?order=nom.asc');renderGardes(rows);}catch(e){console.error(e);}
 }
-const SALAIRES={"Commandeur de l'Aube":300,"Sénéchal de l'Aube":250,"Exécuteur de la Garde":200,"Traqueur de la Garde":150,"Patrouilleur de la Garde":100,"Aspirant de la Garde":50,"Artisan de la Garde":240,"Confrère de la Garde":240,"Mage de la Garde":240,"Barde de la Garde":240};
 
 function renderGardes(rows){
   gardeRows=rows;
@@ -1750,33 +1745,8 @@ function renderGardes(rows){
   const canEdit=canEditSection('garde');
   document.getElementById('gar-total').textContent=rows.length;
   document.getElementById('gar-act-head').style.display=canEdit?'':'none';
-  const resetBtn=document.getElementById('gar-reset-sal-btn');
-  if(resetBtn) resetBtn.style.display=canEdit?'inline-block':'none';
-
-  // Stats salariales
-  let masse=0,verse=0;
-  rows.forEach(r=>{
-    const sal=SALAIRES[r.grade]||0;
-    masse+=sal;
-    if(r.salaire_paye) verse+=sal;
-  });
-  const du=masse-verse;
-  const el_m=document.getElementById('gar-masse');
-  const el_v=document.getElementById('gar-verse');
-  const el_d=document.getElementById('gar-du');
-  if(el_m)el_m.textContent=masse+' sp';
-  if(el_v)el_v.textContent=verse+' sp';
-  if(el_d)el_d.textContent=du+' sp';
 
   tbody.innerHTML=rows.map(r=>{
-    const sal=SALAIRES[r.grade]||0;
-    const sp=!!r.salaire_paye;
-    const badge=sp
-      ?`<span style="color:var(--green-dark);font-size:1rem;">✅ Versé</span>`
-      :`<span style="color:#8B3030;font-size:1rem;">❌ Dû</span>`;
-    const btn=canEdit
-      ?`<button onclick="toggleSalaireGarde('${r.id}',${sp})" style="font-size:1rem;padding:.12rem .45rem;margin-left:.4rem;font-family:'Eagle Lake',serif;cursor:pointer;background:transparent;border:1px solid var(--border-g);color:var(--ink-mid);">${sp?'Annuler':'Valider'}</button>`
-      :'';
     const dateRecr=r.date_recrutement
       ?new Date(r.date_recrutement).toLocaleDateString('fr-FR')
       :'—';
@@ -1793,8 +1763,6 @@ function renderGardes(rows){
       <td class="cell-name">${esc(r.prenom)}${r.nom?" "+esc(r.nom):""}</td>
       <td class="cell-meta">${r.race?`<span class="badge badge-tag">${esc(r.race)}</span>`:'—'}</td>
       <td class="cell-meta">${r.grade?`<span class="badge badge-tag">${esc(r.grade)}</span>`:'—'}</td>
-      <td class="cell-meta" style="font-family:'Eagle Lake',serif;color:var(--green-dark);white-space:nowrap;">${sal?sal+' sp':'—'}</td>
-      <td class="cell-meta" style="white-space:nowrap;">${badge}${btn}</td>
       <td class="cell-meta" style="font-size:1rem;">
         <span style="display:block;">${dateRecr}</span>
         <span style="color:var(--ink-faint);font-style:italic;font-size:1rem;">par ${recruteur}</span>
@@ -1842,7 +1810,7 @@ async function addGarde(){
   try{
     const isEdit=editState&&editState.type==='garde';
     if(isEdit)await sbPatch('mk_gardes',`?id=eq.${editState.id}`,{prenom,nom,race,grade,date_recrutement,recruteur,specialite,arbaletrier});
-    else await sbPost('mk_gardes',{prenom,nom,race,grade,date_recrutement,recruteur,specialite,arbaletrier,salaire_paye:false});
+    else await sbPost('mk_gardes',{prenom,nom,race,grade,date_recrutement,recruteur,specialite,arbaletrier});
     ['gar-prenom','gar-nom','gar-recruteur'].forEach(id=>document.getElementById(id).value='');
     ['gar-race','gar-grade'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('gar-date-recrutement').value='';
@@ -1853,17 +1821,9 @@ async function addGarde(){
   }catch(e){toast('Erreur Supabase : '+(e.message||e).slice(0,80));}
 }
 async function delGarde(id){if(!confirm('Révoquer ce garde ?'))return;try{await sbDelete('mk_gardes',`?id=eq.${id}`);await loadGardes();toast('Garde révoqué.');}catch(e){toast('Erreur.');}}
-async function toggleSalaireGarde(id,current){
-  try{await sbPatch('mk_gardes',`?id=eq.${id}`,{salaire_paye:!current});await loadGardes();
-    toast(current?'Salaire marqué comme dû.':'Salaire versé enregistré.');}catch(e){toast('Erreur.');}
-}
 async function toggleArbaletrier(id,current){
   try{await sbPatch('mk_gardes',`?id=eq.${id}`,{arbaletrier:!current});await loadGardes();
     toast(current?'Arbalète retirée du registre.':'Arbalète enregistrée comme donnée.');}catch(e){toast('Erreur.');}
-}
-async function resetSalaires(){
-  if(!confirm('Remettre tous les salaires à "Non versé" ?')) return;
-  try{await sbPatch('mk_gardes','?salaire_paye=eq.true',{salaire_paye:false});await loadGardes();toast('Salaires réinitialisés.');}catch(e){toast('Erreur.');}
 }
 // ══════════════════════════════════════════════════════════════════════
 //  COMMERCES
