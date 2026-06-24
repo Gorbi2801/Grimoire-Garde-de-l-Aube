@@ -447,6 +447,8 @@ function readSuperadminCreateForm(){
       nom:(document.getElementById('superadminCreateNom')?.value||'').trim(),
       race:(document.getElementById('superadminCreateRace')?.value||'').trim(),
       grade:(document.getElementById('superadminCreateGrade')?.value||'').trim(),
+      date_recrutement:document.getElementById('superadminCreateDateRecrutement')?.value||null,
+      recruteur:(document.getElementById('superadminCreateRecruteur')?.value||'').trim()||null,
       specialite:(document.getElementById('superadminCreateSpecialite')?.value||'').trim()||'Soldat',
     },
   };
@@ -461,6 +463,8 @@ function clearSuperadminCreateForm(){
     'superadminCreateNom',
     'superadminCreateRace',
     'superadminCreateGrade',
+    'superadminCreateDateRecrutement',
+    'superadminCreateRecruteur',
   ].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const specialite=document.getElementById('superadminCreateSpecialite');
   if(specialite)specialite.value='Soldat';

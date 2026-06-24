@@ -1187,15 +1187,23 @@
           </label>
           <label class="form-field">
             <span>Race</span>
-            <input id="superadminCreateRace" placeholder="Race">
+            <select id="superadminCreateRace"><option value="">— Sélectionner —</option><option>Nordique</option><option>Impériale</option><option>Bretonne</option><option>Rougegarde</option><option>Elfe des bois</option><option>Haut-Elfe</option><option>Elfe sombre</option><option>Orque</option><option>Argonien</option><option>Khajiit</option></select>
           </label>
           <label class="form-field">
             <span>Grade</span>
-            <input id="superadminCreateGrade" placeholder="Grade">
+            <select id="superadminCreateGrade"><option value="">— Sélectionner —</option><option>Commandeur de l'Aube</option><option>Sénéchal de l'Aube</option><option>Exécuteur de la Garde</option><option>Traqueur de la Garde</option><option>Patrouilleur de la Garde</option><option>Aspirant de la Garde</option><optgroup label="Spécialité"><option>Artisan de la Garde</option><option>Confrère de la Garde</option><option>Mage de la Garde</option><option>Barde de la Garde</option></optgroup></select>
+          </label>
+          <label class="form-field">
+            <span>Date de recrutement</span>
+            <input id="superadminCreateDateRecrutement" type="date">
+          </label>
+          <label class="form-field">
+            <span>Recruté par</span>
+            <input id="superadminCreateRecruteur" placeholder="Nom du recruteur...">
           </label>
           <label class="form-field">
             <span>Spécialité</span>
-            <input id="superadminCreateSpecialite" placeholder="Spécialité" value="Soldat">
+            <select id="superadminCreateSpecialite"><option>Artisan</option><option>Mage</option><option>Confrère</option><option>Barde</option><option selected>Soldat</option></select>
           </label>
         </div>
 
