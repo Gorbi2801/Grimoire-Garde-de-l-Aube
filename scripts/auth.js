@@ -67,7 +67,7 @@ async function loadSession(options={}){
 
   const { data:profile, error:profileError } = await window.GrimoireSupabase
     .from('mk_profiles')
-    .select('username,display_name,is_superadmin,sections,sections_edit,grade')
+    .select('username,display_name,is_superadmin,sections,sections_edit')
     .eq('user_id', user.id)
     .single();
 
@@ -78,12 +78,14 @@ async function loadSession(options={}){
   }
 
   const sections=Array.isArray(profile.sections)?profile.sections.map(String).filter(Boolean):[];
-  const editSections=Array.isArray(profile.sections_edit)?profile.sections_edit.map(String).filter(Boolean):undefined;
+  const editSections=Array.isArray(profile.sections_edit)?profile.sections_edit.map(String).filter(Boolean):[];
+  const garde=await loadCurrentGarde(user.id);
   session=Object.freeze({
     user,
     username:profile.username,
     displayName:profile.display_name||profile.username,
-    grade:profile.grade||'—',
+    grade:garde?.grade||'—',
+    garde,
     isSuperadmin:profile.is_superadmin===true,
     sections,
     editSections,
@@ -93,6 +95,21 @@ async function loadSession(options={}){
   document.getElementById('sessionLabel').textContent=session.displayName;
   if(loginErr)loginErr.style.display='none';
   await prepareAuthorizedApp();
+}
+
+async function loadCurrentGarde(userId){
+  if(!userId)return null;
+  const { data, error } = await window.GrimoireSupabase
+    .from('mk_gardes')
+    .select('id,user_id,prenom,nom,race,grade,specialite,date_recrutement,recruteur')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if(error){
+    console.error('Impossible de charger la fiche garde liée au compte.', error);
+    return null;
+  }
+  return data||null;
 }
 
 function setLoggedOutUI(){
@@ -166,9 +183,7 @@ function canAccessSection(sec){
 function canEditSection(sec){
   if(!session) return false;
   if(session.isSuperadmin) return true;
-  // If editSections is defined, use it. Otherwise fall back to sections for backward compatibility.
-  if(Array.isArray(session.editSections)) return session.editSections.includes(sec);
-  return Array.isArray(session.sections)?session.sections.includes(sec):false;
+  return canAccessSection(sec) && Array.isArray(session.editSections) && session.editSections.includes(sec);
 }
 
 function sectionLabel(value){
@@ -233,12 +248,14 @@ function permPill(allowed){
 function renderProfilePage(){
   if(!session)return;
   const details=document.getElementById('profileDetails');
+  const gardeDetails=document.getElementById('profileGardeDetails');
   const permsBody=document.getElementById('profilePermsBody');
   if(details){
     const role=session.isSuperadmin?'Superadmin':'Compte RP';
     const rows=[
       ['Nom affiché',session.displayName],
       ['Identifiant',session.username],
+      ['Rôle',role],
       ['Grade',session.grade],
       ['Accès',sectionLabel(session)],
       ['Peut éditer', sectionLabel(session.editSections||[])],
@@ -247,6 +264,22 @@ function renderProfilePage(){
       ['Dernière connexion',profileDate(session.user?.last_sign_in_at)],
     ];
     details.innerHTML=rows.map(([label,value])=>`<dt>${escH(label)}</dt><dd>${escH(value)}</dd>`).join('');
+  }
+  if(gardeDetails){
+    const garde=session.garde;
+    const nomRp=garde?[garde.prenom,garde.nom].filter(Boolean).join(' ')||'—':'Aucune fiche reliée';
+    const rows=garde?[
+      ['Nom RP',nomRp],
+      ['Race',garde.race||'—'],
+      ['Grade',garde.grade||'—'],
+      ['Spécialité',garde.specialite||'—'],
+      ['Date de recrutement',garde.date_recrutement||'—'],
+      ['Recruteur',garde.recruteur||'—'],
+      ['Identifiant fiche',garde.id||'—'],
+    ]:[
+      ['Statut','Aucune fiche garde reliée à ce compte'],
+    ];
+    gardeDetails.innerHTML=rows.map(([label,value])=>`<dt>${escH(label)}</dt><dd>${escH(value)}</dd>`).join('');
   }
   if(permsBody){
     permsBody.innerHTML=configuredSections().map(sec=>{

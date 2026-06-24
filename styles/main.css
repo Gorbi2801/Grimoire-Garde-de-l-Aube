@@ -92,6 +92,7 @@ header{background:linear-gradient(180deg,var(--green-dark) 0%,var(--green) 100%)
 .profile-head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;}
 .profile-layout{display:grid;grid-template-columns:minmax(260px,0.8fr) minmax(420px,1.4fr);gap:1.25rem;align-items:start;}
 .profile-card{background:rgba(226,212,168,0.35);border:1px solid var(--border-g);padding:1.2rem;}
+.profile-permissions{grid-column:1/-1;}
 .profile-title{font-family:'Eagle Lake',serif;font-size:1.05rem;letter-spacing:0.08em;color:var(--green-dark);border-bottom:1px solid var(--border-g);padding-bottom:0.5rem;margin-bottom:0.8rem;}
 .profile-details{display:grid;grid-template-columns:max-content 1fr;gap:0.45rem 1rem;margin:0;}
 .profile-details dt{font-family:'Eagle Lake',serif;font-size:0.95rem;color:var(--ink-mid);}
