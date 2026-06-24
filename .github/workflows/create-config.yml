@@ -1,0 +1,35 @@
+name: Create config from secrets (and build)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create scripts/config.js from secrets
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASEURL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASEKEY }}
+          AUTH_EMAIL_DOMAIN: ${{ secrets.AUTHEMAILDOMAIN }}
+        run: |
+          mkdir -p scripts
+          cat > scripts/config.js <<EOF
+window.GrimoireConfig = Object.freeze({
+  supabaseUrl: "${SUPABASE_URL}",
+  supabaseKey: "${SUPABASE_KEY}",
+  authEmailDomain: "${AUTH_EMAIL_DOMAIN}",
+  sections: ["citoyens","biblio","garde","commerces","diplomatie","cour","inventaire","lois","renseignements"]
+});
+EOF
+
+      - name: Build / Deploy (placeholder)
+        run: |
+          # Remplace par tes commandes de build ou de déploiement si nécessaire.
+          echo "scripts/config.js généré :"
+          ls -l scripts/config.js
