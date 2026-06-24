@@ -65,6 +65,7 @@ header{background:linear-gradient(180deg,var(--green-dark) 0%,var(--green) 100%)
 .nav-btn.active{color:var(--gold-light);border-bottom-color:var(--gold);background:rgba(201,168,76,0.08);}
 .nav-btn .nav-icon{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;flex:0 0 auto;}
 .nav-btn .nav-icon img{display:block;width:32px;height:32px;object-fit:contain;}
+.nav-admin-mark{border:1px solid rgba(201,168,76,0.55);border-radius:50%;font-size:0.85rem;color:var(--gold);letter-spacing:0;}
 
 /* ── LAYOUT ── */
 .main-layout{position:relative;z-index:1;}
@@ -105,6 +106,38 @@ header{background:linear-gradient(180deg,var(--green-dark) 0%,var(--green) 100%)
 .perm-pill.ok{background:rgba(55,110,68,0.16);border:1px solid rgba(55,110,68,0.55);color:var(--s-ok);}
 .perm-pill.ko{background:rgba(122,16,16,0.12);border:1px solid rgba(122,16,16,0.45);color:var(--s-danger);}
 
+/* ── SUPERADMIN ── */
+.superadmin-grid{display:grid;grid-template-columns:minmax(420px,1.1fr) minmax(360px,0.9fr);gap:1.25rem;align-items:start;}
+.superadmin-list-card{min-width:0;}
+.superadmin-detail-card{min-width:0;}
+.superadmin-server-card{grid-column:1/-1;}
+.superadmin-table-wrap{max-height:min(58vh,520px);overflow:auto;}
+.superadmin-table-wrap thead th{position:sticky;top:0;z-index:2;}
+.superadmin-selected-row{background:rgba(201,168,76,0.28)!important;}
+.superadmin-row-btn{font-size:0.9rem;padding:0.25rem 0.7rem;margin:0;}
+.superadmin-details{margin-bottom:1rem;}
+.superadmin-subtitle{font-family:'Eagle Lake',serif;font-size:0.95rem;letter-spacing:0.08em;color:var(--green-dark);margin:1rem 0 0.55rem;border-top:1px solid var(--border-g);padding-top:0.75rem;}
+.superadmin-link-row{display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;}
+.superadmin-link-row select{flex:1;min-width:220px;}
+.superadmin-form-grid{margin-bottom:0.8rem;}
+.superadmin-create-grid{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));margin-bottom:0.8rem;}
+.superadmin-check{display:flex;align-items:center;gap:0.45rem;font-family:'Eagle Lake',serif;color:var(--ink-mid);padding-top:1.7rem;}
+.superadmin-check input,.superadmin-perms input{accent-color:var(--green-dark);}
+.superadmin-perms{margin-top:0.7rem;}
+.superadmin-actions{display:flex;justify-content:flex-end;margin-top:0.8rem;}
+.superadmin-danger{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-top:1.2rem;padding:0.85rem;border:1px solid rgba(122,16,16,0.28);background:rgba(122,16,16,0.07);}
+.superadmin-danger-actions{display:flex;justify-content:flex-end;gap:0.5rem;flex-wrap:wrap;}
+.superadmin-danger strong{font-family:'Eagle Lake',serif;color:var(--brown-dark);font-size:0.95rem;letter-spacing:0.06em;}
+.superadmin-danger p{margin:0.2rem 0 0;color:var(--ink-mid);font-style:italic;}
+.sa-muted{color:var(--ink-mid);font-style:italic;}
+.sa-empty{text-align:center;color:var(--ink-mid);font-style:italic;}
+.sa-status{min-height:1.3rem;color:var(--brown);font-style:italic;margin:-0.4rem 0 0.8rem;}
+@media (max-width:900px){
+  .superadmin-grid{grid-template-columns:1fr;}
+  .superadmin-server-card{grid-column:auto;}
+  .superadmin-danger{align-items:flex-start;flex-direction:column;}
+}
+
 /* ── SEARCH & FILTERS ── */
 .toolbar{display:flex;gap:0.6rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap;}
 .search-wrap{display:flex;align-items:center;gap:0.4rem;background:rgba(226,212,168,0.42);border:1px solid var(--border-g);border-left:3px solid var(--green);padding:0.3rem 0.6rem;flex:1;min-width:200px;}
@@ -115,8 +148,10 @@ header{background:linear-gradient(180deg,var(--green-dark) 0%,var(--green) 100%)
 
 /* ── TABLE ── */
 .table-wrap{border:1px solid var(--border-g);border-top:2px solid var(--green);overflow:hidden;}
+.table-wrap.superadmin-table-wrap{max-height:min(58vh,520px);overflow:auto;}
 table{width:100%;border-collapse:collapse;font-size:1rem;}
 thead th{background:var(--green-dark);font-family:'Eagle Lake',serif;font-size:1rem;letter-spacing:0.1em;color:var(--gold-light);padding:0.65rem 0.9rem;text-align:left;border-right:1px solid rgba(201,168,76,0.15);font-weight:400;}
+.table-wrap.superadmin-table-wrap thead th{position:sticky;top:0;z-index:2;}
 thead th:last-child{border-right:none;text-align:center;}
 tbody tr{border-bottom:1px solid var(--border-g);transition:background 0.12s;}
 tbody tr:nth-child(even){background:rgba(226,212,168,0.38);}

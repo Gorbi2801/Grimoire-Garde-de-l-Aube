@@ -23,6 +23,10 @@
     renderTab, goToFiche, saveFiche, deleteFiche, openEditFiche,
     saveRapport, deleteRapport, addRelation, deleteRelation,
     rensSearch, rensFilter,
+    loadSuperadmin, filterSuperadminGardes, selectSuperadminGarde, selectSuperadminProfile,
+    linkSelectedSuperadminProfile, unlinkSelectedSuperadminGarde,
+    saveSelectedSuperadminProfile, deleteSelectedSuperadminGarde,
+    createSuperadminAccount, deleteSelectedSuperadminAccount,
     escH, escJs, esc, showMsg, toast,
   };
   Object.entries(pub).forEach(([k,v])=>{ if(typeof v==='function') window[k]=v; });

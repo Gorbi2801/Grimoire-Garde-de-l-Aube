@@ -145,7 +145,7 @@ function renderOrganigramme(){
 //  GARDES
 // ══════════════════════════════════════════════════════════════════════
 async function loadGardes(){
-  try{const rows=await sbGet('mk_gardes','?order=nom.asc');renderGardes(rows);}catch(e){console.error(e);}
+  try{const rows=await sbGet('mk_gardes','?user_id=not.is.null&order=nom.asc');renderGardes(rows);}catch(e){console.error(e);}
 }
 
 function renderGardes(rows){

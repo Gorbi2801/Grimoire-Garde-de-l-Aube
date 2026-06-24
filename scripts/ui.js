@@ -10,6 +10,7 @@ function switchSection(sec,btn){
   page.classList.add('active');
   if(btn)btn.classList.add('active');
   activeSection=sec;
+  if(sec==='superadmin'&&typeof loadSuperadmin==='function')loadSuperadmin();
 }
 function showProfilePage(){
   if(!session)return;
