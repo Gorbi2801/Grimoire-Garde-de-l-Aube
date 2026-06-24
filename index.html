@@ -1509,6 +1509,13 @@ body{background:#1C1A18;font-family:'IM Fell English',Georgia,serif;font-size:16
   </div>
 </div>
 <script>
+/* ══════════════════════════════════════════════════════════════════════
+   GRIMOIRE — GARDE DE L'AUBE
+   Toutes les fonctions sont encapsulées dans un IIFE strict.
+   Aucune fonction d'administration n'est accessible depuis window/console.
+   ══════════════════════════════════════════════════════════════════════ */
+(function(){
+'use strict';
 // ══════════════════════════════════════════════════════════════════════
 //  COUVERTURE
 // ══════════════════════════════════════════════════════════════════════
@@ -1673,8 +1680,8 @@ const SB_URL  = 'https://cbfcmtgvxlvfkjhppufq.supabase.co';
 const SB_KEY  = 'sb_publishable_LH8TZ7ANKc6SP8eJ4tj7eg_FwJrz9J5';
 const SB_H    = {'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'return=representation'};
 // Bannière de sécurité console
-console.log('%c⚠ STOP','color:red;font-size:2rem;font-weight:bold;');
-console.log('%cCette console est destinée aux développeurs. Toute manipulation des fonctions d\'administration sans autorisation est une violation de la charte RP et peut entraîner une exclusion.','color:#8B7340;font-size:1rem;');
+console.log('%c⛔ STOP','color:#cc0000;font-size:2.5rem;font-weight:bold;');
+console.log('%cCette console est réservée aux développeurs autorisés.\nToute tentative de manipulation des fonctions internes constitue une violation de la charte de la communauté et peut entraîner une exclusion définitive.\nLes fonctions d\'administration ne sont pas accessibles depuis cet environnement.','color:#8B7340;font-size:1rem;font-style:italic;');
 async function sbGet(t,p=''){const r=await fetch(`${SB_URL}/rest/v1/${t}${p}`,{headers:SB_H});if(!r.ok)throw new Error(await r.text());return r.json();}
 async function sbPost(t,b){const r=await fetch(`${SB_URL}/rest/v1/${t}`,{method:'POST',headers:SB_H,body:JSON.stringify(b)});if(!r.ok)throw new Error(await r.text());return r.json();}
 async function sbPatch(t,p,b){const r=await fetch(`${SB_URL}/rest/v1/${t}${p}`,{method:'PATCH',headers:SB_H,body:JSON.stringify(b)});if(!r.ok)throw new Error(await r.text());return r.json();}
@@ -1788,7 +1795,10 @@ function hideLoader(){document.getElementById('loader').style.display='none';}
 // ══════════════════════════════════════════════════════════════════════
 async function init(){
   showLoader('Chargement du Grimoire...');
-  initSA();
+  // initSA() n'est PAS appelé au chargement public.
+  // La création du compte superadmin initial doit être faite
+  // manuellement via l'outil SQL de Supabase (voir README).
+  // Appel automatique supprimé pour éviter la re-création par console.
   await loadCitoyens();
   hideLoader();
   loadGardes();loadCommerces();loadDiplomatie();loadCour();loadInventaire();loadLois();
@@ -2373,10 +2383,11 @@ async function doLogin(){
     const rawSections=acc.section==='superadmin'?['superadmin']:acc.section.split(',').map(s=>s.trim()).filter(s=>VALID_SECTIONS.includes(s));
     if(!rawSections.length){failAttempt();errEl.textContent='Compte invalide.';errEl.style.display='block';return;}
     resetAttempts();errEl.style.display='none';
-    session={username:user,section:rawSections.join(','),_ts:Date.now()};
+    // Session immuable via Object.freeze — empêche la modification depuis la console
+    session=Object.freeze({username:user,section:rawSections.join(','),_ts:Date.now(),_isSA:acc.section==='superadmin'});
     document.getElementById('loginBlock').style.display='none';document.getElementById('sessionBlock').style.display='flex';
     document.getElementById('sessionLabel').textContent=`${escH(user)} — ${sectionLabel(session.section)}`;
-    if(acc.section==='superadmin'){document.getElementById('saBlock').style.display='block';await renderAccountList();
+    if(session._isSA){document.getElementById('saBlock').style.display='block';await renderAccountList();
       if(acc.first_login){const m=document.getElementById('sa-pass-msg');m.style.display='block';m.style.color='#7A1010';m.textContent='⚠ Mot de passe initial actif — changez-le immédiatement.';}}
     updateAdminUI();toast(`Bienvenue, ${escH(user)}.`);renderInvHistory();
   }catch(e){document.getElementById('loginErr').textContent='Erreur réseau.';document.getElementById('loginErr').style.display='block';}
@@ -2401,7 +2412,8 @@ function canEditSection(sec){
     toast('Session expirée. Reconnectez-vous.');
     return false;
   }
-  if(session.section==='superadmin')return true;
+  // _isSA est posé lors du login depuis la DB, pas modifiable (Object.freeze)
+  if(session._isSA===true)return true;
   return session.section.split(',').map(s=>s.trim()).includes(sec);
 }
 function sectionLabel(s){const m={citoyens:'Civils & Alliés',garde:'Garde',commerces:'Commerces',diplomatie:'Diplomatie',cour:"Cour de l'Ordre",inventaire:'Inventaire',lois:'Codex',renseignements:'Renseignements',superadmin:'Superadmin'};if(s==='superadmin')return m.superadmin;return s.split(',').map(x=>m[x.trim()]||x.trim()).join(', ');}
@@ -2418,7 +2430,7 @@ async function loadAll(){await Promise.all([loadCitoyens(),loadGardes(),loadComm
 //  GESTION COMPTES
 // ══════════════════════════════════════════════════════════════════════
 async function changeSAPass(){
-  if(!session||session.section!=='superadmin'){console.warn('Accès refusé.');return;}
+  if(!session||!session._isSA){return;}
   const np=document.getElementById('sa-np').value;const cp=document.getElementById('sa-cp').value;const msg=document.getElementById('sa-pass-msg');
   if(np.length<8){showMsg(msg,'error','Minimum 8 caractères.');return;}
   if(np!==cp){showMsg(msg,'error','Mots de passe différents.');return;}
@@ -2427,8 +2439,14 @@ async function changeSAPass(){
   try{const h=await hashPwd(np);await sbPatch('mk_accounts',`?username=eq.${SA_ID}`,{password_hash:h,first_login:false});document.getElementById('sa-np').value='';document.getElementById('sa-cp').value='';showMsg(msg,'ok','Mot de passe modifié.');}catch(e){showMsg(msg,'error','Erreur.');}
 }
 async function createAccount(){
-  // Guard : seul un superadmin authentifié peut créer des comptes
-  if(!session||session.section!=='superadmin'){console.warn('Accès refusé.');return;}
+  // Guard 1 : session locale
+  if(!session||session.section!=='superadmin'){return;}
+  // Guard 2 : vérification Supabase que l'auteur est bien superadmin
+  //           (empêche l'injection de session forgée depuis la console)
+  try{
+    const check=await sbGet('mk_accounts',`?username=eq.${encodeURIComponent(session.username)}&select=section`);
+    if(!check.length||check[0].section!=='superadmin'){session=null;toast('Session invalide.');return;}
+  }catch(e){return;}
   const user=document.getElementById('sa-user').value.trim();
   const pass=document.getElementById('sa-pass').value;
   const msg=document.getElementById('sa-msg');
@@ -2436,11 +2454,13 @@ async function createAccount(){
   const checked=[...document.querySelectorAll('.sa-chk:checked')].map(c=>c.value).filter(v=>VALID_SECTIONS.includes(v));
   if(!user){showMsg(msg,'error','Pseudo requis.');return;}
   if(!/^[a-zA-Z0-9_\-]{3,32}$/.test(user)){showMsg(msg,'error','Pseudo invalide (3-32 caractères alphanumériques).');return;}
-  if(user===SA_ID){showMsg(msg,'error','Pseudo réservé.');return;}
+  // Bloc absolu : jamais de compte superadmin via l'UI
+  if(user===SA_ID||user.toLowerCase().includes('superadmin')){showMsg(msg,'error','Pseudo réservé.');return;}
   if(pass.length<8){showMsg(msg,'error','Minimum 8 caractères.');return;}
   if(!checked.length){showMsg(msg,'error','Sélectionnez au moins une section.');return;}
-  // On ne peut jamais créer un compte superadmin via l'UI
   const section=checked.join(',');
+  // Vérification finale : section ne contient jamais 'superadmin'
+  if(section.includes('superadmin')){showMsg(msg,'error','Section interdite.');return;}
   try{
     const ex=await sbGet('mk_accounts',`?username=eq.${encodeURIComponent(user)}`);
     if(ex.length>0){showMsg(msg,'error','Ce pseudo existe déjà.');return;}
@@ -2454,21 +2474,33 @@ async function createAccount(){
   }catch(e){showMsg(msg,'error','Erreur.');}
 }
 async function deleteAccount(user){
-  if(!session||session.section!=='superadmin'){console.warn('Accès refusé.');return;}
+  if(!session||session.section!=='superadmin'){return;}
+  // Double-vérification Supabase — empêche la session forgée en console
+  try{
+    const check=await sbGet('mk_accounts',`?username=eq.${encodeURIComponent(session.username)}&select=section`);
+    if(!check.length||check[0].section!=='superadmin'){session=null;toast('Session invalide.');return;}
+  }catch(e){return;}
   if(user===SA_ID){toast('Impossible de supprimer le superadmin.');return;}
   if(!confirm(`Supprimer "${escH(user)}" ?`))return;
-  try{await sbDelete('mk_accounts',`?username=eq.${encodeURIComponent(user)}`);await renderAccountList();toast(`Compte supprimé.`);}catch(e){toast('Erreur.');}
+  try{await sbDelete('mk_accounts',`?username=eq.${encodeURIComponent(user)}`);await renderAccountList();toast('Compte supprimé.');}catch(e){toast('Erreur.');}
 }
 function toggleEditAccess(id){const el=document.getElementById(id);if(el)el.style.display=el.style.display==='none'?'block':'none';}
 async function saveAccess(user){
-  if(!session||session.section!=='superadmin'){console.warn('Accès refusé.');return;}
-  if(user===SA_ID){return;} // La section superadmin ne peut pas être modifiée via l'UI
+  if(!session||session.section!=='superadmin'){return;}
+  // Double-vérification Supabase
+  try{
+    const check=await sbGet('mk_accounts',`?username=eq.${encodeURIComponent(session.username)}&select=section`);
+    if(!check.length||check[0].section!=='superadmin'){session=null;toast('Session invalide.');return;}
+  }catch(e){return;}
+  if(user===SA_ID){return;}
   const container=document.getElementById(`edit-${user}`);
   const VALID_SECTIONS=['citoyens','garde','commerces','diplomatie','cour','inventaire','lois','renseignements'];
   const chks=container?[...container.querySelectorAll('input[type=checkbox]:checked')].map(c=>c.value).filter(v=>VALID_SECTIONS.includes(v)):[];
   const msg=document.getElementById(`msg-${user}`);
   if(!chks.length){showMsg(msg,'error','Au moins une section requise.');return;}
   const section=chks.join(',');
+  // Bloquer toute tentative d'élever les droits à superadmin
+  if(section.includes('superadmin')){showMsg(msg,'error','Section interdite.');return;}
   try{await sbPatch('mk_accounts',`?username=eq.${encodeURIComponent(user)}`,{section});showMsg(msg,'ok','Accès mis à jour.');await renderAccountList();}catch(e){showMsg(msg,'error','Erreur.');}
 }
 async function renderAccountList(){
@@ -3023,7 +3055,39 @@ async function initRenseignements(){
 // ── Escape HTML ───────────────────────────────────────────────────
 function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+// ══════════════════════════════════════════════════════════════════════
+//  EXPOSITION CONTRÔLÉE — seules les fonctions nécessaires aux onclick
+//  HTML sont exposées sur window. createAccount, deleteAccount et toutes
+//  les fonctions d'administration restent dans le scope IIFE uniquement.
+// ══════════════════════════════════════════════════════════════════════
+(function exposePublic(){
+  const pub = {
+    switchSection, togglePanel, toggleForm, sortTable, filterRows,
+    doLogin, doLogout,
+    saveCitoyen, delCitoyen, editCitoyen, updateStatutCitoyen,
+    saveGarde, delGarde, editGarde,
+    saveCommerce, delCommerce, editCommerce,
+    saveRelation, loadDiplomatie,
+    saveCour, delCour, editCour,
+    saveOrdreFab, delOrdreFab, updateAvancement,
+    saveRecette, delRecette,
+    saveInventaire, delInvItem, ajusterQuantite, undoInvChange,
+    saveLoi, delLoi, exportCSV,
+    saveNote, openNoteModal, closeNoteModal,
+    renderTab, goToFiche, saveFiche, deleteFiche, openEditFiche,
+    saveRapport, deleteRapport, addRelation, deleteRelation,
+    rensSearch, rensFilter,
+    changeSAPass, toggleEditAccess, saveAccess,
+    escH, escJs, esc, showMsg, toast,
+  };
+  Object.entries(pub).forEach(([k,v])=>{ if(typeof v==='function') window[k]=v; });
+})();
+
 init();
+
+// ─── Fin du scope IIFE ──────────────────────────────────────────────
+// Fin IIFE
+})();
 </script>
 </body>
 </html>
