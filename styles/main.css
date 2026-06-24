@@ -66,6 +66,7 @@ header{background:linear-gradient(180deg,var(--green-dark) 0%,var(--green) 100%)
 .nav-btn .nav-icon{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;flex:0 0 auto;}
 .nav-btn .nav-icon img{display:block;width:32px;height:32px;object-fit:contain;}
 .nav-btn .nav-icon.nav-icon-large{width:44px;height:44px;}
+.nav-letter-icon{border:1px solid rgba(201,168,76,0.55);border-radius:50%;font-family:'Eagle Lake',serif;font-size:1.05rem;color:var(--gold);letter-spacing:0;}
 
 /* ── LAYOUT ── */
 .main-layout{position:relative;z-index:1;}
@@ -136,6 +137,28 @@ header{background:linear-gradient(180deg,var(--green-dark) 0%,var(--green) 100%)
   .superadmin-grid{grid-template-columns:1fr;}
   .superadmin-server-card{grid-column:auto;}
   .superadmin-danger{align-items:flex-start;flex-direction:column;}
+}
+
+/* ── PRÉSENCES ── */
+.presence-grid{display:grid;grid-template-columns:minmax(280px,0.75fr) minmax(360px,1fr);gap:1.25rem;align-items:start;}
+.presence-history-card{grid-column:1/-1;}
+.presence-current{border:1px solid var(--border-g);border-left:3px solid var(--gold);background:rgba(240,230,200,0.52);padding:0.85rem;margin-bottom:0.8rem;font-family:'Eagle Lake',serif;color:var(--green-dark);}
+.presence-actions{display:flex;gap:0.6rem;flex-wrap:wrap;align-items:center;}
+.presence-off-btn{margin-left:0;}
+.presence-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0.7rem;}
+.presence-summary-item{border:1px solid var(--border-g);background:rgba(240,230,200,0.4);padding:0.7rem;}
+.presence-summary-item strong{display:block;font-family:'Eagle Lake',serif;color:var(--green-dark);font-size:1.05rem;}
+.presence-summary-item span{display:block;color:var(--ink-mid);font-style:italic;margin-top:0.15rem;}
+.presence-table-wrap{max-height:min(50vh,420px);overflow:auto;}
+.presence-table-wrap thead th{position:sticky;top:0;z-index:2;}
+.presence-dot{display:inline-block;width:0.65rem;height:0.65rem;border-radius:50%;margin-right:0.45rem;border:1px solid rgba(28,26,24,0.28);vertical-align:middle;background:rgba(92,74,58,0.35);}
+.presence-dot.active{background:var(--s-ok);box-shadow:0 0 0 3px rgba(45,106,45,0.12);}
+.presence-dot.off{background:rgba(92,74,58,0.32);}
+.presence-status{display:inline-flex;align-items:center;gap:0.35rem;font-family:'IM Fell English',serif;font-style:italic;color:var(--ink-mid);}
+.presence-admin-log{max-height:220px;overflow:auto;margin-top:0.6rem;}
+@media (max-width:900px){
+  .presence-grid{grid-template-columns:1fr;}
+  .presence-history-card{grid-column:auto;}
 }
 
 /* ── MISSIVES ── */

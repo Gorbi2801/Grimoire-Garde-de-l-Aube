@@ -5,6 +5,8 @@ const superadminState={
   loaded:false,
   gardes:[],
   profiles:[],
+  presences:[],
+  presenceSummaries:[],
   selectedGardeId:null,
   selectedProfileUserId:null,
 };
@@ -65,7 +67,7 @@ async function loadSuperadmin(){
   const msg=document.getElementById('superadminMsg');
   if(msg)msg.textContent='Chargement...';
   try{
-    const [gardesResult,profilesResult]=await Promise.all([
+    const [gardesResult,profilesResult,presencesResult,presenceSummaries]=await Promise.all([
       window.GrimoireSupabase
         .from('mk_gardes')
         .select('id,user_id,prenom,nom,race,grade,specialite,date_recrutement,recruteur')
@@ -74,13 +76,22 @@ async function loadSuperadmin(){
         .from('mk_profiles')
         .select('user_id,username,display_name,is_superadmin,sections,sections_edit')
         .order('username',{ascending:true}),
+      window.GrimoireSupabase
+        .from('mk_presences')
+        .select('id,user_id,started_at,ended_at,created_at')
+        .order('started_at',{ascending:false})
+        .limit(500),
+      typeof loadPresenceSummaries==='function'?loadPresenceSummaries():Promise.resolve([]),
     ]);
 
     if(gardesResult.error)throw gardesResult.error;
     if(profilesResult.error)throw profilesResult.error;
+    if(presencesResult.error)console.warn('Impossible de charger les présences superadmin.', presencesResult.error);
 
     superadminState.gardes=gardesResult.data||[];
     superadminState.profiles=profilesResult.data||[];
+    superadminState.presences=presencesResult.error?[]:(presencesResult.data||[]);
+    superadminState.presenceSummaries=presenceSummaries||[];
     superadminState.loaded=true;
 
     if(superadminState.selectedGardeId&&!saSelectedGarde()){
@@ -109,9 +120,11 @@ function renderSuperadminStats(){
   const gardes=document.getElementById('superadminGardesCount');
   const profiles=document.getElementById('superadminProfilesCount');
   const linked=document.getElementById('superadminLinkedCount');
+  const active=document.getElementById('superadminActiveCount');
   if(gardes)gardes.textContent=`Gardes : ${superadminState.gardes.length}`;
   if(profiles)profiles.textContent=`Comptes : ${superadminState.profiles.length}`;
   if(linked)linked.textContent=`Liés : ${superadminState.gardes.filter(garde=>!!garde.user_id).length}`;
+  if(active)active.textContent=`Présents : ${superadminState.presenceSummaries.filter(row=>row.is_active).length}`;
 }
 
 function filterSuperadminGardes(){
@@ -140,7 +153,7 @@ function renderSuperadminGardes(){
     const profile=saProfileForUser(garde.user_id);
     const selected=garde.id===superadminState.selectedGardeId?' class="superadmin-selected-row"':'';
     return `<tr${selected}>
-      <td class="cell-name">${saEsc(saGardeName(garde))}</td>
+      <td class="cell-name">${typeof renderPresenceDot==='function'?renderPresenceDot(garde.user_id):''}${saEsc(saGardeName(garde))}</td>
       <td class="cell-meta">${garde.grade?`<span class="badge badge-tag">${saEsc(garde.grade)}</span>`:'—'}</td>
       <td class="cell-meta">${profile?saEsc(saProfileName(profile)):'<span class="sa-muted">Non lié</span>'}</td>
       <td class="act"><button class="btn-submit superadmin-row-btn" onclick="selectSuperadminGarde('${saEsc(garde.id)}')">Ouvrir</button></td>
@@ -203,6 +216,8 @@ function renderSuperadminDetail(){
 
     ${profile?renderSuperadminProfileEditor(profile):'<p class="sa-muted">Choisis un compte pour modifier ses permissions.</p>'}
 
+    ${renderSuperadminPresence(garde.user_id||superadminState.selectedProfileUserId)}
+
     <div class="superadmin-danger">
       <div>
         <strong>Suppression</strong>
@@ -212,6 +227,57 @@ function renderSuperadminDetail(){
         <button class="btn-del" onclick="deleteSelectedSuperadminGarde()">Supprimer la fiche</button>
         ${linkedProfile?'<button class="btn-del" onclick="deleteSelectedSuperadminAccount()">Supprimer le compte lié</button>':''}
       </div>
+    </div>`;
+}
+
+function saPresenceSummaryForUser(userId){
+  return superadminState.presenceSummaries.find(row=>row.user_id===userId)||null;
+}
+
+function saPresenceRowsForUser(userId){
+  return superadminState.presences.filter(row=>row.user_id===userId).slice(0,12);
+}
+
+function renderSuperadminPresence(userId){
+  if(!userId)return `
+    <div class="superadmin-subtitle">Présences</div>
+    <p class="sa-muted">Aucun compte lié, donc aucun registre de présence.</p>`;
+
+  const summary=saPresenceSummaryForUser(userId);
+  const rows=saPresenceRowsForUser(userId);
+  const active=summary?.is_active===true;
+  const duration=typeof presenceDuration==='function'?presenceDuration:seconds=>`${Math.floor(Number(seconds||0)/60)} min`;
+  const date=typeof presenceDate==='function'?presenceDate:value=>value||'—';
+
+  return `
+    <div class="superadmin-subtitle">Présences</div>
+    <dl class="profile-details superadmin-details">
+      <dt>Statut</dt><dd><span class="presence-status">${typeof renderPresenceDot==='function'?renderPresenceDot(userId):''}${active?'Présent':'Off'}</span></dd>
+      <dt>Depuis</dt><dd>${active&&summary?.active_since?saEsc(date(summary.active_since)):'—'}</dd>
+      <dt>Dernière présence</dt><dd>${summary?.last_seen_at?saEsc(date(summary.last_seen_at)):'—'}</dd>
+      <dt>Aujourd'hui</dt><dd>${duration(summary?.today_seconds||0)}</dd>
+      <dt>7 jours</dt><dd>${duration(summary?.week_seconds||0)}</dd>
+      <dt>Total</dt><dd>${duration(summary?.total_seconds||0)}</dd>
+    </dl>
+    <div class="table-wrap presence-admin-log">
+      <table>
+        <thead>
+          <tr>
+            <th>Début</th>
+            <th>Fin</th>
+            <th>Durée</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(row=>`
+            <tr>
+              <td>${saEsc(date(row.started_at))}</td>
+              <td>${row.ended_at?saEsc(date(row.ended_at)):'En cours'}</td>
+              <td>${duration(typeof presenceSecondsBetween==='function'?presenceSecondsBetween(row.started_at,row.ended_at):0)}</td>
+            </tr>
+          `).join('')||'<tr><td colspan="3" class="sa-empty">Aucune présence enregistrée.</td></tr>'}
+        </tbody>
+      </table>
     </div>`;
 }
 

@@ -145,7 +145,13 @@ function renderOrganigramme(){
 //  GARDES
 // ══════════════════════════════════════════════════════════════════════
 async function loadGardes(){
-  try{const rows=await sbGet('mk_gardes','?user_id=not.is.null&order=nom.asc');renderGardes(rows);}catch(e){console.error(e);}
+  try{
+    const [rows]=await Promise.all([
+      sbGet('mk_gardes','?user_id=not.is.null&order=nom.asc'),
+      typeof loadPresenceSummaries==='function'?loadPresenceSummaries():Promise.resolve([]),
+    ]);
+    renderGardes(rows);
+  }catch(e){console.error(e);}
 }
 
 function renderGardes(rows){
@@ -162,7 +168,7 @@ function renderGardes(rows){
     const recruteur=r.recruteur?esc(r.recruteur):'—';
     const specialite=r.specialite||'Soldat';
     return `<tr data-search="${esc((r.prenom+' '+r.nom+' '+r.race+' '+r.grade+' '+specialite).toLowerCase())}" data-grade="${esc(r.grade||'')}">
-      <td class="cell-name">${esc(r.prenom)}${r.nom?" "+esc(r.nom):""}</td>
+      <td class="cell-name">${typeof renderPresenceDot==='function'?renderPresenceDot(r.user_id):''}${esc(r.prenom)}${r.nom?" "+esc(r.nom):""}</td>
       <td class="cell-meta">${r.race?`<span class="badge badge-tag">${esc(r.race)}</span>`:'—'}</td>
       <td class="cell-meta">${r.grade?`<span class="badge badge-tag">${esc(r.grade)}</span>`:'—'}</td>
       <td class="cell-meta" style="font-size:1rem;">

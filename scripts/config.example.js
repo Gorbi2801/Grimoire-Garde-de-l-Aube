@@ -11,6 +11,7 @@ window.GrimoireConfig = Object.freeze({
     'cour',
     'inventaire',
     'lois',
+    'presences',
     'missives',
     'renseignements',
   ]),

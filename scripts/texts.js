@@ -11,6 +11,8 @@ window.GrimoireTexts = Object.freeze({
     cour: "Cour de l'Ordre",
     inventaire: 'Inventaire',
     lois: 'Codex',
+    presences: 'Présences',
+    missives: 'Missives',
     renseignements: 'Renseignements',
   }),
   messages: Object.freeze({

@@ -15,6 +15,7 @@ const SECTION_KEYS = [
   'cour',
   'inventaire',
   'lois',
+  'presences',
   'missives',
   'renseignements',
 ];

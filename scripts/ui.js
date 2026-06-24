@@ -10,6 +10,7 @@ function switchSection(sec,btn){
   page.classList.add('active');
   if(btn)btn.classList.add('active');
   activeSection=sec;
+  if(sec==='presences'&&typeof loadPresences==='function')loadPresences();
   if(sec==='missives'&&typeof loadMissives==='function')loadMissives();
   if(sec==='superadmin'&&typeof loadSuperadmin==='function')loadSuperadmin();
 }

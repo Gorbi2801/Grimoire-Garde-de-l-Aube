@@ -10,10 +10,11 @@ const SECTION_LABELS={
   cour:"Cour de l'Ordre",
   inventaire:'Inventaire',
   lois:'Codex',
+  presences:'Présences',
   missives:'Missives',
   renseignements:'Renseignements',
 };
-const DEFAULT_SECTION_ORDER=['citoyens','biblio','garde','commerces','diplomatie','cour','inventaire','lois','missives','renseignements'];
+const DEFAULT_SECTION_ORDER=['citoyens','biblio','garde','commerces','diplomatie','cour','inventaire','lois','presences','missives','renseignements'];
 
 function normalizeUsername(value){
   return value.trim().toLowerCase();
@@ -303,6 +304,7 @@ async function loadAccessibleSections(){
   if(canAccessSection('cour'))jobs.push(loadCour());
   if(canAccessSection('inventaire'))jobs.push(loadInventaire(),loadOrdresFab(),loadRecettes());
   if(canAccessSection('lois'))jobs.push(loadLois());
+  if(canAccessSection('presences')&&typeof loadPresences==='function')jobs.push(loadPresences());
   if(canAccessSection('missives')&&typeof loadMissives==='function')jobs.push(loadMissives());
   if(canAccessSection('renseignements'))jobs.push(initRenseignements());
   await Promise.all(jobs);
