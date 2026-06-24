@@ -30,7 +30,7 @@ jobs:
           echo "  authEmailDomain: \"${AUTH_EMAIL_DOMAIN}\"," >> scripts/config.js
           echo '  sections: ["citoyens","biblio","garde","commerces","diplomatie","cour","inventaire","lois","renseignements"]' >> scripts/config.js
           echo '});' >> scripts/config.js
-          echo "Generated scripts/config.js:" && cat scripts/config.js
+          echo "Generated scripts/config.js"
 
       - name: Prepare site directory
         run: |
@@ -46,9 +46,10 @@ jobs:
         run: ls -la site | sed -n '1,200p'
 
       - name: Upload artifact for GitHub Pages
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-pages-artifact@v4
         with:
           path: site
 
       - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v1
+        uses: actions/deploy-pages@v4
+
