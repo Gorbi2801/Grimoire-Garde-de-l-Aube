@@ -275,7 +275,7 @@ function buildAddRapportFormHTML(ficheId){
 }
 
 function buildAddFicheNotes(f){
-  return ''; // Notes inline non implémentées (via modal edit)
+  return buildEditFicheFormHTML(f);
 }
 
 // ── Formulaire nouvelle fiche ─────────────────────────────────────────
@@ -364,18 +364,66 @@ async function deleteFiche(id){
   await rensLoad();
 }
 
-// ── Modification fiche (simple) ────────────────────────────────────
+// ── Modification fiche — formulaire inline ────────────────────────
+function buildEditFicheFormHTML(f){
+  return `
+  <div class="add-rapport" id="editform-${f.id}" style="display:none;margin-top:.75rem;">
+    <div style="font-family:'Eagle Lake',serif;font-size:.9rem;color:var(--green-dark);margin-bottom:.75rem;">Modifier la fiche</div>
+    <div class="form-row">
+      <div class="field"><label>Nom *</label><input type="text" id="ef-nom-${f.id}" value="${escH(f.nom)}" placeholder="Nom de la cible..."></div>
+      <div class="field"><label>Label de type</label><input type="text" id="ef-typelabel-${f.id}" value="${escH(f.type_label||'')}" placeholder="Ex: Repaire suspecté, Suspect..."></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>Sous-titre</label><input type="text" id="ef-sub-${f.id}" value="${escH(f.sous_titre||'')}" placeholder="Ex: Grotte · Châtellerie de Blancherive"></div>
+      <div class="field"><label>Statut</label>
+        <select id="ef-statut-${f.id}">
+          <option value="neutre"${f.statut==='neutre'?' selected':''}>Neutre</option>
+          <option value="surveillance"${f.statut==='surveillance'?' selected':''}>Surveillance active</option>
+          <option value="recherche"${f.statut==='recherche'?' selected':''}>Recherché</option>
+          <option value="neutralise"${f.statut==='neutralise'?' selected':''}>Neutralisé</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label style="display:flex;align-items:center;gap:.5rem;"><input type="checkbox" id="ef-urgente-${f.id}"${f.urgente?' checked':''}> Marquer comme urgente</label></div>
+    </div>
+    <label>Notes / contexte</label>
+    <textarea id="ef-notes-${f.id}" rows="4" placeholder="Informations générales, contexte...">${escH(f.notes||'')}</textarea>
+    <div style="display:flex;gap:.5rem;margin-top:.65rem;">
+      <button class="btn-add" style="font-size:.82rem;padding:.3rem .8rem;" onclick="saveEditFiche('${f.id}')">Enregistrer</button>
+      <button class="btn-sm" onclick="document.getElementById('editform-${f.id}').style.display='none'">Annuler</button>
+    </div>
+  </div>`;
+}
+
 function openEditFiche(id){
+  const formEl = document.getElementById('editform-'+id);
+  if(formEl){ formEl.style.display = formEl.style.display==='none'?'block':'none'; return; }
+  // Formulaire pas encore injecté — rare, mais fallback sécurisé
   const f = RENS.fiches.find(x=>x.id===id);
   if(!f) return;
-  const newNom    = prompt('Nom :', f.nom);
-  if(newNom===null) return;
-  const newSub    = prompt('Sous-titre :', f.sous_titre||'');
-  const newStatus = prompt('Statut (neutre / surveillance / recherche / neutralise) :', f.statut||'neutre');
-  const urgente   = confirm('Marquer comme urgente ?');
-  sbPatch('mk_rens_fiches',`?id=eq.${id}`,{nom:newNom.trim(), sous_titre:newSub||null, statut:newStatus||'neutre', urgente})
-    .then(()=>rensLoad())
-    .catch(error=>alert('Erreur : '+error.message));
+  const body = document.querySelector(`#fiche-${id} .fiche-body`);
+  if(!body) return;
+  const div = document.createElement('div');
+  div.innerHTML = buildEditFicheFormHTML(f);
+  body.prepend(div.firstElementChild);
+  document.getElementById('editform-'+id).style.display = 'block';
+}
+
+async function saveEditFiche(id){
+  const nom = document.getElementById('ef-nom-'+id)?.value.trim();
+  if(!nom){ alert('Le nom est obligatoire.'); return; }
+  const payload = {
+    nom,
+    sous_titre:  document.getElementById('ef-sub-'+id)?.value.trim()||null,
+    type_label:  document.getElementById('ef-typelabel-'+id)?.value.trim()||null,
+    statut:      document.getElementById('ef-statut-'+id)?.value||'neutre',
+    urgente:     document.getElementById('ef-urgente-'+id)?.checked||false,
+    notes:       document.getElementById('ef-notes-'+id)?.value.trim()||null,
+  };
+  try{ await sbPatch('mk_rens_fiches',`?id=eq.${id}`,payload); }
+  catch(error){ alert('Erreur : '+error.message); return; }
+  await rensLoad();
 }
 
 // ── CRUD Rapports ────────────────────────────────────────────────────
