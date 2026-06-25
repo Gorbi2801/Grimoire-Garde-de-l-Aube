@@ -20,7 +20,8 @@ function showTab(id, el){
   if(tab) tab.style.display='block';
   document.querySelectorAll('#page-renseignements .tab').forEach(t=>t.classList.remove('active'));
   if(el) el.classList.add('active');
-  renderTab(id);
+  if(id==='carte') renderCarte();
+  else renderTab(id);
 }
 
 function toggleFiche(id){
@@ -484,8 +485,129 @@ async function initRenseignements(){
   if(srch) srch.addEventListener('input', e=>rensSearch(e.target.value));
   const filt = document.getElementById('rens-filter');
   if(filt) filt.addEventListener('change', e=>rensFilter(e.target.value));
+  // Injecter l'onglet Carte
+  injectCarteTab();
   // Charger les données
   await rensLoad();
+}
+
+// ── Carte mentale ────────────────────────────────────────────────────
+
+function injectCarteTab(){
+  // Bouton tab
+  const firstTab = document.querySelector('#page-renseignements .tab');
+  if(!firstTab) return;
+  if(!document.getElementById('tab-btn-carte')){
+    const btn = document.createElement('button');
+    btn.className = 'tab';
+    btn.id = 'tab-btn-carte';
+    btn.textContent = '🗺 Carte';
+    btn.onclick = () => showTab('carte', btn);
+    firstTab.parentElement.appendChild(btn);
+  }
+  // Conteneur
+  if(!document.getElementById('tab-carte')){
+    const lastTabContent = [...document.querySelectorAll('#page-renseignements [id^="tab-"]')].pop();
+    if(!lastTabContent) return;
+    const div = document.createElement('div');
+    div.id = 'tab-carte';
+    div.style.display = 'none';
+    div.innerHTML = `
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.75rem;font-size:.82rem;color:var(--ink-faint);">
+        <span style="display:flex;align-items:center;gap:.35rem;"><span style="width:12px;height:12px;border-radius:2px;background:#c8b89a;border:1px solid #8a6a3a;display:inline-block;"></span>Lieu</span>
+        <span style="display:flex;align-items:center;gap:.35rem;"><span style="width:12px;height:12px;border-radius:2px;background:#9aabbc;border:1px solid #3a5a7a;display:inline-block;"></span>Individu</span>
+        <span style="display:flex;align-items:center;gap:.35rem;"><span style="width:12px;height:12px;border-radius:2px;background:#9ab8a0;border:1px solid #3a6a4a;display:inline-block;"></span>Groupe</span>
+        <span style="display:flex;align-items:center;gap:.35rem;"><span style="width:12px;height:12px;border-radius:2px;background:#e8d0d0;border:2px solid #8a1010;display:inline-block;"></span>Urgente / Recherché</span>
+        <span style="margin-left:auto;font-style:italic;">Cliquez sur une fiche pour l'ouvrir</span>
+      </div>
+      <div id="rens-network" style="width:100%;height:560px;border:1px solid var(--border-g);border-radius:4px;background:var(--paper, #f5f0e8);"></div>`;
+    lastTabContent.parentElement.appendChild(div);
+  }
+}
+
+function loadVisNetwork(callback){
+  if(window.vis){ callback(); return; }
+  const s = document.createElement('script');
+  s.src = 'https://unpkg.com/vis-network/standalone/umd/vis-network.min.js';
+  s.onload = callback;
+  s.onerror = ()=>console.error('Impossible de charger vis-network');
+  document.head.appendChild(s);
+}
+
+function renderCarte(){
+  const container = document.getElementById('rens-network');
+  if(!container) return;
+
+  loadVisNetwork(()=>{
+    // Couleurs par type
+    const TC = {
+      lieux:     { bg:'#c8b89a', border:'#8a6a3a', hbg:'#d8c8aa', hborder:'#6a4a2a' },
+      individus: { bg:'#9aabbc', border:'#3a5a7a', hbg:'#aabbcc', hborder:'#2a4a6a' },
+      groupes:   { bg:'#9ab8a0', border:'#3a6a4a', hbg:'#aac8b0', hborder:'#2a5a3a' },
+    };
+    // Couleur de bordure par statut
+    const SB = { surveillance:'#c8820a', recherche:'#8a1010', neutralise:'#5a5a5a' };
+    // Label statut
+    const SL = { surveillance:'⚠ Surveillance', recherche:'🔴 Recherché', neutralise:'✓ Neutralisé' };
+
+    const nodes = new vis.DataSet(RENS.fiches.map(f=>{
+      const c   = TC[f.type] || TC.lieux;
+      const urgente = f.urgente || f.statut==='recherche';
+      const borderColor = urgente ? '#8a1010' : (SB[f.statut] || c.border);
+      const bgColor     = urgente ? '#e8d0d0' : c.bg;
+      const label = f.nom + (SL[f.statut] ? '\n'+SL[f.statut] : '');
+      return {
+        id:          f.id,
+        label,
+        title:       f.sous_titre || f.nom,
+        shape:       'box',
+        color:{
+          background: bgColor,
+          border:     borderColor,
+          highlight:{ background: c.hbg, border: c.hborder }
+        },
+        borderWidth:  urgente ? 3 : 1.5,
+        font:{ face:'serif', size:13, color:'#1c1a18', multi:false },
+        margin:       10,
+      };
+    }));
+
+    const edges = new vis.DataSet(RENS.relations.map(r=>({
+      id:     r.id,
+      from:   r.fiche_source,
+      to:     r.fiche_cible,
+      color:{ color:'#8a7a6a', highlight:'#3a2a1a', opacity:0.8 },
+      width:  1.5,
+      smooth:{ type:'curvedCW', roundness:0.15 },
+    })));
+
+    const options = {
+      physics:{
+        enabled: true,
+        solver: 'forceAtlas2Based',
+        forceAtlas2Based:{ gravitationalConstant:-60, centralGravity:0.01, springLength:160, springConstant:0.08, damping:0.4 },
+        stabilization:{ iterations:300, updateInterval:50 },
+      },
+      interaction:{ dragNodes:false, zoomView:true, dragView:true, hover:true },
+      layout:{ improvedLayout:true },
+    };
+
+    // Réinitialiser le conteneur si déjà un réseau
+    container.innerHTML = '';
+    const network = new vis.Network(container, { nodes, edges }, options);
+
+    // Clic → ouvrir la fiche dans son onglet
+    network.on('click', params=>{
+      if(params.nodes.length>0){
+        const f = RENS.fiches.find(x=>x.id===params.nodes[0]);
+        if(f) goToFiche(f.id, f.type);
+      }
+    });
+
+    // Curseur pointer au survol d'un nœud
+    network.on('hoverNode', ()=>{ container.style.cursor='pointer'; });
+    network.on('blurNode',  ()=>{ container.style.cursor='default'; });
+  });
 }
 
 // ── Escape HTML ───────────────────────────────────────────────────
