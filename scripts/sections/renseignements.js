@@ -281,7 +281,7 @@ function buildAddFicheNotes(f){
 // ── Formulaire nouvelle fiche ─────────────────────────────────────────
 function buildNewFicheFormHTML(){
   return `
-  <div id="rens-add-form" style="display:none;background:rgba(28,26,24,.04);border:1px dashed var(--border-g);padding:1rem;margin-top:.75rem;">
+  <div class="add-rapport" id="rens-add-form" style="display:none;margin-top:.75rem;">
     <div style="font-family:'Eagle Lake',serif;font-size:.9rem;color:var(--green-dark);margin-bottom:.75rem;">Nouvelle fiche</div>
     <div class="form-row">
       <div class="field"><label>Nom *</label><input type="text" id="nf-nom" placeholder="Nom de la cible..."></div>
