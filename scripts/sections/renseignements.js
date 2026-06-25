@@ -135,7 +135,8 @@ function buildFicheHTML(f){
   // Rapports HTML
   const rapsHTML = raps.map(r=>buildRapportHTML(r)).join('');
 
-  const peutModifier = canEditSection('renseignements');
+  const peutModifier = canAccessSection('renseignements');
+  const peutSupprimer = canEditSection('renseignements');
 
   return `
   <div class="fiche${f.urgente?' urgente':''}" id="fiche-${f.id}" data-id="${f.id}" data-tab="${f.type}">
@@ -149,8 +150,8 @@ function buildFicheHTML(f){
       </div>
       <div class="fiche-badges">
         ${badgeType}${badgeUrgente}${badgeStatut}
-        ${peutModifier?`<button class="btn-sm" style="margin-left:.5rem;" onclick="event.stopPropagation();openEditFiche('${f.id}')">Modifier</button>
-        <button class="btn-sm" style="color:#7A1010;" onclick="event.stopPropagation();deleteFiche('${f.id}')">Suppr.</button>`:''}
+        ${peutModifier?`<button class="btn-sm" style="margin-left:.5rem;" onclick="event.stopPropagation();openEditFiche('${f.id}')">Modifier</button>`:''}`
+        ${peutSupprimer?`<button class="btn-sm" style="color:#7A1010;" onclick="event.stopPropagation();deleteFiche('${f.id}')">Suppr.</button>`:''}
       </div>
     </div>
     <div class="fiche-body">
@@ -171,7 +172,8 @@ function buildFicheHTML(f){
 }
 
 function buildRelationsHTML(f, rels){
-  const peutModifier = canEditSection('renseignements');
+  const peutModifier = canAccessSection('renseignements');
+  const peutSupprimer = canEditSection('renseignements');
   const linksHTML = rels.map(rel=>{
     const otherId = rel.fiche_source===f.id ? rel.fiche_cible : rel.fiche_source;
     const relId   = rel.id;
@@ -180,7 +182,7 @@ function buildRelationsHTML(f, rels){
     const typeLabel = other.type==='lieux'?'Lieu':other.type==='individus'?'Individu':'Groupe';
     return `<a class="fiche-link" onclick="goToFiche('${other.id}','${other.type}')">
       <span class="fl-type">${typeLabel} ·</span> ${escH(other.nom)}
-      ${peutModifier?`<span class="fl-del" onclick="event.stopPropagation();deleteRelation('${relId}','${f.id}')" title="Supprimer ce lien">×</span>`:''}
+      ${peutSupprimer?`<span class="fl-del" onclick="event.stopPropagation();deleteRelation('${relId}','${f.id}')" title="Supprimer ce lien">×</span>`:''}
     </a>`;
   }).join('');
 
@@ -217,7 +219,8 @@ function buildRelationsHTML(f, rels){
 }
 
 function buildRapportHTML(r){
-  const peutModifier = canEditSection('renseignements');
+  const peutModifier = canAccessSection('renseignements');
+  const peutSupprimer = canEditSection('renseignements');
   const ficheLabel = {confirme:'✅ Confirmée', nonverif:'⚠ Non vérifiée', urgente:'🔴 Urgente'}[r.fiabilite]||r.fiabilite;
   const date = r.created_at ? new Date(r.created_at).toLocaleDateString('fr-FR') : '';
   const preview = (r.contenu||'').substring(0,60)+(r.contenu&&r.contenu.length>60?'…':'');
@@ -232,7 +235,7 @@ function buildRapportHTML(r){
         <span class="rapport-acc-preview">${escH(preview)}</span>
       </div>
       <div style="display:flex;gap:.3rem;">
-        ${peutModifier?`<button class="btn-sm" onclick="event.stopPropagation();deleteRapport('${r.id}','${r.fiche_id}')">Suppr.</button>`:''}
+        ${peutSupprimer?`<button class="btn-sm" onclick="event.stopPropagation();deleteRapport('${r.id}','${r.fiche_id}')">Suppr.</button>`:''}
       </div>
     </div>
     <div class="rapport-acc-body">
