@@ -11,10 +11,11 @@ const SECTION_LABELS={
   inventaire:'Inventaire',
   lois:'Codex',
   presences:'Présences',
+  patrouilles:'Patrouilles',
   missives:'Missives',
   renseignements:'Renseignements',
 };
-const DEFAULT_SECTION_ORDER=['citoyens','biblio','garde','commerces','diplomatie','cour','inventaire','lois','presences','missives','renseignements'];
+const DEFAULT_SECTION_ORDER=['citoyens','biblio','garde','commerces','diplomatie','cour','inventaire','lois','presences','patrouilles','missives','renseignements'];
 
 function normalizeUsername(value){
   return value.trim().toLowerCase();
@@ -94,7 +95,10 @@ async function loadSession(options={}){
   });
 
   const loginErr=document.getElementById('loginErr');
-  document.getElementById('sessionLabel').textContent=session.displayName;
+  const sessionLabel=document.getElementById('sessionLabel');
+  const gradeLabel=document.getElementById('gradeLabel');
+  if(sessionLabel)sessionLabel.textContent=session.displayName;
+  if(gradeLabel)gradeLabel.textContent=session.grade;
   if(loginErr)loginErr.style.display='none';
   await prepareAuthorizedApp();
 }
@@ -120,7 +124,9 @@ function setLoggedOutUI(){
   const passInput=document.getElementById('loginPass');
   const loginErr=document.getElementById('loginErr');
   const sessionLabel=document.getElementById('sessionLabel');
+  const gradeLabel=document.getElementById('gradeLabel');
   if(sessionLabel)sessionLabel.textContent='—';
+  if(gradeLabel)gradeLabel.textContent='—';
   if(userInput)userInput.value='';
   if(passInput)passInput.value='';
   if(loginErr)loginErr.style.display='none';
@@ -165,7 +171,12 @@ async function showAppShell(){
 
 function configuredSections(){
   const configured=window.GrimoireConfig?.sections;
-  return Array.isArray(configured)?configured:DEFAULT_SECTION_ORDER;
+  const sections=Array.isArray(configured)?configured:DEFAULT_SECTION_ORDER;
+  return sections.filter(sectionFeatureEnabled);
+}
+
+function sectionFeatureEnabled(sec){
+  return window.GrimoireConfig?.features?.[sec]!==false;
 }
 
 function accessibleSections(){
@@ -178,19 +189,22 @@ function accessibleSections(){
 function canAccessSection(sec){
   if(!session)return false;
   if(sec==='profile')return true;
+  if(!sectionFeatureEnabled(sec))return false;
   if(session.isSuperadmin)return true;
   return session.sections.includes(sec);
 }
 
 function canEditSection(sec){
   if(!session) return false;
+  if(!sectionFeatureEnabled(sec)) return false;
   if(session.isSuperadmin) return true;
   return canAccessSection(sec) && Array.isArray(session.editSections) && session.editSections.includes(sec);
 }
 
 function sectionLabel(value){
   if(value?.isSuperadmin)return 'Superadmin';
-  const sections=Array.isArray(value)?value:value?.sections||String(value||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const sections=(Array.isArray(value)?value:value?.sections||String(value||'').split(',').map(s=>s.trim()).filter(Boolean))
+    .filter(sectionFeatureEnabled);
   if(!sections.length)return 'Lecture seule';
   return sections.map(x=>SECTION_LABELS[x]||x).join(', ');
 }
@@ -305,6 +319,7 @@ async function loadAccessibleSections(){
   if(canAccessSection('inventaire'))jobs.push(loadInventaire(),loadOrdresFab(),loadRecettes());
   if(canAccessSection('lois'))jobs.push(loadLois());
   if(canAccessSection('presences')&&typeof loadPresences==='function')jobs.push(loadPresences());
+  if(canAccessSection('patrouilles')&&typeof loadPatrouilles==='function')jobs.push(loadPatrouilles());
   if(canAccessSection('missives')&&typeof loadMissives==='function')jobs.push(loadMissives());
   if(canAccessSection('renseignements'))jobs.push(initRenseignements());
   await Promise.all(jobs);

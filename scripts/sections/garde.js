@@ -158,10 +158,20 @@ function renderGardes(rows){
   gardeRows=rows;
   const tbody=document.getElementById('gar-tbody');
   const canEdit=canEditSection('garde');
+  const canFollowRows=rows.some(r=>typeof canOpenGardeSuivi==='function'&&canOpenGardeSuivi(r));
+  const showActions=canEdit||canFollowRows;
+  const active=document.getElementById('gardeActiveCount');
   document.getElementById('gar-total').textContent=rows.length;
-  document.getElementById('gar-act-head').style.display=canEdit?'':'none';
+  document.getElementById('gar-act-head').style.display=showActions?'':'none';
+  if(active){
+    const activeCount=typeof presenceIsActiveForUser==='function'
+      ?rows.filter(row=>row.user_id&&presenceIsActiveForUser(row.user_id)).length
+      :0;
+    active.textContent=String(activeCount);
+  }
 
   tbody.innerHTML=rows.map(r=>{
+    const canFollow=typeof canOpenGardeSuivi==='function'&&canOpenGardeSuivi(r);
     const dateRecr=r.date_recrutement
       ?new Date(r.date_recrutement).toLocaleDateString('fr-FR')
       :'—';
@@ -176,7 +186,7 @@ function renderGardes(rows){
         <span style="color:var(--ink-faint);font-style:italic;font-size:1rem;">par ${recruteur}</span>
       </td>
       <td class="cell-meta"><span class="badge badge-tag">${esc(specialite)}</span></td>
-      ${canEdit?`<td class="act"><button class="btn-del" onclick="editGarde('${r.id}')">Modifier</button> <button class="btn-del" onclick="delGarde('${r.id}')">Révoquer</button></td>`:''}
+      ${showActions?`<td class="act">${canFollow?`<button class="btn-action btn-gold" onclick="openGardeSuivi('${r.id}')">Suivi</button>`:''}${canEdit?`<button class="btn-del" onclick="editGarde('${r.id}')">Modifier</button> <button class="btn-del" onclick="delGarde('${r.id}')">Révoquer</button>`:''}</td>`:''}
     </tr>`;
   }).join('');
   // Tri par défaut : par grade, selon la hiérarchie de l'Ordre

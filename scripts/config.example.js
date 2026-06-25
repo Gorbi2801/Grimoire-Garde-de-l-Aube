@@ -12,7 +12,11 @@ window.GrimoireConfig = Object.freeze({
     'inventaire',
     'lois',
     'presences',
+    'patrouilles',
     'missives',
     'renseignements',
   ]),
+  features: Object.freeze({
+    missives: false,
+  }),
 });
