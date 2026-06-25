@@ -156,6 +156,7 @@ function buildFicheHTML(f){
     </div>
     <div class="fiche-body">
       ${quickFields?`<div class="fiche-quick">${quickFields}</div>`:''}
+      ${f.notes?`<div style="font-size:.9rem;color:var(--ink);background:rgba(28,26,24,.04);border-left:3px solid var(--border-g);padding:.5rem .75rem;margin-bottom:.75rem;white-space:pre-wrap;">${escH(f.notes)}</div>`:''}
       ${relsHTML}
       <div class="rapports-section">
         <div class="rapports-title">
