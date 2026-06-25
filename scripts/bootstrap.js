@@ -1,6 +1,5 @@
 // ══════════════════════════════════════════════════════════════════════
 //  EXPOSITION CONTRÔLÉE — fonctions nécessaires aux onclick HTML.
-//  Les droits réels seront renforcés côté Supabase/RLS dans l'étape sécurité.
 // ══════════════════════════════════════════════════════════════════════
 (function exposePublic(){
   const pub = {
