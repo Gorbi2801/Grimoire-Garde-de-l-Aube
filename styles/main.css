@@ -289,7 +289,7 @@ tbody td{padding:0.55rem 0.9rem;vertical-align:middle;}
 
 /* ── BADGES ── */
 .badge{display:inline-block;padding:0.15rem 0.55rem;font-family:'Eagle Lake',serif;font-size:1rem;letter-spacing:0.04em;border:1px solid;border-radius:3px;}
-#page-garde .badge, #page-inventaire .badge{font-size:1.2rem;padding:0.25rem 0.85rem;}
+#page-garde .badge, #page-inventaire .badge{font-size:1.1rem;padding:0.2rem 0.7rem;}
 .badge-tag{background:rgba(107,74,30,0.08);color:var(--ink-mid);border-color:var(--border-g);}
 .badge-libre   { background:rgba(45,106,45,0.1);  color:#2D5A1A; border-color:rgba(45,106,45,0.4); }
 .badge-occupé  { background:rgba(107,74,30,0.1);  color:var(--brown); border-color:rgba(107,74,30,0.35); }
