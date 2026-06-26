@@ -7,10 +7,20 @@ const RENS = {
   fiches:    [],   // mk_rens_fiches
   rapports:  [],   // mk_rens_rapports
   relations: [],   // mk_rens_relations
+  mapNodes:  [],   // mk_rens_map_nodes
+  mapLinks:  [],   // mk_rens_map_links
   activeTab: 'lieux',
   searchQ:   '',
-  filterStatut: ''
+  filterStatut: '',
+  mapReady: true,
+  mapPickerType: 'all',
+  mapLinkMode: false,
+  mapLinkSource: '',
+  mapLinkColor: '#8A1010',
+  selectedMapNode: '',
+  selectedMapLink: ''
 };
+let rensMapNetwork = null;
 
 // ── Helpers UI ───────────────────────────────────────────────────────
 function showTab(id, el){
@@ -58,16 +68,47 @@ function goToFiche(ficheId, tab){
   }, 120);
 }
 
+function goToRapport(rapportId){
+  const rapport = RENS.rapports.find(r=>r.id===rapportId);
+  if(!rapport) return;
+  const fiche = RENS.fiches.find(f=>f.id===rapport.fiche_id);
+  if(!fiche) return;
+  goToFiche(fiche.id, fiche.type);
+  setTimeout(()=>{
+    const target = document.getElementById('rap-'+rapportId);
+    if(!target) return;
+    target.classList.add('open');
+    target.scrollIntoView({behavior:'smooth', block:'center'});
+    target.classList.add('highlight');
+    setTimeout(()=>target.classList.remove('highlight'), 1500);
+  }, 260);
+}
+
 // ── Chargement Supabase ──────────────────────────────────────────────
+async function rensOptionalGet(table, params = ''){
+  try{
+    return await sbGet(table, params);
+  }catch(error){
+    console.warn(`Table optionnelle indisponible: ${table}`, error);
+    RENS.mapReady = false;
+    return [];
+  }
+}
+
 async function rensLoad(){
-  const [rf, rr, rl] = await Promise.all([
+  RENS.mapReady = true;
+  const [rf, rr, rl, mn, ml] = await Promise.all([
     sbGet('mk_rens_fiches','?select=*&order=created_at.desc'),
     sbGet('mk_rens_rapports','?select=*&order=created_at.desc'),
-    sbGet('mk_rens_relations','?select=*')
+    sbGet('mk_rens_relations','?select=*'),
+    rensOptionalGet('mk_rens_map_nodes','?select=*&order=created_at.asc'),
+    rensOptionalGet('mk_rens_map_links','?select=*')
   ]);
   RENS.fiches    = rf  || [];
   RENS.rapports  = rr  || [];
   RENS.relations = rl  || [];
+  RENS.mapNodes  = mn  || [];
+  RENS.mapLinks  = ml  || [];
   rensRenderAll();
 }
 
@@ -95,17 +136,20 @@ function rensRenderStats(){
     <div class="stat">Rapports total : <strong>${nbRap}</strong></div>`;
 }
 
-function renderTab(type){
-  const container = document.getElementById('tab-'+type);
-  if(!container) return;
-  let fiches = RENS.fiches.filter(f=>f.type===type);
-  // Filtre recherche
+function rensFilteredFiches(type){
+  let fiches = type ? RENS.fiches.filter(f=>f.type===type) : [...RENS.fiches];
   if(RENS.searchQ){
     const q = RENS.searchQ.toLowerCase();
     fiches = fiches.filter(f=>f.nom.toLowerCase().includes(q)||(f.sous_titre||'').toLowerCase().includes(q));
   }
-  // Filtre statut
   if(RENS.filterStatut) fiches = fiches.filter(f=>f.statut===RENS.filterStatut);
+  return fiches;
+}
+
+function renderTab(type){
+  const container = document.getElementById('tab-'+type);
+  if(!container) return;
+  const fiches = rensFilteredFiches(type);
 
   const labelEl = container.querySelector('.section-label');
   if(labelEl) labelEl.textContent = `${fiches.length} ${type==='lieux'?'lieu(x)':type==='individus'?'individu(s)':'groupe(s)'} recensé(s)`;
@@ -552,14 +596,33 @@ function injectCarteTab(){
     div.id = 'tab-carte';
     div.style.display = 'none';
     div.innerHTML = `
-      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.75rem;font-size:.82rem;color:var(--ink-faint);">
-        <span style="display:flex;align-items:center;gap:.35rem;"><span style="width:12px;height:12px;border-radius:2px;background:#c8b89a;border:1px solid #8a6a3a;display:inline-block;"></span>Lieu</span>
-        <span style="display:flex;align-items:center;gap:.35rem;"><span style="width:12px;height:12px;border-radius:2px;background:#9aabbc;border:1px solid #3a5a7a;display:inline-block;"></span>Individu</span>
-        <span style="display:flex;align-items:center;gap:.35rem;"><span style="width:12px;height:12px;border-radius:2px;background:#9ab8a0;border:1px solid #3a6a4a;display:inline-block;"></span>Groupe</span>
-        <span style="display:flex;align-items:center;gap:.35rem;"><span style="width:12px;height:12px;border-radius:2px;background:#e8d0d0;border:2px solid #8a1010;display:inline-block;"></span>Urgente / Recherché</span>
-        <span style="margin-left:auto;font-style:italic;">Cliquez sur une fiche pour l'ouvrir</span>
+      <div class="rens-map-notice">Carte mentale des rapports : ajoutez les rapports utiles au tableau, déplacez-les librement, reliez les indices avec des fils colorés. Double-cliquez sur une carte pour ouvrir le rapport.</div>
+      <div class="rens-map-toolbar">
+        ${canEditSection('renseignements')?`
+          <button type="button" class="btn-add" onclick="rensOpenMapReportPicker()">+ Ajouter rapport</button>
+          <button type="button" class="btn-sm" onclick="rensStartMapLink()">Relier deux rapports</button>
+          <button type="button" class="btn-sm" onclick="rensCancelMapLink()">Annuler liaison</button>
+          <label class="rens-map-color">Couleur du fil <input id="rensMapLinkColor" type="color" value="#8A1010" onchange="rensSetMapLinkColor(this.value)"></label>
+          <button type="button" class="btn-sm btn-danger-soft" onclick="rensDeleteSelectedMapItem()">Supprimer sélection</button>
+        `:''}
+        <span id="rensMapModeLabel" class="rens-map-mode">Déplacez les cartes comme sur un tableau d'enquête.</span>
       </div>
-      <div id="rens-network" style="width:100%;height:560px;border:1px solid var(--border-g);border-radius:4px;background:var(--paper, #f5f0e8);"></div>`;
+      <div id="rensMapPicker" class="rens-map-picker" hidden>
+        <select id="rensMapReportType" onchange="rensSetMapReportType(this.value)">
+          ${['all','lieux','individus','groupes'].map(type=>`<option value="${type}">${escH({all:'Tous les rapports',lieux:'Lieux',individus:'Individus',groupes:'Groupes'}[type])}</option>`).join('')}
+        </select>
+        <div id="rensMapReportList" class="rens-map-report-list"></div>
+      </div>
+      <div class="rens-map-legend">
+        <span><i class="rens-map-dot rens-map-dot-lieu"></i>Lieu</span>
+        <span><i class="rens-map-dot rens-map-dot-individu"></i>Individu</span>
+        <span><i class="rens-map-dot rens-map-dot-groupe"></i>Groupe</span>
+        <span><i class="rens-map-dot rens-map-dot-danger"></i>Urgente / Recherché</span>
+        <em>Un fil représente une piste ou une connexion d'enquête.</em>
+      </div>
+      <div class="rens-map-shell">
+        <div id="rens-network"></div>
+      </div>`;
     lastTabContent.parentElement.appendChild(div);
   }
 }
@@ -577,80 +640,267 @@ function rensLoadVisNetwork(callback){
   document.head.appendChild(s);
 }
 
+function rensFicheForRapport(report){
+  return RENS.fiches.find(f=>f.id===report?.fiche_id)||null;
+}
+
+function rensRapportType(report){
+  return rensFicheForRapport(report)?.type||'autres';
+}
+
+function rensRapportLabel(report){
+  const fiche = rensFicheForRapport(report);
+  const source = report?.source||'Rapport';
+  const date = report?.created_at ? new Date(report.created_at).toLocaleDateString('fr-FR') : '';
+  return `${fiche?.nom||'Fiche inconnue'} — ${source}${date?` — ${date}`:''}`;
+}
+
+function rensMapTypeColors(type){
+  return {
+    lieux:{bg:'#c8b89a',border:'#8a6a3a'},
+    individus:{bg:'#9aabbc',border:'#3a5a7a'},
+    groupes:{bg:'#9ab8a0',border:'#3a6a4a'},
+    autres:{bg:'#d8c8aa',border:'#7a6a4a'},
+  }[type]||{bg:'#d8c8aa',border:'#7a6a4a'};
+}
+
+function rensMapReportListHtml(){
+  const spawned = new Set(RENS.mapNodes.map(node=>node.report_id));
+  const reports = RENS.rapports
+    .filter(report=>RENS.mapPickerType==='all'||rensRapportType(report)===RENS.mapPickerType)
+    .filter(report=>!spawned.has(report.id));
+  if(!reports.length)return '<p class="sa-empty">Aucun rapport disponible pour ce type.</p>';
+  return reports.map(report=>`<button type="button" class="rens-map-report-choice" onclick="rensSpawnMapReport('${escJs(report.id)}')">
+    <strong>${escH(rensRapportLabel(report))}</strong>
+    <span>${escH((report.contenu||'').slice(0,110))}${report.contenu&&report.contenu.length>110?'…':''}</span>
+  </button>`).join('');
+}
+
+function rensRenderMapPicker(){
+  const list = document.getElementById('rensMapReportList');
+  if(list) list.innerHTML = rensMapReportListHtml();
+}
+
+function rensOpenMapReportPicker(){
+  if(!canEditSection('renseignements'))return;
+  const picker = document.getElementById('rensMapPicker');
+  if(!picker)return;
+  picker.hidden = !picker.hidden;
+  if(!picker.hidden)rensRenderMapPicker();
+}
+
+function rensSetMapReportType(type){
+  RENS.mapPickerType = type || 'all';
+  rensRenderMapPicker();
+}
+
+function rensUpdateMapModeLabel(text){
+  const label = document.getElementById('rensMapModeLabel');
+  if(label)label.textContent = text;
+}
+
+function rensSetMapLinkColor(value){
+  RENS.mapLinkColor = value || '#8A1010';
+}
+
+function rensDefaultMapPosition(index = RENS.mapNodes.length){
+  const angle = index * 0.9;
+  return {
+    x: Math.round(Math.cos(angle) * 220),
+    y: Math.round(Math.sin(angle) * 150),
+  };
+}
+
+async function rensSpawnMapReport(reportId){
+  if(!canEditSection('renseignements'))return;
+  if(!RENS.mapReady){toast('Applique le SQL de carte mentale des renseignements avant.');return;}
+  const existing = RENS.mapNodes.find(node=>node.report_id===reportId);
+  if(existing){
+    RENS.selectedMapNode = existing.id;
+    rensRenderCarte();
+    return;
+  }
+  const pos = rensDefaultMapPosition();
+  try{
+    await sbPost('mk_rens_map_nodes',{
+      report_id: reportId,
+      x: pos.x,
+      y: pos.y,
+      created_by: session.user.id,
+    });
+    const picker = document.getElementById('rensMapPicker');
+    if(picker)picker.hidden = true;
+    await rensLoad();
+    toast('Rapport ajouté à la carte mentale.');
+  }catch(error){
+    console.error(error);
+    toast('Impossible d’ajouter ce rapport à la carte mentale.');
+  }
+}
+
+async function rensSaveMapNodePosition(nodeId, x, y){
+  if(!canEditSection('renseignements')||!RENS.mapReady)return;
+  const node = RENS.mapNodes.find(row=>row.id===nodeId);
+  if(node){node.x=x;node.y=y;}
+  try{
+    await sbPatch('mk_rens_map_nodes',`?id=eq.${encodeURIComponent(nodeId)}`,{
+      x: Math.round(Number(x)),
+      y: Math.round(Number(y)),
+      updated_at: new Date().toISOString(),
+    });
+  }catch(error){
+    console.error(error);
+    toast('Position non sauvegardée.');
+  }
+}
+
+function rensStartMapLink(){
+  if(!canEditSection('renseignements'))return;
+  RENS.mapLinkMode = true;
+  RENS.mapLinkSource = '';
+  RENS.mapLinkColor = document.getElementById('rensMapLinkColor')?.value || RENS.mapLinkColor;
+  rensUpdateMapModeLabel('Mode liaison : cliquez sur le premier rapport, puis sur le second.');
+}
+
+function rensCancelMapLink(){
+  RENS.mapLinkMode = false;
+  RENS.mapLinkSource = '';
+  rensUpdateMapModeLabel('Déplacez les cartes comme sur un tableau d’enquête.');
+}
+
+async function rensCreateMapLink(sourceId, targetId){
+  if(!canEditSection('renseignements')||!RENS.mapReady||sourceId===targetId)return;
+  try{
+    await sbPost('mk_rens_map_links',{
+      source_node_id: sourceId,
+      target_node_id: targetId,
+      color: document.getElementById('rensMapLinkColor')?.value || RENS.mapLinkColor,
+      created_by: session.user.id,
+    });
+    RENS.mapLinkMode = false;
+    RENS.mapLinkSource = '';
+    await rensLoad();
+    toast('Lien ajouté.');
+  }catch(error){
+    console.error(error);
+    toast('Impossible de créer ce lien.');
+  }
+}
+
+async function rensDeleteSelectedMapItem(){
+  if(!canEditSection('renseignements'))return;
+  if(RENS.selectedMapNode){
+    if(!confirm('Retirer ce rapport de la carte mentale ?'))return;
+    await sbDelete('mk_rens_map_nodes',`?id=eq.${encodeURIComponent(RENS.selectedMapNode)}`);
+    RENS.selectedMapNode = '';
+    await rensLoad();
+    return;
+  }
+  if(RENS.selectedMapLink){
+    if(!confirm('Supprimer ce fil ?'))return;
+    await sbDelete('mk_rens_map_links',`?id=eq.${encodeURIComponent(RENS.selectedMapLink)}`);
+    RENS.selectedMapLink = '';
+    await rensLoad();
+    return;
+  }
+  toast('Sélectionne une carte ou un fil à supprimer.');
+}
+
 function rensRenderCarte(){
   const container = document.getElementById('rens-network');
   if(!container) return;
-  container.innerHTML = '<p class="sa-empty" style="padding:1rem;">Chargement de la carte des renseignements...</p>';
+  rensRenderMapPicker();
 
+  if(!RENS.mapReady){
+    container.innerHTML = '<p class="rens-map-empty">Carte mentale non configurée côté Supabase. Lance le script supabase/sql/renseignements_map.sql.</p>';
+    return;
+  }
+  if(!RENS.mapNodes.length){
+    container.innerHTML = '<p class="rens-map-empty">Aucun rapport posé sur la carte mentale. Utilisez “Ajouter rapport” pour commencer.</p>';
+    return;
+  }
+
+  container.innerHTML = '<p class="rens-map-empty">Préparation du tableau d’enquête...</p>';
   rensLoadVisNetwork(()=>{
-    // Couleurs par type
-    const TC = {
-      lieux:     { bg:'#c8b89a', border:'#8a6a3a', hbg:'#d8c8aa', hborder:'#6a4a2a' },
-      individus: { bg:'#9aabbc', border:'#3a5a7a', hbg:'#aabbcc', hborder:'#2a4a6a' },
-      groupes:   { bg:'#9ab8a0', border:'#3a6a4a', hbg:'#aac8b0', hborder:'#2a5a3a' },
-    };
-    // Couleur de bordure par statut
-    const SB = { surveillance:'#c8820a', recherche:'#8a1010', neutralise:'#5a5a5a' };
-    // Label statut
-    const SL = { surveillance:'⚠ Surveillance', recherche:'🔴 Recherché', neutralise:'✓ Neutralisé' };
-
-    const nodes = new vis.DataSet(RENS.fiches.map(f=>{
-      const c   = TC[f.type] || TC.lieux;
-      const urgente = f.urgente || f.statut==='recherche';
-      const borderColor = urgente ? '#8a1010' : (SB[f.statut] || c.border);
-      const bgColor     = urgente ? '#e8d0d0' : c.bg;
-      const label = f.nom + (SL[f.statut] ? '\n'+SL[f.statut] : '');
+    const nodes = new vis.DataSet(RENS.mapNodes.map((node,index)=>{
+      const report = RENS.rapports.find(r=>r.id===node.report_id);
+      const fiche = rensFicheForRapport(report);
+      const type = rensRapportType(report);
+      const colors = rensMapTypeColors(type);
+      const selected = RENS.selectedMapNode===node.id;
       return {
-        id:          f.id,
-        label,
-        title:       f.sous_titre || f.nom,
-        shape:       'box',
+        id: node.id,
+        reportId: node.report_id,
+        x: Number.isFinite(Number(node.x)) ? Number(node.x) : rensDefaultMapPosition(index).x,
+        y: Number.isFinite(Number(node.y)) ? Number(node.y) : rensDefaultMapPosition(index).y,
+        label: `${fiche?.nom||'Fiche'}\n${report?.source||'Rapport'}`,
+        title: rensRapportLabel(report),
+        shape: 'box',
         color:{
-          background: bgColor,
-          border:     borderColor,
-          highlight:{ background: c.hbg, border: c.hborder }
+          background: selected ? '#f0d8d8' : colors.bg,
+          border: selected ? '#8a1010' : colors.border,
+          highlight:{background:'#efe1c4',border:'#8a1010'},
         },
-        borderWidth:  urgente ? 3 : 1.5,
-        font:{ face:'serif', size:13, color:'#1c1a18', multi:false },
-        margin:       10,
+        borderWidth: selected ? 3 : 1.5,
+        font:{face:'serif',size:14,color:'#1c1a18',multi:true},
+        margin:12,
       };
     }));
 
-    const edges = new vis.DataSet(RENS.relations.map(r=>({
-      id:     r.id,
-      from:   r.fiche_source,
-      to:     r.fiche_cible,
-      color:{ color:'#8a7a6a', highlight:'#3a2a1a', opacity:0.8 },
-      width:  1.5,
-      smooth:{ type:'curvedCW', roundness:0.15 },
+    const edges = new vis.DataSet(RENS.mapLinks.map(link=>({
+      id: link.id,
+      from: link.source_node_id,
+      to: link.target_node_id,
+      color:{color:link.color||'#8A1010',highlight:'#3a2a1a',opacity:0.92},
+      width: RENS.selectedMapLink===link.id ? 4 : 2.2,
+      smooth:{type:'curvedCW',roundness:0.12},
     })));
 
     const options = {
-      physics:{
-        enabled: true,
-        solver: 'forceAtlas2Based',
-        forceAtlas2Based:{ gravitationalConstant:-60, centralGravity:0.01, springLength:160, springConstant:0.08, damping:0.4 },
-        stabilization:{ iterations:300, updateInterval:50 },
-      },
-      interaction:{ dragNodes:false, zoomView:true, dragView:true, hover:true },
-      layout:{ improvedLayout:true },
+      physics:false,
+      interaction:{dragNodes:canEditSection('renseignements'),zoomView:true,dragView:true,hover:true},
+      nodes:{chosen:false},
+      edges:{chosen:false},
     };
 
-    // Réinitialiser le conteneur si déjà un réseau
     container.innerHTML = '';
-    const network = new vis.Network(container, { nodes, edges }, options);
+    rensMapNetwork = new vis.Network(container,{nodes,edges},options);
+    rensMapNetwork.fit({animation:false});
 
-    // Clic → ouvrir la fiche dans son onglet
-    network.on('click', params=>{
-      if(params.nodes.length>0){
-        const f = RENS.fiches.find(x=>x.id===params.nodes[0]);
-        if(f) goToFiche(f.id, f.type);
+    rensMapNetwork.on('click', params=>{
+      RENS.selectedMapNode = params.nodes[0] || '';
+      RENS.selectedMapLink = params.edges[0] || '';
+      if(RENS.mapLinkMode && RENS.selectedMapNode){
+        if(!RENS.mapLinkSource){
+          RENS.mapLinkSource = RENS.selectedMapNode;
+          rensUpdateMapModeLabel('Mode liaison : cliquez sur le second rapport.');
+        }else{
+          rensCreateMapLink(RENS.mapLinkSource, RENS.selectedMapNode);
+        }
+        return;
       }
+      if(RENS.selectedMapNode)rensUpdateMapModeLabel('Carte sélectionnée. Double-cliquez pour ouvrir le rapport, ou supprimez-la si besoin.');
+      else if(RENS.selectedMapLink)rensUpdateMapModeLabel('Fil sélectionné. Vous pouvez le supprimer si besoin.');
+      else rensUpdateMapModeLabel('Déplacez les cartes comme sur un tableau d’enquête.');
     });
 
-    // Curseur pointer au survol d'un nœud
-    network.on('hoverNode', ()=>{ container.style.cursor='pointer'; });
-    network.on('blurNode',  ()=>{ container.style.cursor='default'; });
+    rensMapNetwork.on('doubleClick', params=>{
+      const nodeId = params.nodes[0];
+      const node = RENS.mapNodes.find(row=>row.id===nodeId);
+      if(node)goToRapport(node.report_id);
+    });
+
+    rensMapNetwork.on('dragEnd', params=>{
+      if(!params.nodes.length)return;
+      const positions = rensMapNetwork.getPositions(params.nodes);
+      params.nodes.forEach(nodeId=>{
+        const pos = positions[nodeId];
+        if(pos)rensSaveMapNodePosition(nodeId,pos.x,pos.y);
+      });
+    });
+
+    rensMapNetwork.on('hoverNode', ()=>{ container.style.cursor='pointer'; });
+    rensMapNetwork.on('blurNode',  ()=>{ container.style.cursor='default'; });
   });
 }
 

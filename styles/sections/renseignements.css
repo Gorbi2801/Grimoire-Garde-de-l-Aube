@@ -64,6 +64,41 @@ body{background:#1C1A18;font-family:'IM Fell English',Georgia,serif;font-size:16
 .fiche-link .fl-del{font-size:.85rem;color:var(--ink-faint);margin-left:.2rem;padding-left:.25rem;border-left:1px solid rgba(201,168,76,.3);cursor:pointer;}
 .fiche-link .fl-del:hover{color:#7A1010;}
 
+/* CARTE DES RENSEIGNEMENTS */
+.rens-map-notice{background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.35);border-left:4px solid var(--gold);color:var(--ink-mid);font-style:italic;line-height:1.45;padding:.65rem .85rem;margin-bottom:.75rem;}
+.rens-map-toolbar{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;margin-bottom:.75rem;}
+.rens-map-toolbar .btn-add,.rens-map-toolbar .btn-sm{margin:0;}
+.rens-map-color{display:inline-flex;align-items:center;gap:.4rem;font-family:'Eagle Lake',serif;font-size:.72rem;letter-spacing:.05em;color:var(--ink-faint);}
+.rens-map-color input{width:2.2rem;height:1.8rem;padding:.1rem;border:1px solid var(--border-g);background:var(--parch);}
+.rens-map-mode{margin-left:auto;color:var(--ink-mid);font-style:italic;}
+.btn-danger-soft{color:#7A1010;border-color:rgba(122,16,16,.38);}
+.btn-danger-soft:hover{background:rgba(122,16,16,.08);}
+.rens-map-picker{display:grid;grid-template-columns:220px minmax(0,1fr);gap:.6rem;align-items:start;background:rgba(14,12,11,.06);border:1px dashed var(--border-g);padding:.65rem;margin-bottom:.75rem;}
+.rens-map-picker[hidden]{display:none;}
+.rens-map-picker select{font-family:'IM Fell English',serif;font-size:.95rem;background:var(--parch);border:1px solid var(--border-g);color:var(--ink);padding:.35rem .5rem;}
+.rens-map-report-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.45rem;max-height:210px;overflow:auto;padding-right:.15rem;}
+.rens-map-report-choice{display:block;text-align:left;width:100%;background:rgba(237,230,214,.78);border:1px solid rgba(93,73,47,.28);color:var(--ink);font-family:'IM Fell English',serif;padding:.5rem .65rem;cursor:pointer;}
+.rens-map-report-choice:hover{border-color:var(--gold);background:rgba(201,168,76,.18);}
+.rens-map-report-choice strong{display:block;font-family:'Eagle Lake',serif;font-size:.8rem;color:var(--green-dark);line-height:1.25;}
+.rens-map-report-choice span{display:block;color:var(--ink-mid);font-style:italic;margin-top:.2rem;line-height:1.25;}
+.rens-map-legend{display:flex;gap:.65rem;flex-wrap:wrap;align-items:center;margin-bottom:.75rem;font-size:.9rem;color:var(--ink-faint);}
+.rens-map-legend span{display:inline-flex;align-items:center;gap:.35rem;}
+.rens-map-legend em{margin-left:auto;color:var(--ink-mid);font-style:italic;}
+.rens-map-dot{width:12px;height:12px;border-radius:2px;display:inline-block;box-shadow:0 1px 2px rgba(0,0,0,.18);}
+.rens-map-dot-lieu{background:#c8b89a;border:1px solid #8a6a3a;}
+.rens-map-dot-individu{background:#9aabbc;border:1px solid #3a5a7a;}
+.rens-map-dot-groupe{background:#9ab8a0;border:1px solid #3a6a4a;}
+.rens-map-dot-danger{background:#e8d0d0;border:2px solid #8a1010;}
+.rens-map-shell{position:relative;min-height:560px;border:1px solid var(--border-g);border-top:3px solid var(--gold);background:linear-gradient(135deg,rgba(226,216,194,.82),rgba(194,180,146,.76));box-shadow:inset 0 0 34px rgba(38,28,20,.18),0 2px 10px rgba(0,0,0,.12);overflow:hidden;}
+.rens-map-shell::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.28;background-image:linear-gradient(rgba(122,97,61,.24) 1px,transparent 1px),linear-gradient(90deg,rgba(122,97,61,.22) 1px,transparent 1px),radial-gradient(circle at 25% 30%,rgba(201,168,76,.22),transparent 28%),radial-gradient(circle at 72% 62%,rgba(122,16,16,.12),transparent 30%);background-size:64px 64px,64px 64px,100% 100%,100% 100%;}
+#rens-network{position:relative;z-index:1;width:100%;height:560px;background:transparent;}
+#rens-network canvas{outline:none;}
+.rens-map-empty{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-family:'Eagle Lake',serif;color:var(--ink-mid);font-style:italic;text-align:center;background:rgba(237,230,214,.78);border:1px solid var(--border-g);padding:.8rem 1rem;box-shadow:0 2px 8px rgba(0,0,0,.12);}
+@media(max-width:760px){
+  .rens-map-picker{grid-template-columns:1fr;}
+  .rens-map-mode{margin-left:0;width:100%;}
+}
+
 /* FORMULAIRE RELATION */
 .add-relation-form{display:none;margin-top:.5rem;background:var(--parch);border:1px solid var(--border-g);padding:.6rem .75rem;}
 .add-relation-form.open{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;}
@@ -104,4 +139,5 @@ body{background:#1C1A18;font-family:'IM Fell English',Georgia,serif;font-size:16
 
 /* HIGHLIGHT cible au scroll */
 .fiche.highlight{animation:highlightPulse 1.5s ease;}
+.rapport-accordion.highlight{animation:highlightPulse 1.5s ease;}
 @keyframes highlightPulse{0%{box-shadow:0 0 0 3px rgba(201,168,76,.8);}100%{box-shadow:none;}}

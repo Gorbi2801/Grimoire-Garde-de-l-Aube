@@ -70,6 +70,38 @@ function carteReportLabel(report){
   return `${target} — ${source} — ${carteDate(report.created_at)}`;
 }
 
+function carteReportType(report){
+  const fiche=carteState.fiches.find(row=>row.id===report.fiche_id);
+  return fiche?.type||'autres';
+}
+
+function carteReportTypeLabel(type){
+  return {all:'Tous les rapports',lieux:'Lieux',individus:'Individus',groupes:'Groupes',autres:'Sans fiche'}[type]||type;
+}
+
+function carteVisibleReports(type='all'){
+  return carteState.reports.filter(report=>type==='all'||carteReportType(report)===type);
+}
+
+function carteReportChipHtml(reportId){
+  const report=carteState.reports.find(row=>row.id===reportId);
+  if(!report)return '';
+  return `<span class="carte-report-chip">
+    ${carteEsc(carteReportLabel(report))}
+    <button type="button" onclick="carteRemoveReportFromSelection('${escJs(reportId)}')" aria-label="Retirer ce rapport">×</button>
+  </span>`;
+}
+
+function carteReportPickerListHtml(type='all'){
+  const selected=new Set(carteSelectedReportIds());
+  const reports=carteVisibleReports(type).filter(report=>!selected.has(report.id));
+  if(!reports.length)return '<p class="sa-empty">Aucun rapport disponible pour ce filtre.</p>';
+  return reports.map(report=>`<button type="button" class="carte-report-choice" onclick="carteAddReportToSelection('${escJs(report.id)}')">
+    <strong>${carteEsc(carteReportLabel(report))}</strong>
+    <span>${carteEsc((report.contenu||'').slice(0,90))}${report.contenu&&report.contenu.length>90?'…':''}</span>
+  </button>`).join('');
+}
+
 function cartePatrouilleLabel(row){
   if(!row)return '';
   return [row.title,row.location].filter(Boolean).join(' — ')||'Patrouille active';
@@ -479,9 +511,18 @@ function carteCommonForm(kind,row,reportIds){
       </label>
       <label class="form-field carte-report-field">
         <span>Rapports liés</span>
-        <select id="carteReports" multiple size="5">
-          ${carteState.reports.map(report=>`<option value="${carteEsc(report.id)}" ${reportIds.has(report.id)?'selected':''}>${carteEsc(carteReportLabel(report))}</option>`).join('')}
-        </select>
+        <div id="carteSelectedReports" class="carte-report-selected" data-selected-reports="${carteEsc([...reportIds].join(','))}">
+          ${[...reportIds].map(carteReportChipHtml).join('')||'<em>Aucun rapport lié.</em>'}
+        </div>
+        <button type="button" class="btn-sm carte-report-add" onclick="carteToggleReportPicker()">+ Ajouter rapport</button>
+        <div id="carteReportPicker" class="carte-report-picker" hidden>
+          <select id="carteReportType" onchange="carteRenderReportPicker()">
+            ${['all','lieux','individus','groupes','autres'].map(type=>`<option value="${type}">${carteEsc(carteReportTypeLabel(type))}</option>`).join('')}
+          </select>
+          <div id="carteReportList" class="carte-report-list">
+            ${carteReportPickerListHtml()}
+          </div>
+        </div>
       </label>
       <label class="form-field carte-description-field">
         <span>Informations</span>
@@ -658,9 +699,71 @@ function carteFormPayload(){
   };
 }
 
+function carteReportSelectionHost(){
+  return document.getElementById('carteSelectedReports');
+}
+
 function carteSelectedReportIds(){
-  const reportSelect=document.getElementById('carteReports');
-  return reportSelect?[...reportSelect.selectedOptions].map(option=>option.value):[];
+  const host=carteReportSelectionHost();
+  if(!host)return [];
+  return String(host.dataset.selectedReports||'').split(',').filter(Boolean);
+}
+
+function carteSetSelectedReportIds(ids){
+  const host=carteReportSelectionHost();
+  if(!host)return;
+  const unique=[...new Set((ids||[]).filter(Boolean))];
+  host.dataset.selectedReports=unique.join(',');
+  host.innerHTML=unique.map(carteReportChipHtml).join('')||'<em>Aucun rapport lié.</em>';
+  carteRenderReportPicker();
+}
+
+function carteToggleReportPicker(){
+  const picker=document.getElementById('carteReportPicker');
+  if(!picker)return;
+  picker.hidden=!picker.hidden;
+  if(!picker.hidden)carteRenderReportPicker();
+}
+
+function carteRenderReportPicker(){
+  const list=document.getElementById('carteReportList');
+  if(!list)return;
+  const type=document.getElementById('carteReportType')?.value||'all';
+  list.innerHTML=carteReportPickerListHtml(type);
+}
+
+async function cartePersistSelectedReportLinks(){
+  const pin=carteSelectedPin();
+  const zone=carteSelectedZone();
+  if(!pin&&!zone)return;
+  const kind=pin?'pin':'zone';
+  const id=pin?.id||zone?.id;
+  const reportIds=carteSelectedReportIds();
+  try{
+    await carteSaveLinks(kind,id,reportIds);
+    if(kind==='pin')carteState.pinLinks=[
+      ...carteState.pinLinks.filter(row=>row.pin_id!==id),
+      ...reportIds.map(reportId=>({pin_id:id,report_id:reportId})),
+    ];
+    else carteState.zoneLinks=[
+      ...carteState.zoneLinks.filter(row=>row.zone_id!==id),
+      ...reportIds.map(reportId=>({zone_id:id,report_id:reportId})),
+    ];
+    toast('Rapports liés mis à jour.');
+  }catch(error){
+    console.error(error);
+    toast('Impossible de sauvegarder les rapports liés.');
+  }
+}
+
+async function carteAddReportToSelection(reportId){
+  carteSetSelectedReportIds([...carteSelectedReportIds(),reportId]);
+  await cartePersistSelectedReportLinks();
+}
+
+async function carteRemoveReportFromSelection(reportId){
+  carteSetSelectedReportIds(carteSelectedReportIds().filter(id=>id!==reportId));
+  await cartePersistSelectedReportLinks();
 }
 
 async function carteSaveLinks(kind,id,reportIds){

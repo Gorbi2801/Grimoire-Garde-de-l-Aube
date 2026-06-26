@@ -263,7 +263,19 @@ header{background:linear-gradient(180deg,var(--green-dark) 0%,var(--green) 100%)
 .carte-editor-grid .form-field{grid-column:span 2;}
 .carte-editor-grid input[type="color"]{height:2.35rem;padding:0.12rem;}
 .carte-report-field{grid-column:1/3;}
-.carte-report-field select{min-height:116px;}
+.carte-report-selected{display:flex;flex-wrap:wrap;gap:0.35rem;min-height:2.3rem;background:rgba(237,230,214,0.58);border:1px solid var(--border-g);padding:0.35rem;margin-bottom:0.35rem;}
+.carte-report-selected em{color:var(--ink-mid);font-style:italic;}
+.carte-report-chip{display:inline-flex;align-items:center;gap:0.35rem;max-width:100%;background:rgba(201,168,76,0.14);border:1px solid rgba(201,168,76,0.42);color:var(--ink);font-style:italic;padding:0.18rem 0.32rem 0.18rem 0.5rem;}
+.carte-report-chip button{border:0;background:transparent;color:var(--brown);font-family:'Eagle Lake',serif;font-size:1rem;line-height:1;cursor:pointer;}
+.carte-report-add{margin-bottom:0.35rem;}
+.carte-report-picker{display:grid;gap:0.35rem;background:rgba(14,12,11,0.08);border:1px dashed var(--border-g);padding:0.45rem;}
+.carte-report-picker[hidden]{display:none;}
+.carte-report-picker select{min-height:0;background:rgba(237,230,214,0.78);}
+.carte-report-list{display:grid;gap:0.3rem;max-height:180px;overflow:auto;padding-right:0.15rem;}
+.carte-report-choice{display:block;width:100%;text-align:left;background:rgba(237,230,214,0.76);border:1px solid rgba(93,73,47,0.28);color:var(--ink);font-family:'IM Fell English',serif;padding:0.4rem 0.5rem;cursor:pointer;}
+.carte-report-choice:hover{border-color:var(--gold);background:rgba(201,168,76,0.18);}
+.carte-report-choice strong{display:block;font-family:'Eagle Lake',serif;font-size:0.82rem;color:var(--green-dark);line-height:1.25;}
+.carte-report-choice span{display:block;color:var(--ink-mid);font-style:italic;margin-top:0.15rem;line-height:1.25;}
 .carte-description-field{grid-column:3/-1;}
 .carte-description-field textarea{resize:vertical;min-height:116px;}
 .carte-editor-actions{display:flex;justify-content:flex-end;align-items:center;gap:0.55rem;margin-top:0.8rem;flex-wrap:wrap;}
