@@ -247,17 +247,34 @@ async function forceStopPresence(userId, nomGarde){
   if(!confirm(`Mettre ${nomGarde} hors service de force ?`)) return;
   try{
     const { error } = await window.GrimoireSupabase
-      .from('mk_presences')
-      .update({ended_at: new Date().toISOString()})
-      .eq('user_id', userId)
-      .is('ended_at', null);
+      .rpc('force_stop_presence', { p_user_id: userId });
     if(error) throw error;
     await loadPresenceSummaries();
     if(typeof loadGardes==='function') await loadGardes();
-    await notifyDiscord('stop');
+    await notifyDiscordForceStop(nomGarde);
     toast(`${nomGarde} mis hors service.`);
   }catch(error){
     console.error(error);
     toast('Erreur lors de la mise hors service.');
+  }
+}
+
+async function notifyDiscordForceStop(nomGarde){
+  const webhookUrl = window.GrimoireConfig?.discordPresenceWebhook;
+  if (!webhookUrl || webhookUrl === 'DISCORD_WEBHOOK_URL') return;
+  // Récupérer le grade du garde depuis gardeRows si disponible
+  const gardeRow = typeof gardeRows !== 'undefined'
+    ? gardeRows.find(r => (r.prenom+' '+r.nom).trim() === nomGarde.trim())
+    : null;
+  const grade = gardeRow?.grade || '';
+  const content = `🔴 **${nomGarde}**${grade?' *('+grade+')*':''} a été mis hors service.`;
+  try{
+    await fetch(webhookUrl, {
+      method : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body   : JSON.stringify({ content }),
+    });
+  }catch(e){
+    console.warn('[Discord] Notification force-stop non envoyée.', e);
   }
 }
