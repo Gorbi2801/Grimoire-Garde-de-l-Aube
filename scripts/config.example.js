@@ -3,6 +3,7 @@ window.GrimoireConfig = Object.freeze({
   supabaseKey: 'sb_publishable_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
   authEmailDomain: 'grimoire.invalid',
   discordPresenceWebhook: 'DISCORD_WEBHOOK_URL',
+  discordRenseignementWebhook: 'DISCORD_WEBHOOK_URL',
   sections: Object.freeze([
     'citoyens',
     'biblio',
