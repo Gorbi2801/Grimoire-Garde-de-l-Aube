@@ -161,6 +161,7 @@ function renderGardes(rows){
   const canFollowRows=rows.some(r=>typeof canOpenGardeSuivi==='function'&&canOpenGardeSuivi(r));
   const showActions=canEdit||canFollowRows;
   const active=document.getElementById('gardeActiveCount');
+  const absentEl=document.getElementById('gardeAbsentCount');
   document.getElementById('gar-total').textContent=rows.length;
   document.getElementById('gar-act-head').style.display=showActions?'':'none';
   if(active){
@@ -168,6 +169,10 @@ function renderGardes(rows){
       ?rows.filter(row=>row.user_id&&presenceIsActiveForUser(row.user_id)).length
       :0;
     active.textContent=String(activeCount);
+  }
+  if(absentEl){
+    const absentCount=rows.filter(r=>(r.statut||'actif')==='absent').length;
+    absentEl.textContent=String(absentCount);
   }
 
   tbody.innerHTML=rows.map(r=>{
