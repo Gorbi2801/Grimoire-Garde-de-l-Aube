@@ -243,15 +243,6 @@ async function addGarde(){
     toggleForm('gar-form');await loadGardes();toast(`${prenom}${nom?' '+nom:''} ${isEdit?'mis à jour':'enrôlé'}.`);
   }catch(e){toast('Erreur Supabase : '+(e.message||e).slice(0,80));}
 }
-async function forceStopPresence(userId, nomGarde){
-  if(!confirm(`Mettre ${nomGarde} hors service de force ?`)) return;
-  try{
-    await sbPatch('mk_presences',`?user_id=eq.${userId}&ended_at=is.null`,{ended_at: new Date().toISOString()});
-    await loadGardes();
-    toast(`${nomGarde} mis hors service.`);
-  }catch(e){ toast('Erreur : '+(e.message||e)); }
-}
-
 async function toggleAbsenceGarde(id, statutActuel){
   const nouveauStatut = statutActuel==='absent' ? 'actif' : 'absent';
   const msg = nouveauStatut==='absent' ? 'Marquer ce garde comme absent ?' : 'Réactiver ce garde ?';

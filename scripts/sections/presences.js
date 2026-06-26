@@ -242,3 +242,22 @@ async function stopPresence(){
     toast('Erreur lors de la clôture.');
   }
 }
+
+async function forceStopPresence(userId, nomGarde){
+  if(!confirm(`Mettre ${nomGarde} hors service de force ?`)) return;
+  try{
+    const { error } = await window.GrimoireSupabase
+      .from('mk_presences')
+      .update({ended_at: new Date().toISOString()})
+      .eq('user_id', userId)
+      .is('ended_at', null);
+    if(error) throw error;
+    await loadPresenceSummaries();
+    if(typeof loadGardes==='function') await loadGardes();
+    await notifyDiscord('stop');
+    toast(`${nomGarde} mis hors service.`);
+  }catch(error){
+    console.error(error);
+    toast('Erreur lors de la mise hors service.');
+  }
+}
