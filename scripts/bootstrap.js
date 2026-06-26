@@ -8,7 +8,7 @@
     garSwitchTab,
     doLogin, doLogout,
     addCitoyen, saveCitoyen:addCitoyen, delCitoyen, editCitoyen, cycleStatut, updateStatutCitoyen:cycleStatut,
-    addGarde, saveGarde:addGarde, delGarde, editGarde, toggleAbsenceGarde,
+    addGarde, saveGarde:addGarde, delGarde, editGarde, toggleAbsenceGarde, forceStopPresence,
     openGardeSuivi, closeGardeSuivi, loadGardeSuivi, addGardeSuiviEntry, updateSuiviKind,
     addCommerce, saveCommerce:addCommerce, delCommerce, editCommerce,
     saveRelation, loadDiplomatie,
