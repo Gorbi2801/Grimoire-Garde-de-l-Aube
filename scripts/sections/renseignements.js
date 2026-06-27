@@ -1018,7 +1018,8 @@ function rensStartMapLink(){
 function rensCancelMapLink(){
   RENS.mapLinkMode = false;
   RENS.mapLinkSource = '';
-  rensUpdateMapModeLabel('Déplacez les cartes comme sur un tableau d’enquête.');
+  rensUpdateMapModeLabel('Déplacez les cartes comme sur un tableau d\'enquête.');
+  rensRenderCarte();
 }
 
 async function rensCreateMapLink(sourceId, targetId){
