@@ -94,7 +94,7 @@ async function exportSection(){
   try{
     let csv='',filename='';
     if(activeSection==='citoyens'){const r=await sbGet('mk_citoyens','?order=nom.asc');csv='Prénom,Nom,Race,Métier\n'+r.map(x=>`"${x.prenom}","${x.nom}","${x.race||''}","${x.metier||''}"`).join('\n');filename='civils_aube.csv';}
-    else if(activeSection==='garde'){const r=await sbGet('mk_gardes','?order=nom.asc');csv='Prénom,Nom,Race,Grade,Spécialité\n'+r.map(x=>`"${x.prenom}","${x.nom}","${x.race||''}","${x.grade||''}","${x.specialite||'Soldat'}"`).join('\n');filename='garde_aube.csv';}
+    else if(activeSection==='garde'){const r=await sbGet('mk_gardes','?order=nom.asc');csv='Prénom,Nom,Race,Grade,Spécialité\n'+r.map(x=>`"${x.prenom}","${x.nom}","${x.race||''}","${x.grade||''}","${x.specialite||'Guerrier'}"`).join('\n');filename='garde_aube.csv';}
     else if(activeSection==='commerces'){const r=await sbGet('mk_transactions','?order=date.desc');csv='Date,Type,Objet,Prix,Vendeur/Acheteur,Garde\n'+r.map(x=>`"${x.date||''}","${x.type||''}","${(x.objet||'').replace(/"/g,"'")}","${(x.valeur||'').replace(/"/g,"'")}","${(x.partie_externe||'').replace(/"/g,"'")}","${(x.enregistre_par||'').replace(/"/g,"'")}"`).join('\n');filename='transactions_aube.csv';}
     else if(activeSection==='cour'){const r=await sbGet('mk_cour','?order=titre.asc');csv='Prénom,Nom,Titre\n'+r.map(x=>`"${x.prenom}","${x.nom}","${x.titre||''}"`).join('\n');filename='cour_aube.csv';}
     else if(activeSection==='inventaire'){const r=await sbGet('mk_inventaire','?order=nom.asc');csv='Objet,Catégorie,Quantité\n'+r.map(x=>`"${x.nom}","${x.categorie||''}",${x.quantite}`).join('\n');filename='inventaire_aube.csv';}

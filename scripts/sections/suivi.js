@@ -207,7 +207,7 @@ function renderGardeSuivi(){
       ['Garde',suiviGardeName(garde)],
       ['Grade',garde.grade||'—'],
       ['Race',garde.race||'—'],
-      ['Spécialité',garde.specialite||'Soldat'],
+      ['Spécialité',garde.specialite||'Guerrier'],
       ['Recrutement',garde.date_recrutement?new Date(garde.date_recrutement).toLocaleDateString('fr-FR'):'—'],
       ['Recruté par',garde.recruteur||'—'],
     ].map(([label,value])=>`<dt>${suiviEsc(label)}</dt><dd>${suiviEsc(value)}</dd>`).join('');

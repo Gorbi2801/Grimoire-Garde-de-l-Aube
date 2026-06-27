@@ -80,7 +80,7 @@ function normalizeGarde(value: Record<string, unknown> | null) {
     nom: String(garde.nom || '').trim(),
     race: String(garde.race || '').trim() || null,
     grade: String(garde.grade || '').trim() || null,
-    specialite: String(garde.specialite || '').trim() || 'Soldat',
+    specialite: String(garde.specialite || '').trim() || 'Guerrier',
     date_recrutement: String(garde.date_recrutement || '').trim() || null,
     recruteur: String(garde.recruteur || '').trim() || null,
   };

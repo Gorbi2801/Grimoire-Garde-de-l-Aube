@@ -181,7 +181,7 @@ function renderGardes(rows){
       ?new Date(r.date_recrutement).toLocaleDateString('fr-FR')
       :'—';
     const recruteur=r.recruteur?esc(r.recruteur):'—';
-    const specialite=r.specialite||'Soldat';
+    const specialite=r.specialite||'Guerrier';
     return `<tr data-search="${esc((r.prenom+' '+r.nom+' '+r.race+' '+r.grade+' '+specialite).toLowerCase())}" data-grade="${esc(r.grade||'')}" data-statut="${esc(r.statut||'actif')}">
       <td class="cell-name">${typeof renderPresenceDot==='function'?renderPresenceDot(r.user_id):''}${esc(r.prenom)}${r.nom?" "+esc(r.nom):""}${r.statut==='absent'?'<span class="badge" style="background:rgba(122,16,16,.12);color:#7A1010;border:1px solid #7A1010;margin-left:.4rem;font-size:.78rem;">⚠ Absent</span>':''}</td>
       <td class="cell-meta">${r.race?`<span class="badge badge-tag">${esc(r.race)}</span>`:'—'}</td>
@@ -218,7 +218,7 @@ function editGarde(id){
   document.getElementById('gar-grade').value=row.grade||'';
   document.getElementById('gar-date-recrutement').value=row.date_recrutement||'';
   document.getElementById('gar-recruteur').value=row.recruteur||'';
-  document.getElementById('gar-specialite').value=row.specialite||'Soldat';
+  document.getElementById('gar-specialite').value=row.specialite||'Guerrier';
   document.getElementById('gar-submit-btn').textContent='Mettre à jour';
   openFormById('gar-form');
 }
@@ -229,7 +229,7 @@ async function addGarde(){
   const grade=document.getElementById('gar-grade').value;
   const date_recrutement=document.getElementById('gar-date-recrutement').value||null;
   const recruteur=document.getElementById('gar-recruteur').value.trim()||null;
-  const specialite=document.getElementById('gar-specialite').value||'Soldat';
+  const specialite=document.getElementById('gar-specialite').value||'Guerrier';
   if(!prenom){toast('Prénom requis.');return;}
   try{
     const isEdit=editState&&editState.type==='garde';
@@ -238,7 +238,7 @@ async function addGarde(){
     ['gar-prenom','gar-nom','gar-recruteur'].forEach(id=>document.getElementById(id).value='');
     ['gar-race','gar-grade'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('gar-date-recrutement').value='';
-    document.getElementById('gar-specialite').value='Soldat';
+    document.getElementById('gar-specialite').value='Guerrier';
     clearEditState('gar-form');
     toggleForm('gar-form');await loadGardes();toast(`${prenom}${nom?' '+nom:''} ${isEdit?'mis à jour':'enrôlé'}.`);
   }catch(e){toast('Erreur Supabase : '+(e.message||e).slice(0,80));}
