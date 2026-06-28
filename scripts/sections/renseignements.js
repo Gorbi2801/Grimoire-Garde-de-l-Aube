@@ -547,16 +547,32 @@ function buildNewFicheFormHTML(){
 }
 
 // ── Notification Discord ─────────────────────────────────────────────
-async function notifyDiscordRenseignement(){
+async function notifyDiscordRenseignement(type, detail){
   const url = window.GrimoireConfig?.discordRenseignementWebhook;
   if(!url) return;
+
+  const prenom     = session?.garde?.prenom || '';
+  const nom        = session?.garde?.nom    || '';
+  const grade      = session?.garde?.grade  || session?.grade || '';
+  const nomComplet = [prenom, nom].filter(Boolean).join(' ') || session?.displayName || 'Garde inconnu';
+  const auteur     = grade ? `${nomComplet} *(${grade})*` : nomComplet;
+
+  const isFiche    = type === 'fiche';
+  const titre      = isFiche
+    ? '<:corbeau:1517815921258008697> **Nouvelle fiche versée aux archives**'
+    : '<:corbeau:1517815921258008697> **Nouveau rapport déposé**';
+  const sousTitre  = isFiche
+    ? `-# *Une nouvelle fiche vient d'être versée aux archives de Fort-Aube.*`
+    : `-# *Un nouveau rapport de renseignement vient d'être déposé.*`;
+  const detailLine = detail ? `\n> **${isFiche ? 'Fiche' : 'Rapport'} :** ${detail}` : '';
+
+  const content = `${titre}\n${sousTitre}${detailLine}\n> **Par :** ${auteur}\n\n<:aube:1516926588359540856> Consultez les archives et transmettez tout élément complémentaire à votre supérieur.`;
+
   try{
     await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        content: '<:corbeau:1517815921258008697> **Nouveau renseignement disponible**\n-# *Une nouvelle fiche vient d\'être versée aux archives de Fort-Aube.*\n\n<:aube:1516926588359540856> Consultez la fiche ci-dessus et transmettez tout élément complémentaire à votre supérieur.'
-      })
+      body: JSON.stringify({ content })
     });
   }catch(e){ console.warn('Discord webhook renseignement :', e); }
 }
@@ -581,7 +597,7 @@ async function saveFiche(){
     try{await sbPost('mk_rens_fiches',fallbackPayload);}
     catch(fallbackError){ alert('Erreur : '+fallbackError.message); return; }
   }
-  await notifyDiscordRenseignement();
+  await notifyDiscordRenseignement('fiche', nom);
   document.getElementById('rens-add-form').style.display='none';
   await rensLoad();
   // Aller sur le bon onglet
@@ -679,7 +695,7 @@ async function saveRapport(ficheId){
     try{await sbPost('mk_rens_rapports',payload);}
     catch(fallbackError){ alert('Erreur : '+fallbackError.message); return; }
   }
-  await notifyDiscordRenseignement();
+  await notifyDiscordRenseignement('rapport', titre||source||'Sans titre');
   await rensLoad();
 }
 
