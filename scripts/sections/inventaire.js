@@ -11,80 +11,54 @@ const CATEGORIES = ['Équipement','Potions','Nourriture','Ingrédient','Livres',
 const CAT_SLUG   = {'Équipement':'cat-equip','Potions':'cat-potions','Nourriture':'cat-nourriture','Ingrédient':'cat-ingredient','Livres':'cat-livres','Matériaux':'cat-materiaux'};
 
 // ── Onglets catégorie — injectés dynamiquement avant le tableau ────────
-function renderInvCatTabs(rows){
-  // Trouver les catégories qui ont des items
-  const catsPresentes = [...new Set(rows.map(r=>r.categorie).filter(Boolean))];
-  const orderedCats = CATEGORIES.filter(c=>catsPresentes.includes(c));
 
-  const tabs = [
-    {key:'tout', label:'Tout', count:rows.length},
-    ...orderedCats.map(c=>({key:c, label:c, count:rows.filter(r=>r.categorie===c).length})),
-  ];
-
-  // Injecter ou créer le conteneur avant la table
-  let wrap = document.getElementById('inv-cat-tabs');
-  if(!wrap){
-    const table = document.querySelector('#page-inventaire table, #page-inventaire .sect-table');
-    if(!table) return;
-    wrap = document.createElement('div');
-    wrap.id = 'inv-cat-tabs';
-    table.parentNode.insertBefore(wrap, table);
-  }
-
-  wrap.innerHTML = `<div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.8rem;border-bottom:1px solid var(--border-g);padding-bottom:.6rem;">
-    ${tabs.map(t=>{
-      const active = invActiveCat === t.key;
-      const epuises = t.key==='tout'
-        ? rows.filter(r=>r.quantite<=0).length
-        : rows.filter(r=>r.categorie===t.key&&r.quantite<=0).length;
-      return `<button onclick="invSetCat('${t.key}')"
-        style="font-family:'Eagle Lake',serif;font-size:.82rem;padding:.28rem .8rem;
-               border:1px solid ${active?'var(--green)':'var(--border-g)'};
-               border-bottom:${active?'2px solid var(--green-dark)':'1px solid var(--border-g)'};
-               background:${active?'var(--parch-dark)':'transparent'};
-               color:${active?'var(--green-dark)':'var(--ink-mid)'};
-               cursor:pointer;white-space:nowrap;">
-        ${t.label}
-        <span style="font-family:'IM Fell English',serif;font-size:.78rem;
-                     color:${active?'var(--ink-mid)':'var(--ink-faint)'};margin-left:.3rem;">
-          ${t.count}${epuises>0?` <span style="color:#7A1010;">(${epuises}✕)</span>`:''}
-        </span>
-      </button>`;
-    }).join('')}
-  </div>`;
-}
-
-function invSetCat(cat){
+// ── Onglets catégorie ─────────────────────────────────────────────────
+function invShowTab(cat, el){
   invActiveCat = cat;
-  // Re-rendre les onglets pour mettre à jour l'actif
-  renderInvCatTabs(invRows);
-  // Filtrer les lignes du tableau
-  applyInvFilter();
+  document.querySelectorAll('[id^="inv-tab-"]').forEach(t=>t.style.display='none');
+  const panel = document.getElementById('inv-tab-'+cat);
+  if(panel) panel.style.display='block';
+  document.querySelectorAll('#page-inventaire .tab').forEach(t=>t.classList.remove('active'));
+  if(el) el.classList.add('active');
 }
 
-function applyInvFilter(){
-  document.querySelectorAll('#inv-tbody tr').forEach(row=>{
-    if(row.classList.contains('inv-cat-header')){
-      // Vérifier si la catégorie du header correspond
-      const cat = row.getAttribute('data-cat-header')||'';
-      row.style.display = (invActiveCat==='tout'||invActiveCat===cat)?'':'none';
-      return;
-    }
-    const cat = row.getAttribute('data-cat')||'';
-    row.style.display = (invActiveCat==='tout'||cat===invActiveCat)?'':'none';
+// ── Recherche sur l'onglet actif ──────────────────────────────────────
+function invSearch(q){
+  const stock = document.getElementById('inv-filter-stock')?.value||'';
+  const tbodyId = invActiveCat==='tout'?'inv-tbody-tout':'inv-tbody-'+invActiveCat;
+  const tbody = document.getElementById(tbodyId);
+  if(!tbody)return;
+  tbody.querySelectorAll('tr').forEach(row=>{
+    const name = row.getAttribute('data-search')||'';
+    const s    = row.getAttribute('data-stock')||'';
+    row.style.display = (!q||name.includes(q.toLowerCase()))&&(!stock||s===stock)?'':'none';
   });
 }
 
-// ── Stock dot ─────────────────────────────────────────────────────────
+// ── Indicateur de stock ───────────────────────────────────────────────
 function stockDot(qty){
   const color = qty<=0?'#7A1010':qty<=2?'#8B6914':'#2D6A2D';
   const title = qty<=0?'Épuisé':qty<=2?'Stock bas':'En stock';
-  return `<span title="${title}" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};margin-right:.4rem;flex-shrink:0;"></span>`;
+  return `<span title="${title}" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};margin-right:.4rem;vertical-align:middle;"></span>`;
 }
 
-// ══════════════════════════════════════════════════════════════════════
-//  ORDRES DE FABRICATION
-// ══════════════════════════════════════════════════════════════════════
+// ── Ligne de tableau ──────────────────────────────────────────────────
+function invRow(r, canAdmin, showCat){
+  return `<tr data-search="${esc(r.nom.toLowerCase())}" data-stock="${r.quantite<=0?'vide':'dispo'}" data-cat="${esc(r.categorie||'')}">
+    <td class="cell-name">${stockDot(r.quantite)}${esc(r.nom)}</td>
+    ${showCat?`<td class="cell-meta">${r.categorie?`<span class="badge badge-${CAT_SLUG[r.categorie]||'tag'}">${esc(r.categorie)}</span>`:'—'}</td>`:''}
+    <td>${canAdmin
+      ?`<div style="display:flex;align-items:center;gap:.5rem;">
+          <button class="btn-del" style="border-color:var(--border-g);color:var(--ink-mid);font-size:1rem;width:26px;height:26px;display:flex;align-items:center;justify-content:center;padding:0;" onclick="updateQty('${r.id}','${escJs(r.nom)}',${r.quantite},-1)">−</button>
+          <input type="number" min="0" value="${r.quantite}" style="width:3.4rem;text-align:center;font-family:'Eagle Lake',serif;font-size:1rem;background:var(--parch);border:1px solid var(--border-g);color:${r.quantite<=0?'#7A1010':'var(--green-dark)'};padding:.15rem 0;" onchange="setQty('${r.id}','${escJs(r.nom)}',${r.quantite},this.value)">
+          <button class="btn-del" style="border-color:var(--border-g);color:var(--ink-mid);font-size:1rem;width:26px;height:26px;display:flex;align-items:center;justify-content:center;padding:0;" onclick="updateQty('${r.id}','${escJs(r.nom)}',${r.quantite},1)">+</button>
+        </div>`
+      :`<span style="font-family:'Eagle Lake',serif;font-size:1rem;color:${r.quantite<=0?'#7A1010':'var(--green-dark)'};">${r.quantite}</span>`
+    }</td>
+    ${canAdmin?`<td class="act"><button class="btn-del" onclick="editInvItem('${r.id}')">Modifier</button> <button class="btn-del" onclick="delInvItem('${r.id}')">Suppr.</button></td>`:''}
+  </tr>`;
+}
+
 let ordresFabRows=[];
 async function loadOrdresFab(){
   try{const rows=await sbGet('mk_ordres_fabrication','?order=created_at.asc');renderOrdresFab(rows);}catch(e){console.error(e);}
@@ -171,70 +145,30 @@ async function delRecette(id){if(!confirm('Supprimer cette recette ?'))return;tr
 // ══════════════════════════════════════════════════════════════════════
 function renderInventaire(rows){
   invRows=rows;
-  const tbody   = document.getElementById('inv-tbody');
-  const canAdmin = canEditSection('inventaire');
-  const empty   = rows.filter(r=>r.quantite<=0).length;
+  const canAdmin=canEditSection('inventaire');
+  const empty=rows.filter(r=>r.quantite<=0).length;
+  document.getElementById('inv-total').textContent=rows.length;
+  document.getElementById('inv-empty').textContent=empty;
 
-  // Stats
-  document.getElementById('inv-total').textContent = rows.length;
-  document.getElementById('inv-empty').textContent = empty;
-  document.getElementById('inv-act-head').style.display = canAdmin?'':'none';
+  // Têtes de colonnes Actions sur tous les panneaux
+  ['inv-act-head','inv-act-head-equip','inv-act-head-potions',
+   'inv-act-head-nourrit','inv-act-head-ingred','inv-act-head-livres','inv-act-head-mat'
+  ].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=canAdmin?'':'none';});
 
-  // Onglets catégorie
-  renderInvCatTabs(rows);
+  // Panneau "Tout" — toutes catégories avec badge
+  const toutTbody=document.getElementById('inv-tbody-tout');
+  if(toutTbody) toutTbody.innerHTML=rows.map(r=>invRow(r,canAdmin,true)).join('');
 
-  // Grouper par catégorie
-  const grouped = {};
-  const noCat   = [];
-  rows.forEach(r=>{
-    if(r.categorie) (grouped[r.categorie]=grouped[r.categorie]||[]).push(r);
-    else noCat.push(r);
+  // Panneaux par catégorie
+  CATEGORIES.forEach(cat=>{
+    const tbody=document.getElementById('inv-tbody-'+cat);
+    if(!tbody)return;
+    const catRows=rows.filter(r=>r.categorie===cat);
+    tbody.innerHTML=catRows.length
+      ?catRows.map(r=>invRow(r,canAdmin,false)).join('')
+      :`<tr><td colspan="${canAdmin?3:2}" style="font-family:'IM Fell English',serif;font-style:italic;color:var(--ink-faint);padding:.6rem;">Aucun objet dans cette catégorie.</td></tr>`;
   });
-
-  const orderedCats = CATEGORIES.filter(c=>grouped[c]?.length);
-  if(noCat.length) orderedCats.push('');
-
-  let html = '';
-
-  orderedCats.forEach(cat=>{
-    const items = cat ? grouped[cat] : noCat;
-    const catLabel = cat||'Sans catégorie';
-    const catCount = items.length;
-    const catEmpty = items.filter(r=>r.quantite<=0).length;
-
-    // Header de catégorie
-    html += `<tr class="inv-cat-header" data-cat-header="${cat}" style="background:var(--parch-dark);">
-      <td colspan="${canAdmin?4:3}" style="padding:.4rem .8rem;">
-        <span style="font-family:'Eagle Lake',serif;font-size:.85rem;color:var(--green-dark);letter-spacing:.06em;text-transform:uppercase;">${catLabel}</span>
-        <span style="font-family:'IM Fell English',serif;font-style:italic;font-size:.82rem;color:var(--ink-faint);margin-left:.6rem;">${catCount} item${catCount>1?'s':''}</span>
-        ${catEmpty>0?`<span style="font-family:'IM Fell English',serif;font-style:italic;font-size:.82rem;color:#7A1010;margin-left:.4rem;">· ${catEmpty} épuisé${catEmpty>1?'s':''}</span>`:''}
-      </td>
-    </tr>`;
-
-    // Items de la catégorie
-    items.forEach(r=>{
-      html += `<tr data-search="${esc(r.nom.toLowerCase())}" data-stock="${r.quantite<=0?'vide':'dispo'}" data-cat="${esc(r.categorie||'')}">
-        <td class="cell-name" style="display:flex;align-items:center;">
-          ${stockDot(r.quantite)}${esc(r.nom)}
-        </td>
-        <td class="cell-meta">${r.categorie?`<span class="badge badge-${CAT_SLUG[r.categorie]||'tag'}">${esc(r.categorie)}</span>`:'—'}</td>
-        <td>${canAdmin
-          ?`<div style="display:flex;align-items:center;gap:0.5rem;">
-              <button class="btn-del" style="border-color:var(--border-g);color:var(--ink-mid);font-size:1rem;width:26px;height:26px;display:flex;align-items:center;justify-content:center;padding:0;" onclick="updateQty('${r.id}','${escJs(r.nom)}',${r.quantite},-1)">−</button>
-              <input type="number" min="0" value="${r.quantite}" style="width:3.4rem;text-align:center;font-family:'Eagle Lake',serif;font-size:1rem;background:var(--parch);border:1px solid var(--border-g);color:${r.quantite<=0?'#7A1010':'var(--green-dark)'};padding:.15rem 0;" onchange="setQty('${r.id}','${escJs(r.nom)}',${r.quantite},this.value)">
-              <button class="btn-del" style="border-color:var(--border-g);color:var(--ink-mid);font-size:1rem;width:26px;height:26px;display:flex;align-items:center;justify-content:center;padding:0;" onclick="updateQty('${r.id}','${escJs(r.nom)}',${r.quantite},1)">+</button>
-            </div>`
-          :`<span style="font-family:'Eagle Lake',serif;font-size:1rem;color:${r.quantite<=0?'#7A1010':'var(--green-dark)'};">${r.quantite}</span>`
-        }</td>
-        ${canAdmin?`<td class="act"><button class="btn-del" onclick="editInvItem('${r.id}')">Modifier</button> <button class="btn-del" onclick="delInvItem('${r.id}')">Suppr.</button></td>`:''}
-      </tr>`;
-    });
-  });
-
-  tbody.innerHTML = html;
-  applyInvFilter();
 }
-
 function editInvItem(id){
   const row=invRows.find(r=>r.id===id);if(!row)return;
   editState={type:'inventaire',id};

@@ -485,18 +485,57 @@
       </div>
     </div>
     <div class="toolbar">
-      <div class="search-wrap"><span style="color:var(--ink-faint);font-size:1rem;">🔍</span><input id="inv-search" type="text" placeholder="Rechercher un objet..." oninput="filterRows('inv-tbody',this.value)"></div>
-      <select class="filter-sel" id="inv-filter-stock" onchange="filterRows('inv-tbody',document.getElementById('inv-search').value)">
+      <div class="search-wrap"><span style="color:var(--ink-faint);font-size:1rem;">🔍</span><input id="inv-search" type="text" placeholder="Rechercher un objet..." oninput="invSearch(this.value)"></div>
+      <select class="filter-sel" id="inv-filter-stock" onchange="invSearch(document.getElementById('inv-search').value)">
         <option value="">Tous les stocks</option><option value="dispo">Disponible</option><option value="vide">Épuisé</option>
       </select>
-      <select class="filter-sel" id="inv-filter-cat" onchange="filterRows('inv-tbody',document.getElementById('inv-search').value)">
-        <option value="">Toutes les catégories</option><option>Équipement</option><option>Potions</option><option>Nourriture</option><option>Ingrédient</option><option>Livres</option><option>Matériaux</option>
-      </select>
-      <button class="btn-sort asc" id="inv-sort-btn" onclick="sortTable('inv-tbody','name','inv-sort-btn')">Nom</button>
     </div>
-    <div class="table-wrap">
+
+    <!-- Onglets par catégorie -->
+    <div class="tabs">
+      <div class="tab active" onclick="invShowTab('tout',this)">Tout</div>
+      <div class="tab" onclick="invShowTab('Équipement',this)">Équipement</div>
+      <div class="tab" onclick="invShowTab('Potions',this)">Potions</div>
+      <div class="tab" onclick="invShowTab('Nourriture',this)">Nourriture</div>
+      <div class="tab" onclick="invShowTab('Ingrédient',this)">Ingrédient</div>
+      <div class="tab" onclick="invShowTab('Livres',this)">Livres</div>
+      <div class="tab" onclick="invShowTab('Matériaux',this)">Matériaux</div>
+    </div>
+
+    <!-- Panneau Tout -->
+    <div id="inv-tab-tout" class="table-wrap">
       <table><thead><tr><th>Objet</th><th>Catégorie</th><th>Quantité</th><th id="inv-act-head" style="display:none;">Actions</th></tr></thead>
-      <tbody id="inv-tbody"></tbody></table>
+      <tbody id="inv-tbody-tout"></tbody></table>
+    </div>
+    <!-- Panneau Équipement -->
+    <div id="inv-tab-Équipement" class="table-wrap" style="display:none;">
+      <table><thead><tr><th>Objet</th><th>Quantité</th><th id="inv-act-head-equip" style="display:none;">Actions</th></tr></thead>
+      <tbody id="inv-tbody-Équipement"></tbody></table>
+    </div>
+    <!-- Panneau Potions -->
+    <div id="inv-tab-Potions" class="table-wrap" style="display:none;">
+      <table><thead><tr><th>Objet</th><th>Quantité</th><th id="inv-act-head-potions" style="display:none;">Actions</th></tr></thead>
+      <tbody id="inv-tbody-Potions"></tbody></table>
+    </div>
+    <!-- Panneau Nourriture -->
+    <div id="inv-tab-Nourriture" class="table-wrap" style="display:none;">
+      <table><thead><tr><th>Objet</th><th>Quantité</th><th id="inv-act-head-nourrit" style="display:none;">Actions</th></tr></thead>
+      <tbody id="inv-tbody-Nourriture"></tbody></table>
+    </div>
+    <!-- Panneau Ingrédient -->
+    <div id="inv-tab-Ingrédient" class="table-wrap" style="display:none;">
+      <table><thead><tr><th>Objet</th><th>Quantité</th><th id="inv-act-head-ingred" style="display:none;">Actions</th></tr></thead>
+      <tbody id="inv-tbody-Ingrédient"></tbody></table>
+    </div>
+    <!-- Panneau Livres -->
+    <div id="inv-tab-Livres" class="table-wrap" style="display:none;">
+      <table><thead><tr><th>Objet</th><th>Quantité</th><th id="inv-act-head-livres" style="display:none;">Actions</th></tr></thead>
+      <tbody id="inv-tbody-Livres"></tbody></table>
+    </div>
+    <!-- Panneau Matériaux -->
+    <div id="inv-tab-Matériaux" class="table-wrap" style="display:none;">
+      <table><thead><tr><th>Objet</th><th>Quantité</th><th id="inv-act-head-mat" style="display:none;">Actions</th></tr></thead>
+      <tbody id="inv-tbody-Matériaux"></tbody></table>
     </div>
     <!-- ══ RECETTES ══ -->
     <div style="margin-top:1.5rem;">
