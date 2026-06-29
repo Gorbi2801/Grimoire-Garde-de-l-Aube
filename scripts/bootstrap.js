@@ -16,6 +16,7 @@
     addOrdreFab, saveOrdreFab:addOrdreFab, delOrdreFab, incrementOrdreFab, setOrdreFabAvancement, updateAvancement:incrementOrdreFab,
     addRecette, saveRecette:addRecette, delRecette,
     addInvItem, saveInventaire:addInvItem, editInvItem, delInvItem, updateQty, setQty, ajusterQuantite:updateQty,
+    invSwitchTab, invSetCat, invToggleEmpty,
     revertInvEntry, undoInvChange:revertInvEntry,
     addLoi, saveLoi:addLoi, delLoi,
     loadMissives, setMissiveTab, filterMissives, selectMissive, sendMissive,
