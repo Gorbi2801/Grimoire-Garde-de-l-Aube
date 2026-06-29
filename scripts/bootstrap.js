@@ -17,7 +17,6 @@
     addRecette, saveRecette:addRecette, delRecette,
     addInvItem, saveInventaire:addInvItem, editInvItem, delInvItem, updateQty, setQty, ajusterQuantite:updateQty,
     invShowTab, invSearch,
-    invSetCat,
     revertInvEntry, undoInvChange:revertInvEntry,
     addLoi, saveLoi:addLoi, delLoi,
     loadMissives, setMissiveTab, filterMissives, selectMissive, sendMissive,
