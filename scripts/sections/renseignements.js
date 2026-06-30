@@ -850,7 +850,8 @@ function injectCarteTab(){
         <span><i class="rens-map-dot rens-map-dot-groupe"></i>Groupe</span>
         <span><i class="rens-map-dot rens-map-dot-danger"></i>Urgente / Recherché</span>
         <span style="display:inline-flex;align-items:center;gap:.3rem;"><i style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#c8a84b;border:2px solid #7a6030;"></i>Fiche centrale</span>
-        <em>Un fil représente une piste ou une connexion d'enquête.</em>
+        <span style="display:inline-flex;align-items:center;gap:.35rem;"><i style="display:inline-block;width:18px;height:0;border-top:2px dashed rgba(122,16,16,.5);"></i>Relation déjà établie</span>
+        <em>Un fil plein représente une piste tracée manuellement.</em>
       </div>
       <div class="rens-map-shell">
         <div id="rens-network"></div>
@@ -1082,6 +1083,10 @@ async function rensDeleteSelectedMapItem(){
     return;
   }
   if(RENS.selectedMapLink){
+    if(String(RENS.selectedMapLink).startsWith('auto-')){
+      toast('Ce fil reflète une relation déjà établie sur une fiche ou un rapport. Supprime-la depuis là-bas, pas ici.');
+      return;
+    }
     if(!confirm('Supprimer ce fil ?'))return;
     await sbDelete('mk_rens_map_links',`?id=eq.${encodeURIComponent(RENS.selectedMapLink)}`);
     RENS.selectedMapLink = '';
@@ -1089,6 +1094,46 @@ async function rensDeleteSelectedMapItem(){
     return;
   }
   toast('Sélectionne une carte ou un fil à supprimer.');
+}
+
+// ── Liens automatiques — déduits des relations déjà établies ──────────
+// Si deux éléments présents sur la carte ont une relation enregistrée
+// ailleurs (fiche liée à un rapport, rapport lié à un rapport, fiche
+// liée à une fiche), un fil pointillé est tracé automatiquement entre
+// leurs cartes — sans action manuelle, et sans créer de ligne en base.
+function rensComputeAutoEdges(){
+  const nodeByReport = {}, nodeByFiche = {};
+  RENS.mapNodes.forEach(n=>{
+    if(n.report_id) nodeByReport[n.report_id] = n.id;
+    if(n.fiche_id)  nodeByFiche[n.fiche_id]   = n.id;
+  });
+
+  const edges = [];
+  const seen  = new Set();
+  const addEdge = (a,b)=>{
+    if(!a||!b||a===b) return;
+    const key = [a,b].sort().join('|');
+    if(seen.has(key)) return;
+    seen.add(key);
+    edges.push({
+      id: 'auto-'+key,
+      from: a, to: b,
+      color:{color:'rgba(122,16,16,.32)', highlight:'rgba(122,16,16,.55)'},
+      dashes:[5,4],
+      width:1.4,
+      smooth:{type:'curvedCW',roundness:0.12},
+      isAuto:true,
+    });
+  };
+
+  // Rapport → Fiche (mk_rens_rapport_liens)
+  RENS.rapportLiens.forEach(l=>addEdge(nodeByReport[l.rapport_id], nodeByFiche[l.fiche_id]));
+  // Rapport → Rapport (mk_rens_rapport_rapport)
+  RENS.rapportRapport.forEach(l=>addEdge(nodeByReport[l.rapport_a], nodeByReport[l.rapport_b]));
+  // Fiche → Fiche (mk_rens_relations)
+  RENS.relations.forEach(l=>addEdge(nodeByFiche[l.fiche_source], nodeByFiche[l.fiche_cible]));
+
+  return edges;
 }
 
 function rensRenderCarte(){
@@ -1143,14 +1188,16 @@ ${report?.titre||'Rapport'}`,
         font:{face:'serif',size:14,color:'#1c1a18',multi:true}, margin:12,
       };
     }));
-    const edges = new vis.DataSet(RENS.mapLinks.map(link=>({
+    const manualEdges = RENS.mapLinks.map(link=>({
       id: link.id,
       from: link.source_node_id,
       to: link.target_node_id,
       color:{color:link.color||'#8A1010',highlight:'#3a2a1a',opacity:0.92},
       width: RENS.selectedMapLink===link.id ? 4 : 2.2,
       smooth:{type:'curvedCW',roundness:0.12},
-    })));
+    }));
+    const autoEdges = rensComputeAutoEdges();
+    const edges = new vis.DataSet([...manualEdges, ...autoEdges]);
 
     const options = {
       physics:false,
@@ -1180,7 +1227,12 @@ ${report?.titre||'Rapport'}`,
         const label = node?.node_type==='fiche' ? 'Fiche sélectionnée' : 'Carte sélectionnée';
         rensUpdateMapModeLabel(`${label}. Double-cliquez pour ouvrir, ou supprimez-la si besoin.`);
       }
-      else if(RENS.selectedMapLink)rensUpdateMapModeLabel('Fil sélectionné. Vous pouvez le supprimer si besoin.');
+      else if(RENS.selectedMapLink){
+        const isAuto = String(RENS.selectedMapLink).startsWith('auto-');
+        rensUpdateMapModeLabel(isAuto
+          ? 'Fil automatique (relation déjà établie). Non supprimable depuis la carte.'
+          : 'Fil sélectionné. Vous pouvez le supprimer si besoin.');
+      }
       else rensUpdateMapModeLabel('Déplacez les cartes comme sur un tableau d’enquête.');
     });
 
