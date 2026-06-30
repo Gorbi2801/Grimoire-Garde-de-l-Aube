@@ -8,6 +8,8 @@ const presenceLogsState={
   summaries:[],
   gardes:[],
   profiles:[],
+  sortKey:null,
+  sortDirection:null,
 };
 
 function presenceLogsEsc(value){
@@ -91,6 +93,46 @@ function presenceLogsHydrateRow(row){
   };
 }
 
+function presenceLogsStatusRank(row){
+  if(row.empty)return 2;
+  if(!row.ended_at)return 0;
+  return 1;
+}
+
+function presenceLogsSortValue(row,key){
+  if(key==='name'||key==='username')return String(row[key]||'').toLowerCase();
+  if(key==='status')return presenceLogsStatusRank(row);
+  if(key==='started_at'||key==='ended_at'||key==='last_seen_at'){
+    const value=key==='last_seen_at'?row.summary?.last_seen_at:row[key];
+    const time=value?new Date(value).getTime():NaN;
+    return Number.isNaN(time)?null:time;
+  }
+  if(key==='today_seconds')return Number(row.summary?.today_seconds)||0;
+  if(key==='week_seconds')return Number(row.summary?.week_seconds)||0;
+  if(key==='total_seconds')return Number(row.summary?.total_seconds)||0;
+  if(key==='durationSeconds')return Number(row.durationSeconds)||0;
+  return String(row[key]||'').toLowerCase();
+}
+
+function presenceLogsSortedRows(rows){
+  const {sortKey,sortDirection}=presenceLogsState;
+  if(!sortKey||!sortDirection)return rows;
+  const direction=sortDirection==='asc'?1:-1;
+  return rows.map((row,index)=>({row,index})).sort((a,b)=>{
+    const av=presenceLogsSortValue(a.row,sortKey);
+    const bv=presenceLogsSortValue(b.row,sortKey);
+    const aMissing=av===null||av===undefined||av==='';
+    const bMissing=bv===null||bv===undefined||bv==='';
+    if(aMissing&&bMissing)return a.index-b.index;
+    if(aMissing)return 1;
+    if(bMissing)return -1;
+    let result=0;
+    if(typeof av==='number'&&typeof bv==='number')result=av-bv;
+    else result=String(av).localeCompare(String(bv),'fr',{numeric:true,sensitivity:'base'});
+    return result===0?a.index-b.index:result*direction;
+  }).map(item=>item.row);
+}
+
 function presenceLogsAllUsers(){
   const ids=new Set(presenceLogsState.gardes.map(row=>row.user_id).filter(Boolean));
   return [...ids].map(userId=>{
@@ -154,6 +196,7 @@ function renderPresenceLogs(){
   renderPresenceLogsGradeFilter();
   renderPresenceLogsStats();
   renderPresenceLogsTable();
+  renderPresenceLogsSortState();
 }
 
 function renderPresenceLogsGradeFilter(){
@@ -242,7 +285,7 @@ function renderPresenceLogsStats(){
 function renderPresenceLogsTable(){
   const tbody=document.getElementById('presenceLogsBody');
   if(!tbody)return;
-  const rows=presenceLogsFilteredRows();
+  const rows=presenceLogsSortedRows(presenceLogsFilteredRows());
 
   tbody.innerHTML=rows.map(row=>{
     const summary=row.summary||{};
@@ -293,4 +336,29 @@ function renderPresenceLogsTable(){
 function filterPresenceLogs(){
   renderPresenceLogsStats();
   renderPresenceLogsTable();
+  renderPresenceLogsSortState();
+}
+
+function renderPresenceLogsSortState(){
+  document.querySelectorAll('[data-presence-sort]').forEach(button=>{
+    const key=button.getAttribute('data-presence-sort');
+    const active=key===presenceLogsState.sortKey&&presenceLogsState.sortDirection;
+    button.classList.toggle('asc',active==='asc');
+    button.classList.toggle('desc',active==='desc');
+    button.setAttribute('aria-sort',active==='asc'?'ascending':active==='desc'?'descending':'none');
+  });
+}
+
+function sortPresenceLogs(key){
+  if(presenceLogsState.sortKey!==key){
+    presenceLogsState.sortKey=key;
+    presenceLogsState.sortDirection='asc';
+  }else if(presenceLogsState.sortDirection==='asc'){
+    presenceLogsState.sortDirection='desc';
+  }else{
+    presenceLogsState.sortKey=null;
+    presenceLogsState.sortDirection=null;
+  }
+  renderPresenceLogsTable();
+  renderPresenceLogsSortState();
 }

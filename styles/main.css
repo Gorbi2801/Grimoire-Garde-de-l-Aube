@@ -163,6 +163,11 @@ header{background:linear-gradient(180deg,var(--green-dark) 0%,var(--green) 100%)
 .presence-logs-table-wrap{max-height:calc(100vh - 360px);min-height:420px;overflow:auto;background:rgba(240,230,200,0.28);}
 .presence-logs-table{min-width:1180px;}
 .presence-logs-table thead th{position:sticky;top:0;z-index:3;}
+.presence-logs-table .presence-log-sort{width:100%;justify-content:space-between;background:transparent;border:0;color:var(--gold-light);font-size:0.92rem;padding:0;letter-spacing:0.08em;}
+.presence-logs-table .presence-log-sort:hover{color:var(--gold);border-color:transparent;}
+.presence-logs-table .presence-log-sort::after{content:'↕';font-size:0.82rem;opacity:0.55;}
+.presence-logs-table .presence-log-sort.asc::after{content:'↑';opacity:1;}
+.presence-logs-table .presence-log-sort.desc::after{content:'↓';opacity:1;}
 .presence-logs-table td{white-space:nowrap;}
 .presence-logs-table .cell-name{min-width:210px;white-space:normal;}
 .presence-logs-table .cell-name strong{display:inline;color:var(--ink);}

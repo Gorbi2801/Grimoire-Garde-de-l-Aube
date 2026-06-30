@@ -1535,16 +1535,16 @@
         <table class="presence-logs-table">
           <thead>
             <tr>
-              <th>Garde</th>
-              <th>Compte</th>
-              <th>Statut</th>
-              <th>Début</th>
-              <th>Fin</th>
-              <th>Durée</th>
-              <th>Aujourd'hui</th>
-              <th>7 jours</th>
-              <th>Total</th>
-              <th>Dernière présence</th>
+              <th><button type="button" class="btn-sort presence-log-sort" data-presence-sort="name" onclick="sortPresenceLogs('name')">Garde</button></th>
+              <th><button type="button" class="btn-sort presence-log-sort" data-presence-sort="username" onclick="sortPresenceLogs('username')">Compte</button></th>
+              <th><button type="button" class="btn-sort presence-log-sort" data-presence-sort="status" onclick="sortPresenceLogs('status')">Statut</button></th>
+              <th><button type="button" class="btn-sort presence-log-sort" data-presence-sort="started_at" onclick="sortPresenceLogs('started_at')">Début</button></th>
+              <th><button type="button" class="btn-sort presence-log-sort" data-presence-sort="ended_at" onclick="sortPresenceLogs('ended_at')">Fin</button></th>
+              <th><button type="button" class="btn-sort presence-log-sort" data-presence-sort="durationSeconds" onclick="sortPresenceLogs('durationSeconds')">Durée</button></th>
+              <th><button type="button" class="btn-sort presence-log-sort" data-presence-sort="today_seconds" onclick="sortPresenceLogs('today_seconds')">Aujourd'hui</button></th>
+              <th><button type="button" class="btn-sort presence-log-sort" data-presence-sort="week_seconds" onclick="sortPresenceLogs('week_seconds')">7 jours</button></th>
+              <th><button type="button" class="btn-sort presence-log-sort" data-presence-sort="total_seconds" onclick="sortPresenceLogs('total_seconds')">Total</button></th>
+              <th><button type="button" class="btn-sort presence-log-sort" data-presence-sort="last_seen_at" onclick="sortPresenceLogs('last_seen_at')">Dernière présence</button></th>
             </tr>
           </thead>
           <tbody id="presenceLogsBody"></tbody>

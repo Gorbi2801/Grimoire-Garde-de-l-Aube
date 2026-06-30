@@ -29,7 +29,7 @@
     carteAddReportToSelection, carteRemoveReportFromSelection,
     carteToggleOverlay, carteZoomIn, carteZoomOut, carteResetView,
     startPresence, stopPresence,
-    loadPresenceLogs, filterPresenceLogs,
+    loadPresenceLogs, filterPresenceLogs, sortPresenceLogs,
     saveNoteModal, saveNote:saveNoteModal, openNoteModal, closeNoteModal,
     showTab, toggleFiche, toggleRap, toggleAdd, toggleRelForm, removeRel,
     renderTab, goToFiche, saveFiche, deleteFiche, openEditFiche, saveEditFiche,
