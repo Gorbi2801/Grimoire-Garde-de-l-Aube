@@ -1012,6 +1012,267 @@
       </div>
       <!-- ══ /LES PRINCES DAEDRIQUES ET LEURS CULTES ══ -->
 
+      <!-- ══ LIVRE : GUIDE SUR LES VAMPIRES ══ -->
+      <div class="biblio-book">
+        <div class="biblio-book-head" onclick="this.parentElement.classList.toggle('open');this.querySelector('.biblio-arr').textContent=this.parentElement.classList.contains('open')?'▼':'▶';">
+          <span class="biblio-arr">▶</span>
+          <div class="biblio-book-meta">
+            <span class="biblio-book-title">Guide sur les Vampires</span>
+            <span class="biblio-book-sub">Comprendre, identifier, renseigner et neutraliser la menace — manuel antivampirique de la Garde</span>
+          </div>
+        </div>
+        <div class="biblio-book-body">
+          <p class="biblio-fore">Ce manuel rassemble les connaissances opérationnelles de la Garde de l'Aube sur les vampires : ce qu'ils sont, comment les reconnaître, quelles capacités ils emploient, et quelles procédures doivent guider une unité face à eux.</p>
+          <p class="biblio-fore">Il ne remplace jamais le jugement du terrain. Les lignées vampiriques diffèrent, les hauts rangs savent masquer leur nature, et un seul indice ne suffit jamais à condamner un suspect.</p>
+
+          <h4 class="biblio-h4">Nature du vampirisme</h4>
+          <div class="biblio-creature">
+            <div class="biblio-creature-name">I. Définition générale</div>
+            <p class="biblio-body">Un vampire est un mortel transformé par une maladie ou une malédiction vampirique, souvent désignée en Bordeciel sous le nom de <em>Sanguinare Vampiris</em>. Une fois la transformation achevée, il devient un mort-vivant : son corps change, il se nourrit de sang, développe des capacités surnaturelles et porte des faiblesses propres à sa lignée.</p>
+            <p class="biblio-body">Le vampirisme n'est pas uniforme. Pouvoirs, apparence, résistances et vulnérabilités varient selon la souche, le clan, le créateur et la proximité avec Molag Bal. Deux vampires de rang semblable peuvent donc exiger deux réponses différentes.</p>
+          </div>
+
+          <div class="biblio-creature">
+            <div class="biblio-creature-name">II. Origine et transformation</div>
+            <p class="biblio-body">Le vampirisme est traditionnellement lié à Molag Bal, Prince daedrique de la domination et de l'asservissement. Certains rapports rattachent la magie de plusieurs vampires à Havreglace, ce qui expliquerait certaines attaques capables de traverser les protections physiques ordinaires.</p>
+            <p class="biblio-body">La transformation n'est pas toujours immédiate. Une victime peut d'abord être infectée, puis perdre progressivement son état mortel avant de devenir un nouveau-né. Dans les premiers temps, elle peut conserver souvenirs, identité et parfois une capacité partielle à résister à son créateur, sans cesser d'être dangereuse.</p>
+          </div>
+
+          <h4 class="biblio-h4">Hiérarchie vampirique</h4>
+          <div class="biblio-table-wrap">
+            <table class="biblio-table">
+              <thead><tr><th>Niveau</th><th>Catégorie</th><th>Description opérationnelle</th></tr></thead>
+              <tbody>
+                <tr><td class="biblio-rank">Cataclysmique</td><td>Grand Maître Vampire</td><td>Chef suprême décrit dans les rapports. Affrontement direct presque suicidaire.</td></tr>
+                <tr><td class="biblio-rank">Extrême</td><td>Haut-Vampire / Vampire éveillé</td><td>Peut masquer crocs, yeux et apparence. Fort potentiel d'infiltration.</td></tr>
+                <tr><td class="biblio-rank">Très élevée</td><td>Maître / Baron / chef de cellule</td><td>Dirige des subalternes et peut employer magie de zone, foudre, nécromancie ou pouvoirs de lignée.</td></tr>
+                <tr><td class="biblio-rank">Élevée</td><td>Vampire standard</td><td>Plus reconnaissable, mais déjà capable de drain vital, magie et coordination.</td></tr>
+                <tr><td class="biblio-rank">Variable</td><td>Nouveau-né</td><td>Récemment transformé, affamé, impulsif et souvent soumis à un créateur.</td></tr>
+                <tr><td class="biblio-rank">Indirecte</td><td>Cultiste marqué</td><td>Mortel altéré, utilisé comme agent, invocateur ou réserve de sang.</td></tr>
+                <tr><td class="biblio-rank">Indirecte</td><td>Cultiste volontaire / esclave</td><td>Complice, séduit, terrorisé ou envoûté. Peut être sacrifié ou transformé.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="biblio-note">Le nombre ne dit pas tout : un vampire seul peut être assez puissant pour ne pas avoir besoin d'escorte, tandis qu'un groupe peut servir d'appât ou sonder nos défenses.</p>
+
+          <h4 class="biblio-h4">Identifier sans condamner</h4>
+          <div class="biblio-creature">
+            <div class="biblio-creature-name">Indices faibles</div>
+            <p class="biblio-body">Pâleur, yeux inhabituels, canines développées, activité nocturne, évitement du soleil, guérison anormale, intérêt pour le sang, tentative d'isoler une recrue ou volonté excessive de dominer la discussion sont des indices utiles, jamais des preuves suffisantes.</p>
+            <p class="biblio-quote">On ne condamne jamais une personne sur sa seule apparence. Maladies, blessures, malédictions et particularités raciales peuvent imiter certains signes du vampirisme.</p>
+          </div>
+
+          <div class="biblio-table-wrap">
+            <table class="biblio-table">
+              <thead><tr><th>Méthode</th><th>Valeur</th><th>Limite</th></tr></thead>
+              <tbody>
+                <tr><td>Yeux et crocs</td><td>Indice utile sur certains nouveau-nés et standards.</td><td>Inutile contre un vampire qui modifie son apparence.</td></tr>
+                <tr><td>Soleil</td><td>Peut révéler gêne, faiblesse ou perte de régénération.</td><td>Les puissants peuvent résister ou dissimuler l'effet.</td></tr>
+                <tr><td>Argent sur entaille</td><td>Rapporté comme utile contre certains nouveau-nés.</td><td>Peu fiable sur les rangs supérieurs.</td></tr>
+                <tr><td>Interrogatoire</td><td>Détecte contradictions et scénario fabriqué.</td><td>Un infiltrateur entraîné peut mentir proprement.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="biblio-body">Les méthodes fortes restent la détection d'aura par un mage formé, les artefacts de contrôle reconnus par le Commandement, et surtout la convergence de preuves : aura, témoins, magie, drain, disparitions et liens cultistes.</p>
+
+          <h4 class="biblio-h4">Pouvoirs recensés</h4>
+          <div class="biblio-creature">
+            <div class="biblio-creature-name">Magies et capacités</div>
+            <ul class="biblio-unknowns">
+              <li><strong>Siphon vital / drain vampirique</strong> — halo ou rayon rouge absorbant santé et énergie vitale. Plus dangereux si la canalisation dure.</li>
+              <li><strong>Froid lié à Havreglace</strong> — blizzard ralentissant, projectiles de glace et contrôle du terrain.</li>
+              <li><strong>Barrage de foudre</strong> — incantation visible à deux mains, lanceur immobile, zone large et létale.</li>
+              <li><strong>Chaîne de Molag Bal</strong> — éclair passant d'une cible à une autre si les alliés sont trop proches.</li>
+              <li><strong>Nécromancie et invocations</strong> — squelettes, morts-vivants, chiens infernaux ou relèvement de corps tombés.</li>
+              <li><strong>Invisibilité, illusion et amnésie</strong> — disparition de la silhouette, envoûtement, séduction et pertes de mémoire.</li>
+              <li><strong>Déguisement et infiltration</strong> — les hauts rangs peuvent masquer leur nature et recruter des mortels influents.</li>
+            </ul>
+          </div>
+
+          <h4 class="biblio-h4">Faiblesses et contre-mesures</h4>
+          <div class="biblio-creature">
+            <div class="biblio-creature-name">Réponses prioritaires</div>
+            <p class="biblio-body"><strong>Feu.</strong> Force le déplacement, gêne la régénération et augmente l'efficacité des carreaux spécialisés. À manier sans provoquer d'incendie incontrôlé.</p>
+            <p class="biblio-body"><strong>Soleil et magie solaire.</strong> Le soleil affaiblit normalement les vampires, mais certains hauts rangs le supportent. Feu solaire, Fléau des vampires et Aura de Stendarr restent des outils majeurs.</p>
+            <p class="biblio-body"><strong>Argent.</strong> Efficace en armement courant ; la poudre d'argent semble surtout pertinente contre les nouveau-nés.</p>
+            <p class="biblio-body"><strong>Interruption.</strong> Plusieurs sorts exigent une canalisation. Un coup de bouclier bien placé casse l'équilibre et ouvre une fenêtre aux tireurs et duellistes.</p>
+            <p class="biblio-body"><strong>Pression constante.</strong> Rompre le drain, alterner les blessés, empêcher l'accès aux civils ou captifs, et ne jamais laisser au vampire le temps de se régénérer.</p>
+          </div>
+
+          <h4 class="biblio-h4">Renseignements et procédure</h4>
+          <div class="biblio-creature">
+            <div class="biblio-creature-name">Clans, cultistes et attaques de sondage</div>
+            <p class="biblio-body">Plusieurs clans existent, avec leurs lignées, méthodes et rivalités. Certains rapports mentionnent les Descendants, faction liée à une première vampire et hostile à certains agents de Molag Bal. Une convergence d'intérêts n'en fait pas des alliés.</p>
+            <p class="biblio-body">Les cultistes fournissent abris, informations et victimes. Ils agissent en plein jour, entrent plus facilement dans les villes, peuvent servir d'agents ou de réserves de sang, et sont parfois transformés s'ils sont jugés utiles.</p>
+            <p class="biblio-body">Une attaque faible peut être une reconnaissance ennemie. Après chaque incident, consigner heure, lieu, effectif, magie utilisée, direction de fuite, réaction de la Garde et pertes. Ne jamais rendre publiques les failles observées.</p>
+          </div>
+
+          <div class="biblio-creature">
+            <div class="biblio-creature-name">Procédure d'intervention</div>
+            <ul class="biblio-unknowns">
+              <li>Observer sans accuser et alerter discrètement un supérieur.</li>
+              <li>Éloigner les civils et empêcher le suspect de s'isoler avec une recrue.</li>
+              <li>Faire venir un mage ou préparer un transfert contrôlé.</li>
+              <li>Ne pas annoncer publiquement « vampire » sans preuve suffisante.</li>
+              <li>Préparer une équipe de réaction avant tout test.</li>
+              <li>Si le vampire dialogue, reculer vers un terrain ouvert, refuser le duel et ne pas révéler toute la disposition des tireurs.</li>
+              <li>S'il se rend, ne pas s'approcher seul, maintenir les tireurs en couverture et appliquer les ordres sans improviser une exécution.</li>
+              <li>Après combat, vérifier morsures, amnésie, symptômes de drain, corps relevables et voies de fuite.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <!-- ══ /GUIDE SUR LES VAMPIRES ══ -->
+
+      <!-- ══ LIVRE : FORMATIONS TACTIQUES DE COMBAT ══ -->
+      <div class="biblio-book">
+        <div class="biblio-book-head" onclick="this.parentElement.classList.toggle('open');this.querySelector('.biblio-arr').textContent=this.parentElement.classList.contains('open')?'▼':'▶';">
+          <span class="biblio-arr">▶</span>
+          <div class="biblio-book-meta">
+            <span class="biblio-book-title">Formations tactiques de combat</span>
+            <span class="biblio-book-sub">Se déplacer, combattre et survivre en unité face aux vampires</span>
+          </div>
+        </div>
+        <div class="biblio-book-body">
+          <p class="biblio-fore">Ce manuel traite du mouvement collectif. Il ne cherche pas à faire de chaque garde un héros isolé, mais à rendre l'unité difficile à enfermer, difficile à drainer, difficile à disperser.</p>
+          <p class="biblio-fore">Face à un vampire, une bonne formation n'est jamais un bloc immobile. C'est un réseau d'angles, de retraits, d'interruptions et de lignes de tir conservées.</p>
+
+          <h4 class="biblio-h4">Menaces et réponses prioritaires</h4>
+          <div class="biblio-table-wrap">
+            <table class="biblio-table">
+              <thead><tr><th>Menace</th><th>Signes</th><th>Réponse prioritaire</th></tr></thead>
+              <tbody>
+                <tr><td>Nouveau-né affamé</td><td>Charge, morsure, impulsivité.</td><td>Distance, entrave, tir coordonné, surveillance de la reddition.</td></tr>
+                <tr><td>Draineur</td><td>Halo rouge et cible unique.</td><td>Rupture de ligne, interruption et soin.</td></tr>
+                <tr><td>Lanceur de froid</td><td>Blizzard ou projectiles.</td><td>Déplacement latéral et résistance au froid.</td></tr>
+                <tr><td>Lanceur de zone</td><td>Incantation à deux mains.</td><td>Dispersion et interruption.</td></tr>
+                <tr><td>Chaîne de foudre</td><td>Éclair sautant entre alliés.</td><td>Espacement maximal.</td></tr>
+                <tr><td>Nécromancien</td><td>Corps relevés, invocations.</td><td>Bannissement et pression sur le maître.</td></tr>
+                <tr><td>Infiltrateur</td><td>Apparence normale, incohérences.</td><td>Mage, surveillance en équipe.</td></tr>
+                <tr><td>Invisible</td><td>Bruits sans silhouette.</td><td>Silence, rôdeur, secteurs fixes.</td></tr>
+                <tr><td>Seigneur Vampire</td><td>Transformation monstrueuse.</td><td>Repli préparé, soleil et tir massif.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h4 class="biblio-h4">Principes de formation</h4>
+          <div class="biblio-creature">
+            <div class="biblio-creature-name">I. Dispersion contrôlée</div>
+            <p class="biblio-body">Chaque membre garde un secteur, une distance, une ligne de vue vers un allié, une voie de repli et la capacité d'entendre les ordres. La dispersion n'est pas une fuite : c'est une manière de refuser les sorts de zone et les chaînes de foudre.</p>
+          </div>
+          <div class="biblio-creature">
+            <div class="biblio-creature-name">II. Mobilité</div>
+            <p class="biblio-body">Le bouclier immobile, l'arbalétrier sans angle et le duelliste engagé de face perdent leur utilité. Les rotations, le déplacement latéral et la capacité à se replacer priment sur le poids de l'armure.</p>
+          </div>
+          <div class="biblio-creature">
+            <div class="biblio-creature-name">III. Lignes de tir</div>
+            <p class="biblio-body">La mêlée ne forme jamais un mur complet. Au moins deux angles doivent rester ouverts pour permettre aux arbalétriers de punir une incantation, un drain ou une tentative de fuite.</p>
+          </div>
+          <div class="biblio-creature">
+            <div class="biblio-creature-name">IV. Deux boucliers</div>
+            <p class="biblio-body">Le premier interrompt ; le second secourt et remplace. Les autres ne rejoignent pas la mêlée sans ordre, afin de ne pas bloquer les tirs ni offrir une cible groupée.</p>
+          </div>
+          <div class="biblio-creature">
+            <div class="biblio-creature-name">V. Terrain</div>
+            <p class="biblio-body">Le terrain idéal est ouvert, visible et doté de sorties. Couloirs, forêts denses, escaliers, ponts et pièces encombrées favorisent les sorts de zone et les embuscades.</p>
+          </div>
+
+          <h4 class="biblio-h4">Formations extérieures</h4>
+          <figure class="biblio-figure">
+            <img src="assets/formation_exterieur.png" alt="Schéma de formation extérieure de la Garde de l'Aube">
+            <figcaption>Schéma indicatif d'une formation extérieure : maintenir les angles, les intervalles et les lignes de tir.</figcaption>
+            <figcaption>A = arbalétrier  B = bouclier   D = duelliste  V = vampire</figcaption>
+          </figure>
+          <div class="biblio-creature">
+            <div class="biblio-creature-name">Éventail dispersé</div>
+            <p class="biblio-body">Le vampire reste au centre de plusieurs angles, jamais d'un cercle fermé. Les arbalétriers forment un arc large, les boucliers sont décalés et les duellistes attendent sur les flancs.</p>
+            <p class="biblio-note">Ne jamais former un cercle compact : conserver des couloirs de tir, de grandes distances et, si possible, de la hauteur.</p>
+          </div>
+          <div class="biblio-creature">
+            <div class="biblio-creature-name">Encerclement cassé</div>
+            <p class="biblio-body">L'encerclement conserve volontairement des trous. Ils servent de lignes de tir et orientent la fuite vers une zone préparée.</p>
+          </div>
+          <div class="biblio-creature">
+            <div class="biblio-creature-name">Progression en quinconce</div>
+            <p class="biblio-body">Pas de colonne simple ou double. Rôdeur en avant à portée, tireurs décalés, boucliers au centre arrière et distances irrégulières.</p>
+          </div>
+          <div class="biblio-creature">
+            <div class="biblio-creature-name">Retrait alterné</div>
+            <p class="biblio-body">Une moitié couvre pendant que l'autre recule. Les boucliers interrompent puis se replient. Le rôdeur guide l'itinéraire et le mage n'est jamais abandonné.</p>
+          </div>
+
+          <h4 class="biblio-h4">Rôles de chacun</h4>
+          <div class="biblio-table-wrap">
+            <table class="biblio-table">
+              <thead><tr><th>Rôle</th><th>Mission</th><th>À faire</th><th>À éviter</th></tr></thead>
+              <tbody>
+                <tr><td class="biblio-rank">Porteur de bouclier</td><td>Casser la concentration, détourner l'attention, couvrir une rotation.</td><td>Sprinter, contourner, frapper la posture magique, annoncer sa fatigue.</td><td>Rester statique, masquer les tireurs, poursuivre seul.</td></tr>
+                <tr><td class="biblio-rank">Arbalétrier</td><td>Punir chaque incantation et produire des dégâts réguliers.</td><td>Chercher un angle, viser le lanceur, changer de position.</td><td>Tirer à travers un allié ou rester isolé.</td></tr>
+                <tr><td class="biblio-rank">Duelliste</td><td>Créer un pic de dégâts après l'interruption.</td><td>Frapper flanc ou dos, conserver la mobilité, se retirer vite.</td><td>Engager de face ou rester au contact après la reprise ennemie.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h4 class="biblio-h4">Ordres courts</h4>
+          <ul class="biblio-command-list">
+            <li><strong>DISPERSION</strong> — augmenter les intervalles.</li>
+            <li><strong>DRAIN</strong> — interruption et soin immédiats.</li>
+            <li><strong>ZONE</strong> — attaque large en préparation.</li>
+            <li><strong>CHAÎNE</strong> — aucun regroupement.</li>
+            <li><strong>ROTATION</strong> — remplacer un bouclier ou blessé.</li>
+            <li><strong>INVISIBLE</strong> — silence et contrôle des secteurs.</li>
+            <li><strong>INVOCATIONS</strong> — le mage traite les serviteurs.</li>
+            <li><strong>REPLI</strong> — retrait alterné vers l'itinéraire prévu.</li>
+          </ul>
+
+          <h4 class="biblio-h4">Races et équipement</h4>
+          <p class="biblio-note">Ce classement ne juge pas les personnes. Il mesure seulement l'utilité des passifs et pouvoirs raciaux contre des vampires. L'entraînement, le rôle et l'équipement restent plus importants.</p>
+          <div class="biblio-table-wrap">
+            <table class="biblio-table">
+              <thead><tr><th>Tier</th><th>Race</th><th>Rôle conseillé</th><th>Passif / pouvoir</th><th>Évaluation antivampirique</th></tr></thead>
+              <tbody>
+                <tr><td class="biblio-rank">S</td><td>Breton</td><td>Bouclier, mage</td><td>25 % Résistance à la magie / Peau de dragon : 50% d'absorption des sorts pendant 60s</td><td>Meilleure défense générale contre la magie vampirique.</td></tr>
+                <tr><td class="biblio-rank">A</td><td>Dunmer</td><td>Bouclier</td><td>50% Résistance au feu / Ire ancestrale : Aura infligeant 10 dégâts de feu/s aux ennemis proches pendant 60s.</td><td>Pression de feu à courte portée et sécurité avec les tactiques incendiaires.</td></tr>
+                <tr><td class="biblio-rank">A</td><td>Nordique</td><td>Bouclier</td><td>50% Résistance au froid / Cri de guerre : Les ennemis proches fuient pendant 30s</td><td>Contre direct aux magies de glace.</td></tr>
+                <tr><td class="biblio-rank">A</td><td>Orque</td><td>Duelliste, bouclier</td><td>Aucun passif / Rage du Berserker : Dégâts subis ÷2 et dégâts physiques x2 pendant 60s</td><td>Fenêtre de rupture extrêmement forte.</td></tr>
+                <tr><td class="biblio-rank">B</td><td>Argonien</td><td>bouclier, arbalétrier</td><td>50% Résistance aux maladies + Respiration aquatique / Bénédiction du Hist : Régénération de Santé x10 pendant 60s.</td><td>Résilience et récupération après drain.</td></tr>
+                <tr><td class="biblio-rank">B</td><td>Rougegarde</td><td>Bouclier, duelliste</td><td>50% Résistance aux poisons / Poussée d'adrénaline : Régénération de Vigueur x10 pendant 60s.</td><td>Mobilité, coups de bouclier et retrait prolongés.</td></tr>
+                <tr><td class="biblio-rank">B</td><td>Altmer</td><td>Mage</td><td>50 Magie / Régalien : Régénère 25% de la Magie max par seconde pendant 60s.</td><td>Excellent pour soleil, soin et barrières.</td></tr>
+                <tr><td class="biblio-rank">C</td><td>Bosmer</td><td>Arbalétrier</td><td>50% Résistance aux poisons et aux maladies / Manipulation d'animal : Un animal devient allié pendant 60s.</td><td>Bonne résistance indirecte, peu de contre direct.</td></tr>
+                <tr><td class="biblio-rank">C</td><td>Khajiit</td><td>Arbalétrier</td><td>+15 dégâts à mains nues / Nyctalopie : Vision nocturne pendant 60s.</td><td>Très utile en obscurité, faible contre la magie.</td></tr>
+                <tr><td class="biblio-rank">C</td><td>Impérial</td><td>Arbalétrier</td><td>Plus d'or trouvé / Voix de l'Empereur : Apaise les PNJ proches pendant 30s</td><td>Rupture de combat potentielle.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="biblio-table-wrap">
+            <table class="biblio-table">
+              <thead><tr><th>Rôle</th><th>Équipement prioritaire</th></tr></thead>
+              <tbody>
+                <tr><td class="biblio-rank">Bouclier</td><td>Bouclier maniable, armure permettant le sprint, soin, résistance magique, arme courte.</td></tr>
+                <tr><td class="biblio-rank">Arbalétrier</td><td>Arbalète entretenue, carreaux ordinaires et spécialisés, arme secondaire, lumière, réserve répartie.</td></tr>
+                <tr><td class="biblio-rank">Mage</td><td>Soin, protection magique, magie solaire, bannissement, détection d'aura.</td></tr>
+                <tr><td class="biblio-rank">Duelliste</td><td>Double épées ou doubles haches, doubles attaques lourdes.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h4 class="biblio-h4">Aide-mémoire des dix règles</h4>
+          <ol class="biblio-unknowns">
+            <li>Un vampire seul peut être le plus dangereux.</li>
+            <li>Ne jamais confirmer un vampire sur sa seule apparence.</li>
+            <li>Ne jamais avancer en colonne serrée.</li>
+            <li>Maintenir de grands intervalles.</li>
+            <li>Deux boucliers actifs maximum.</li>
+            <li>Le bouclier interrompt ; il n'encaisse pas la proto-magie.</li>
+            <li>Les arbalétriers recherchent des angles opposés.</li>
+            <li>Attirer l'ennemi vers un terrain ouvert.</li>
+            <li>Soigner la cible drainée et empêcher la régénération ennemie.</li>
+            <li>Après le combat, contrôler blessures, mémoire, infection et nécromancie.</li>
+          </ol>
+        </div>
+      </div>
+      <!-- ══ /FORMATIONS TACTIQUES DE COMBAT ══ -->
+
     </div>
   </div>
 
