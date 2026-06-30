@@ -154,6 +154,16 @@ function rensFilteredFiches(type){
     fiches = fiches.filter(f=>f.nom.toLowerCase().includes(q));
   }
   if(RENS.filterStatut) fiches = fiches.filter(f=>f.statut===RENS.filterStatut);
+
+  // Tri de priorité : Urgentes en premier, puis Recherché, Surveillance, Neutre/Neutralisé
+  const statutOrder = {recherche:1, surveillance:2, neutre:3, neutralise:4};
+  fiches = [...fiches].sort((a,b)=>{
+    const ua = a.urgente?0:1, ub = b.urgente?0:1;
+    if(ua!==ub) return ua-ub;
+    const sa = statutOrder[a.statut]??3, sb = statutOrder[b.statut]??3;
+    return sa-sb;
+  });
+
   return fiches;
 }
 
