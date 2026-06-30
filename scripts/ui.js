@@ -15,6 +15,7 @@ function switchSection(sec,btn){
   if(sec==='patrouilles'&&typeof loadPatrouilles==='function')loadPatrouilles();
   if(sec==='missives'&&typeof loadMissives==='function')loadMissives();
   if(sec==='superadmin'&&typeof loadSuperadmin==='function')loadSuperadmin();
+  if(sec==='presence-logs'&&typeof loadPresenceLogs==='function')loadPresenceLogs();
 }
 function showProfilePage(){
   if(!session)return;

@@ -31,6 +31,7 @@
     renseignements:()=>callIfAvailable('rensLoad'),
     missives:()=>callIfAvailable('loadMissives'),
     superadmin:()=>callIfAvailable('loadSuperadmin'),
+    'presence-logs':()=>callIfAvailable('loadPresenceLogs'),
     suivi:()=>callIfAvailable('loadGardeSuivi'),
     profile:()=>refreshCurrentSession(),
   };
@@ -44,9 +45,9 @@
     mk_inventaire:['inventaire'],
     mk_ordres_fabrication:['inventaire'],
     mk_recettes:['inventaire'],
-    mk_profiles:['profile','superadmin'],
-    mk_gardes:['profile','garde','patrouilles','superadmin','suivi'],
-    mk_presences:['presences','garde','patrouilles','superadmin','suivi'],
+    mk_profiles:['profile','superadmin','presence-logs'],
+    mk_gardes:['profile','garde','patrouilles','superadmin','presence-logs','suivi'],
+    mk_presences:['presences','garde','patrouilles','superadmin','presence-logs','suivi'],
     mk_patrouilles:['patrouilles','carte'],
     mk_patrouille_members:['patrouilles'],
     mk_garde_suivi:['suivi'],
@@ -71,7 +72,7 @@
 
   function canRefreshSection(section){
     if(section==='profile')return !!session;
-    if(section==='superadmin')return !!session?.isSuperadmin;
+    if(section==='superadmin'||section==='presence-logs')return !!session?.isSuperadmin;
     if(section==='suivi')return !!session && typeof suiviState!=='undefined' && !!suiviState.garde;
     if(section==='inventaire')return canAccessSection('inventaire');
     if(section==='renseignements')return canAccessSection('renseignements');

@@ -11,6 +11,7 @@ const SECTION_LABELS={
   inventaire:'Inventaire',
   lois:'Codex',
   presences:'Présences',
+  'presence-logs':'Logs présences',
   patrouilles:'Patrouilles',
   carte:'Carte',
   missives:'Missives',
@@ -194,6 +195,7 @@ function accessibleSections(){
 function canAccessSection(sec){
   if(!session)return false;
   if(sec==='profile')return true;
+  if(sec==='superadmin'||sec==='presence-logs')return session.isSuperadmin===true;
   if(!sectionFeatureEnabled(sec))return false;
   if(session.isSuperadmin)return true;
   return session.sections.includes(sec);
