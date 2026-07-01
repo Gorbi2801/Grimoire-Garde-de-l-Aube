@@ -1,5 +1,3 @@
-import { createClient } from 'npm:@supabase/supabase-js@2';
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -8,13 +6,6 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
-
-const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false,
-  },
-});
 
 type Profile = {
   user_id: string;
@@ -36,6 +27,10 @@ type Caller = {
   userId: string;
   profile: Profile;
   garde: Garde | null;
+};
+
+type AuthUser = {
+  id: string;
 };
 
 function json(body: unknown, status = 200) {
@@ -68,6 +63,31 @@ function webhookFor(action: string) {
     return Deno.env.get('DISCORD_WEBHOOK_AGENDA') || '';
   }
   return '';
+}
+
+function serviceHeaders(extra: HeadersInit = {}) {
+  return {
+    apikey: SERVICE_ROLE_KEY,
+    Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+    ...extra,
+  };
+}
+
+function restUrl(table: string, params: Record<string, string>) {
+  const url = new URL(`${SUPABASE_URL}/rest/v1/${table}`);
+  Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
+  return url;
+}
+
+async function fetchSingle<T>(table: string, params: Record<string, string>): Promise<T | null> {
+  const response = await fetch(restUrl(table, params), {
+    headers: serviceHeaders({ Accept: 'application/json' }),
+  });
+  if (!response.ok) {
+    throw new Error(`Lecture ${table} refusée (${response.status}).`);
+  }
+  const rows = await response.json() as T[];
+  return rows[0] || null;
 }
 
 function hasSection(caller: Caller, section: string) {
@@ -112,26 +132,33 @@ async function requireCaller(req: Request): Promise<Caller> {
   const token = authHeader.replace(/^Bearer\s+/i, '').trim();
   if (!token) throw new Error('Session manquante.');
 
-  const { data: userData, error: userError } = await admin.auth.getUser(token);
-  if (userError || !userData.user) throw new Error('Session invalide.');
+  const userResponse = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: {
+      apikey: SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!userResponse.ok) throw new Error('Session invalide.');
+  const user = await userResponse.json() as AuthUser;
+  if (!user?.id) throw new Error('Session invalide.');
 
-  const { data: profile, error: profileError } = await admin
-    .from('mk_profiles')
-    .select('user_id,username,display_name,is_superadmin,sections,sections_edit')
-    .eq('user_id', userData.user.id)
-    .single();
-  if (profileError || !profile) throw new Error('Profil introuvable.');
+  const profile = await fetchSingle<Profile>('mk_profiles', {
+    select: 'user_id,username,display_name,is_superadmin,sections,sections_edit',
+    user_id: `eq.${user.id}`,
+    limit: '1',
+  });
+  if (!profile) throw new Error('Profil introuvable.');
 
-  const { data: garde } = await admin
-    .from('mk_gardes')
-    .select('user_id,prenom,nom,grade')
-    .eq('user_id', userData.user.id)
-    .maybeSingle();
+  const garde = await fetchSingle<Garde>('mk_gardes', {
+    select: 'user_id,prenom,nom,grade',
+    user_id: `eq.${user.id}`,
+    limit: '1',
+  });
 
   return {
-    userId: userData.user.id,
-    profile: profile as Profile,
-    garde: (garde || null) as Garde | null,
+    userId: user.id,
+    profile,
+    garde,
   };
 }
 
@@ -176,12 +203,12 @@ async function buildAgendaMessage(payload: Record<string, unknown>, caller: Call
   const eventId = text(payload.eventId);
   if (!/^[0-9a-f-]{36}$/i.test(eventId)) throw new Error('Événement invalide.');
 
-  const { data: event, error } = await admin
-    .from('mk_agenda_events')
-    .select('id,title,description,location,type,status,starts_at,ends_at,organizer_name,organizer_grade')
-    .eq('id', eventId)
-    .single();
-  if (error || !event) throw new Error('Événement introuvable.');
+  const event = await fetchSingle<Record<string, unknown>>('mk_agenda_events', {
+    select: 'id,title,description,location,type,status,starts_at,ends_at,organizer_name,organizer_grade',
+    id: `eq.${eventId}`,
+    limit: '1',
+  });
+  if (!event) throw new Error('Événement introuvable.');
 
   const organizerName = text(event.organizer_name, 'Organisateur inconnu');
   const organizerGrade = text(event.organizer_grade);
