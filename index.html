@@ -116,6 +116,7 @@
   </div>
   <nav class="nav-sections">
     <button class="nav-btn" onclick="switchSection('presences',this)"><span class="nav-icon"><img src="assets/sections_logo/presences.png" alt="" style="width:44px;height:44px;"></span>Présences</button>
+    <button class="nav-btn" onclick="switchSection('agenda',this)"><span class="nav-icon nav-letter-icon">A</span>Agenda</button>
     <button class="nav-btn" onclick="switchSection('patrouilles',this)"><span class="nav-icon"><img src="assets/sections_logo/patrouilles.png" alt="" style="width:44px;height:44px;"></span>Patrouilles</button>
     <button class="nav-btn active" onclick="switchSection('citoyens',this)"><span class="nav-icon"><img src="assets/sections_logo/citoyens.png" alt="" style="width:44px;height:44px;"></span>Citoyens</button>
     <button class="nav-btn" onclick="switchSection('garde',this)"><span class="nav-icon"><img src="assets/sections_logo/garde.png" alt="" style="width:44px;height:44px;"></span>Garde</button>
@@ -307,7 +308,7 @@
           <div class="form-field"><label>Prénom</label><input id="gar-prenom" type="text" placeholder="Prénom..."></div>
           <div class="form-field"><label>Nom</label><input id="gar-nom" type="text" placeholder="Nom..."></div>
           <div class="form-field"><label>Race</label>
-            <select id="gar-race"><option value="">— Sélectionner —</option><option>Nordique</option><option>Impériale</option><option>Bretonne</option><option>Rougegarde</option><option>Elfe des bois</option><option>Haut-Elfe</option><option>Elfe sombre</option><option>Orque</option><option>Argonien</option><option>Khajiit</option></select>
+            <select id="gar-race"><option value="">— Sélectionner —</option><option>Nordique</option><option>Impériale</option><option>Breton</option><option>Rougegarde</option><option>Elfe des bois</option><option>Haut-Elfe</option><option>Elfe noir</option><option>Orque</option><option>Argonien</option><option>Khajiit</option></select>
           </div>
           <div class="form-field"><label>Grade</label>
             <select id="gar-grade"><option value="">— Sélectionner —</option><option>Commandeur de l'Aube</option><option>Sénéchal de l'Aube</option><option>Exécuteur de la Garde</option><option>Traqueur de la Garde</option><option>Patrouilleur de la Garde</option><option>Aspirant de la Garde</option></select>
@@ -1363,6 +1364,48 @@
     <p class="sa-status" id="presenceMsg"></p>
   </section>
 
+  <section class="section-page" id="page-agenda">
+    <div class="sect-header">
+      <h2>Agenda</h2>
+      <p>Programme des événements RP, cours, interventions et rassemblements de la Garde.</p>
+      <div class="sect-stats">
+        <span class="stat-chip" id="agendaRangeLabel">Période : —</span>
+        <span class="stat-chip" id="agendaEventCount">Événements : 0</span>
+        <span class="stat-chip" id="agendaTodayCount">Aujourd'hui : 0</span>
+      </div>
+    </div>
+
+    <div class="agenda-toolbar">
+      <div class="agenda-view-tabs">
+        <button type="button" class="agenda-view-btn active" data-agenda-view="day" onclick="setAgendaView('day')">1 jour</button>
+        <button type="button" class="agenda-view-btn" data-agenda-view="week" onclick="setAgendaView('week')">7 jours</button>
+        <button type="button" class="agenda-view-btn" data-agenda-view="month" onclick="setAgendaView('month')">1 mois</button>
+      </div>
+      <div class="agenda-nav">
+        <button type="button" class="btn-action" onclick="moveAgendaRange(-1)">Précédent</button>
+        <button type="button" class="btn-action" onclick="goAgendaToday()">Aujourd'hui</button>
+        <button type="button" class="btn-action" onclick="moveAgendaRange(1)">Suivant</button>
+      </div>
+      <div class="search-wrap agenda-search">
+        <span>⌕</span>
+        <input id="agendaSearch" placeholder="Rechercher titre, lieu, organisateur..." oninput="filterAgenda()">
+      </div>
+      <button type="button" class="btn-submit agenda-create-btn" id="agendaCreateBtn" onclick="openAgendaCreate()">Nouvel événement</button>
+    </div>
+    <p class="sa-status" id="agendaMsg"></p>
+
+    <div class="agenda-layout">
+      <div class="agenda-calendar-card">
+        <div class="agenda-weekdays" id="agendaWeekdays"></div>
+        <div class="agenda-calendar" id="agendaCalendar"></div>
+      </div>
+      <aside class="agenda-detail-card" id="agendaDetail">
+        <div class="profile-title">Événement sélectionné</div>
+        <p class="sa-muted">Sélectionne un événement dans le calendrier.</p>
+      </aside>
+    </div>
+  </section>
+
   <section class="section-page" id="page-patrouilles">
     <div class="sect-header">
       <h2>Patrouilles</h2>
@@ -1798,6 +1841,7 @@
 <script src="scripts/sections/lois.js"></script>
 <script src="scripts/sections/presences.js"></script>
 <script src="scripts/sections/presence-logs.js"></script>
+<script src="scripts/sections/agenda.js"></script>
 <script src="scripts/sections/patrouilles.js"></script>
 <script src="scripts/sections/missives.js"></script>
 <script src="scripts/sections/superadmin.js"></script>

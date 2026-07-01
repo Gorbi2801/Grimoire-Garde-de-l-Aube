@@ -16,6 +16,7 @@ declare
     'mk_profiles',
     'mk_gardes',
     'mk_presences',
+    'mk_agenda_events',
     'mk_patrouilles',
     'mk_patrouille_members',
     'mk_garde_suivi',

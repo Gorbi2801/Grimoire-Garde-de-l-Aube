@@ -4,6 +4,7 @@ window.GrimoireConfig = Object.freeze({
   authEmailDomain: 'grimoire.invalid',
   discordPresenceWebhook: 'DISCORD_WEBHOOK_URL',
   discordRenseignementWebhook: 'DISCORD_WEBHOOK_URL',
+  discordAgendaWebhook: 'DISCORD_WEBHOOK_URL',
   sections: Object.freeze([
     'citoyens',
     'biblio',
@@ -14,6 +15,7 @@ window.GrimoireConfig = Object.freeze({
     'inventaire',
     'lois',
     'presences',
+    'agenda',
     'patrouilles',
     'carte',
     'missives',

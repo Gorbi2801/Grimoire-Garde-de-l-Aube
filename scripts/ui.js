@@ -12,6 +12,7 @@ function switchSection(sec,btn){
   if(btn)btn.classList.add('active');
   activeSection=sec;
   if(sec==='presences'&&typeof loadPresences==='function')loadPresences();
+  if(sec==='agenda'&&typeof loadAgenda==='function')loadAgenda();
   if(sec==='patrouilles'&&typeof loadPatrouilles==='function')loadPatrouilles();
   if(sec==='missives'&&typeof loadMissives==='function')loadMissives();
   if(sec==='superadmin'&&typeof loadSuperadmin==='function')loadSuperadmin();

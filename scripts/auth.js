@@ -12,12 +12,13 @@ const SECTION_LABELS={
   lois:'Codex',
   presences:'Présences',
   'presence-logs':'Logs présences',
+  agenda:'Agenda',
   patrouilles:'Patrouilles',
   carte:'Carte',
   missives:'Missives',
   renseignements:'Renseignements',
 };
-const DEFAULT_SECTION_ORDER=['citoyens','biblio','garde','commerces','diplomatie','cour','inventaire','lois','presences','patrouilles','carte','missives','renseignements'];
+const DEFAULT_SECTION_ORDER=['citoyens','biblio','garde','commerces','diplomatie','cour','inventaire','lois','presences','agenda','patrouilles','carte','missives','renseignements'];
 
 function normalizeUsername(value){
   return value.trim().toLowerCase();
