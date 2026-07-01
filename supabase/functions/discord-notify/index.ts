@@ -5,7 +5,7 @@ const corsHeaders = {
 };
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
-const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+const SUPABASE_SECRET_KEY = getSupabaseSecretKey();
 
 type Profile = {
   user_id: string;
@@ -32,6 +32,25 @@ type Caller = {
 type AuthUser = {
   id: string;
 };
+
+function getSupabaseSecretKey() {
+  const legacyKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+  if (legacyKey) return legacyKey;
+
+  const rawKeys = Deno.env.get('SUPABASE_SECRET_KEYS') || '';
+  if (!rawKeys) return '';
+
+  try {
+    const keys = JSON.parse(rawKeys) as Record<string, unknown>;
+    const defaultKey = keys.default;
+    if (typeof defaultKey === 'string' && defaultKey) return defaultKey;
+
+    const firstKey = Object.values(keys).find((value) => typeof value === 'string' && value);
+    return typeof firstKey === 'string' ? firstKey : '';
+  } catch (_error) {
+    return '';
+  }
+}
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -67,8 +86,8 @@ function webhookFor(action: string) {
 
 function serviceHeaders(extra: HeadersInit = {}) {
   return {
-    apikey: SERVICE_ROLE_KEY,
-    Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+    apikey: SUPABASE_SECRET_KEY,
+    Authorization: `Bearer ${SUPABASE_SECRET_KEY}`,
     ...extra,
   };
 }
@@ -134,7 +153,7 @@ async function requireCaller(req: Request): Promise<Caller> {
 
   const userResponse = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
     headers: {
-      apikey: SERVICE_ROLE_KEY,
+      apikey: SUPABASE_SECRET_KEY,
       Authorization: `Bearer ${token}`,
     },
   });
@@ -241,7 +260,7 @@ Deno.serve(async (req) => {
     return json({ error: 'Méthode non autorisée.' }, 405);
   }
 
-  if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+  if (!SUPABASE_URL || !SUPABASE_SECRET_KEY) {
     return json({ error: 'Configuration serveur incomplète.' }, 500);
   }
 
