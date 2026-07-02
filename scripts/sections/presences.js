@@ -248,16 +248,16 @@ async function startPresence(){
   if(!session)return;
   if(presenceActiveRow()){toast('Tu es déjà marqué présent.');return;}
   try{
-    const { data:inserted, error } = await window.GrimoireSupabase
+    const { error } = await window.GrimoireSupabase
       .from('mk_presences')
-      .insert({user_id:session.user.id})
-      .select('id')
-      .single();
+      .insert({user_id:session.user.id});
     if(error)throw error;
     await loadPresences();
     if(typeof loadGardes==='function')await loadGardes();
     await notifyPresenceDiscord('start');
-    initPresenceAutoStop(inserted?.id, session.user.id);
+    // Récupérer l'ID depuis le state chargé (évite .select().single() qui peut échouer selon la RLS)
+    const active = presenceActiveRow();
+    initPresenceAutoStop(active?.id, session.user.id);
     toast('Présence enregistrée.');
   }catch(error){
     console.error(error);
