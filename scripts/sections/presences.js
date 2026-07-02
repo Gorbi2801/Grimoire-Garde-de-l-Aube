@@ -92,9 +92,6 @@ async function loadPresences(){
     presenceState.loaded=true;
     renderPresences();
     if(msg)msg.textContent='';
-    // Réactiver l'auto-stop si une présence est déjà ouverte au chargement de la page
-    const alreadyActive = presenceActiveRow();
-    if(alreadyActive) initPresenceAutoStop(alreadyActive.id, session.user.id);
   }catch(error){
     console.error(error);
     if(msg)msg.textContent='Impossible de charger le registre de présence.';
@@ -189,64 +186,6 @@ async function notifyPresenceDiscord(type) {
   await send(type==='start'?'presence_start':'presence_stop');
 }
 
-
-// ══════════════════════════════════════════════════════════════════════
-//  AUTO-ARRÊT DE PRÉSENCE — fermeture de page/onglet
-//  Stocke l'ID de la présence active pour éviter de dépendre du state
-//  au moment du beforeunload (peut être désynchronisé).
-// ══════════════════════════════════════════════════════════════════════
-let _activePresenceId       = null;  // ID de la ligne mk_presences ouverte
-let _activePresenceUserId   = null;  // user_id correspondant
-let _presenceBeaconBound    = false;
-
-function _presenceBeaconHandler(){
-  const url = window.GrimoireConfig?.supabaseUrl;
-  const key  = window.GrimoireConfig?.supabaseKey;
-  if(!url || !key) return;
-
-  // Méthode 1 : PATCH direct sur la ligne par ID (le plus fiable)
-  if(_activePresenceId){
-    const patchUrl = `${url}/rest/v1/mk_presences?id=eq.${_activePresenceId}`;
-    const body     = JSON.stringify({ ended_at: new Date().toISOString() });
-    const headers  = {
-      'Content-Type'  : 'application/json',
-      'apikey'        : key,
-      'Authorization' : `Bearer ${key}`,
-      'Prefer'        : 'return=minimal',
-    };
-    // fetch keepalive (Chrome/Edge/Firefox récent)
-    try{ fetch(patchUrl, { method:'PATCH', headers, body, keepalive:true }); }catch(e){}
-  }
-
-  // Méthode 2 : RPC via sendBeacon (POST uniquement, fallback Safari / anciens navigateurs)
-  if(_activePresenceUserId){
-    const rpcUrl  = `${url}/rest/v1/rpc/force_stop_presence?apikey=${key}`;
-    const payload = new Blob(
-      [JSON.stringify({ p_user_id: _activePresenceUserId })],
-      { type: 'application/json' }
-    );
-    try{ navigator.sendBeacon(rpcUrl, payload); }catch(e){}
-  }
-}
-
-function initPresenceAutoStop(presenceId, userId){
-  _activePresenceId     = presenceId;
-  _activePresenceUserId = userId;
-  if(!_presenceBeaconBound){
-    window.addEventListener('beforeunload', _presenceBeaconHandler);
-    window.addEventListener('pagehide',     _presenceBeaconHandler);
-    _presenceBeaconBound = true;
-  }
-}
-
-function clearPresenceAutoStop(){
-  _activePresenceId     = null;
-  _activePresenceUserId = null;
-  window.removeEventListener('beforeunload', _presenceBeaconHandler);
-  window.removeEventListener('pagehide',     _presenceBeaconHandler);
-  _presenceBeaconBound = false;
-}
-
 async function startPresence(){
   if(!session)return;
   if(presenceActiveRow()){toast('Tu es déjà marqué présent.');return;}
@@ -258,9 +197,6 @@ async function startPresence(){
     await loadPresences();
     if(typeof loadGardes==='function')await loadGardes();
     await notifyPresenceDiscord('start');
-    // Récupérer l'ID depuis le state chargé (évite .select().single() qui peut échouer selon la RLS)
-    const active = presenceActiveRow();
-    initPresenceAutoStop(active?.id, session.user.id);
     toast('Présence enregistrée.');
   }catch(error){
     console.error(error);
@@ -281,7 +217,6 @@ async function stopPresence(){
     await loadPresences();
     if(typeof loadGardes==='function')await loadGardes();
     await notifyPresenceDiscord('stop');
-    clearPresenceAutoStop();
     toast('Présence clôturée.');
   }catch(error){
     console.error(error);
