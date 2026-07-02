@@ -92,6 +92,9 @@ async function loadPresences(){
     presenceState.loaded=true;
     renderPresences();
     if(msg)msg.textContent='';
+    // Réactiver l'auto-stop si une présence est déjà ouverte au chargement de la page
+    const alreadyActive = presenceActiveRow();
+    if(alreadyActive) initPresenceAutoStop(alreadyActive.id, session.user.id);
   }catch(error){
     console.error(error);
     if(msg)msg.textContent='Impossible de charger le registre de présence.';
