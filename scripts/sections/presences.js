@@ -188,56 +188,76 @@ async function notifyPresenceDiscord(type) {
 
 
 // ══════════════════════════════════════════════════════════════════════
-//  AUTO-ARRÊT DE PRÉSENCE
-//  - Fermeture de page / onglet : fetch keepalive vers force_stop_presence
+//  AUTO-ARRÊT DE PRÉSENCE — fermeture de page/onglet
+//  Stocke l'ID de la présence active pour éviter de dépendre du state
+//  au moment du beforeunload (peut être désynchronisé).
 // ══════════════════════════════════════════════════════════════════════
-let _presenceBeaconRegistered = false;
+let _activePresenceId       = null;  // ID de la ligne mk_presences ouverte
+let _activePresenceUserId   = null;  // user_id correspondant
+let _presenceBeaconBound    = false;
 
 function _presenceBeaconHandler(){
-  const active = presenceActiveRow();
-  if(!active || !session) return;
   const url = window.GrimoireConfig?.supabaseUrl;
   const key  = window.GrimoireConfig?.supabaseKey;
   if(!url || !key) return;
-  try{
-    fetch(`${url}/rest/v1/rpc/force_stop_presence`, {
-      method   : 'POST',
-      headers  : {
-        'Content-Type' : 'application/json',
-        'apikey'       : key,
-        'Authorization': `Bearer ${key}`,
-      },
-      body     : JSON.stringify({ p_user_id: session.user.id }),
-      keepalive: true,
-    });
-  }catch(e){ /* best-effort */ }
+
+  // Méthode 1 : PATCH direct sur la ligne par ID (le plus fiable)
+  if(_activePresenceId){
+    const patchUrl = `${url}/rest/v1/mk_presences?id=eq.${_activePresenceId}`;
+    const body     = JSON.stringify({ ended_at: new Date().toISOString() });
+    const headers  = {
+      'Content-Type'  : 'application/json',
+      'apikey'        : key,
+      'Authorization' : `Bearer ${key}`,
+      'Prefer'        : 'return=minimal',
+    };
+    // fetch keepalive (Chrome/Edge/Firefox récent)
+    try{ fetch(patchUrl, { method:'PATCH', headers, body, keepalive:true }); }catch(e){}
+  }
+
+  // Méthode 2 : RPC via sendBeacon (POST uniquement, fallback Safari / anciens navigateurs)
+  if(_activePresenceUserId){
+    const rpcUrl  = `${url}/rest/v1/rpc/force_stop_presence?apikey=${key}`;
+    const payload = new Blob(
+      [JSON.stringify({ p_user_id: _activePresenceUserId })],
+      { type: 'application/json' }
+    );
+    try{ navigator.sendBeacon(rpcUrl, payload); }catch(e){}
+  }
 }
 
-function initPresenceAutoStop(){
-  if(_presenceBeaconRegistered) return;
-  window.addEventListener('beforeunload', _presenceBeaconHandler);
-  window.addEventListener('pagehide',     _presenceBeaconHandler);
-  _presenceBeaconRegistered = true;
+function initPresenceAutoStop(presenceId, userId){
+  _activePresenceId     = presenceId;
+  _activePresenceUserId = userId;
+  if(!_presenceBeaconBound){
+    window.addEventListener('beforeunload', _presenceBeaconHandler);
+    window.addEventListener('pagehide',     _presenceBeaconHandler);
+    _presenceBeaconBound = true;
+  }
 }
 
 function clearPresenceAutoStop(){
+  _activePresenceId     = null;
+  _activePresenceUserId = null;
   window.removeEventListener('beforeunload', _presenceBeaconHandler);
   window.removeEventListener('pagehide',     _presenceBeaconHandler);
-  _presenceBeaconRegistered = false;
+  _presenceBeaconBound = false;
 }
 
 async function startPresence(){
   if(!session)return;
   if(presenceActiveRow()){toast('Tu es déjà marqué présent.');return;}
   try{
-    const { error } = await window.GrimoireSupabase
+    const { data:inserted, error } = await window.GrimoireSupabase
       .from('mk_presences')
-      .insert({user_id:session.user.id});
+      .insert({user_id:session.user.id})
+      .select('id')
+      .single();
     if(error)throw error;
     await loadPresences();
     if(typeof loadGardes==='function')await loadGardes();
     await notifyPresenceDiscord('start');
-    initPresenceAutoStop();
+    initPresenceAutoStop(inserted?.id, session.user.id);
     toast('Présence enregistrée.');
   }catch(error){
     console.error(error);
