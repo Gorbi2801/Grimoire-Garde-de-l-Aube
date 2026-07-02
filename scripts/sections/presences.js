@@ -186,6 +186,46 @@ async function notifyPresenceDiscord(type) {
   await send(type==='start'?'presence_start':'presence_stop');
 }
 
+
+// ══════════════════════════════════════════════════════════════════════
+//  AUTO-ARRÊT DE PRÉSENCE
+//  - Fermeture de page / onglet : fetch keepalive vers force_stop_presence
+// ══════════════════════════════════════════════════════════════════════
+let _presenceBeaconRegistered = false;
+
+function _presenceBeaconHandler(){
+  const active = presenceActiveRow();
+  if(!active || !session) return;
+  const url = window.GrimoireConfig?.supabaseUrl;
+  const key  = window.GrimoireConfig?.supabaseKey;
+  if(!url || !key) return;
+  try{
+    fetch(`${url}/rest/v1/rpc/force_stop_presence`, {
+      method   : 'POST',
+      headers  : {
+        'Content-Type' : 'application/json',
+        'apikey'       : key,
+        'Authorization': `Bearer ${key}`,
+      },
+      body     : JSON.stringify({ p_user_id: session.user.id }),
+      keepalive: true,
+    });
+  }catch(e){ /* best-effort */ }
+}
+
+function initPresenceAutoStop(){
+  if(_presenceBeaconRegistered) return;
+  window.addEventListener('beforeunload', _presenceBeaconHandler);
+  window.addEventListener('pagehide',     _presenceBeaconHandler);
+  _presenceBeaconRegistered = true;
+}
+
+function clearPresenceAutoStop(){
+  window.removeEventListener('beforeunload', _presenceBeaconHandler);
+  window.removeEventListener('pagehide',     _presenceBeaconHandler);
+  _presenceBeaconRegistered = false;
+}
+
 async function startPresence(){
   if(!session)return;
   if(presenceActiveRow()){toast('Tu es déjà marqué présent.');return;}
@@ -197,6 +237,7 @@ async function startPresence(){
     await loadPresences();
     if(typeof loadGardes==='function')await loadGardes();
     await notifyPresenceDiscord('start');
+    initPresenceAutoStop();
     toast('Présence enregistrée.');
   }catch(error){
     console.error(error);
@@ -217,6 +258,7 @@ async function stopPresence(){
     await loadPresences();
     if(typeof loadGardes==='function')await loadGardes();
     await notifyPresenceDiscord('stop');
+    clearPresenceAutoStop();
     toast('Présence clôturée.');
   }catch(error){
     console.error(error);
