@@ -6,6 +6,7 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
 const SUPABASE_SECRET_KEY = getSupabaseSecretKey();
+const AGENDA_ROLE_ID = '1517264270063177789';
 
 type Profile = {
   user_id: string;
@@ -236,6 +237,7 @@ async function buildAgendaMessage(payload: Record<string, unknown>, caller: Call
     : organizerName;
 
   const lines = [
+    `<@&${AGENDA_ROLE_ID}>`,
     '<:aube:1516926588359540856> **Nouvel événement ajouté à l’agenda**',
     '-# *Un nouveau rendez-vous vient d’être inscrit au programme de la Garde.*',
     `> **Titre :** ${text(event.title, 'Sans titre')}`,
@@ -278,10 +280,18 @@ Deno.serve(async (req) => {
     else if (action === 'agenda_created') content = await buildAgendaMessage(payload, caller);
     else throw new Error('Action inconnue.');
 
+    const discordPayload: Record<string, unknown> = { content };
+    if (action === 'agenda_created') {
+      discordPayload.allowed_mentions = {
+        parse: [],
+        roles: [AGENDA_ROLE_ID],
+      };
+    }
+
     const response = await fetch(webhook, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content }),
+      body: JSON.stringify(discordPayload),
     });
 
     if (!response.ok) {

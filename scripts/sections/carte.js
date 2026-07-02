@@ -8,7 +8,7 @@ const CARTE_MAP=Object.freeze({
   height:1383,
 });
 
-const CARTE_TYPES=['Risque','Intérêt','Rumeur','Patrouille','Enquête','Lieu sûr'];
+const CARTE_TYPES=['Risque','Intérêt','Rumeur','Patrouille','Enquête','Lieu sûr','Zones de chasse'];
 const CARTE_RISKS=['Faible','Modéré','Élevé','Critique'];
 const CARTE_STATUS=['À vérifier','Confirmé','En cours','Résolu','Obsolète'];
 const CARTE_RISK_COLORS=Object.freeze({

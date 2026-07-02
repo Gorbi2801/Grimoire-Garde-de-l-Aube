@@ -1,7 +1,7 @@
 create table if not exists public.mk_map_pins (
   id uuid primary key default gen_random_uuid(),
   title text not null check (length(trim(title)) between 1 and 140),
-  type text not null default 'Risque' check (type in ('Risque', 'Intérêt', 'Rumeur', 'Patrouille', 'Enquête', 'Lieu sûr')),
+  type text not null default 'Risque' check (type in ('Risque', 'Intérêt', 'Rumeur', 'Patrouille', 'Enquête', 'Lieu sûr', 'Zones de chasse')),
   risk_level text not null default 'Modéré' check (risk_level in ('Faible', 'Modéré', 'Élevé', 'Critique')),
   status text not null default 'À vérifier' check (status in ('À vérifier', 'Confirmé', 'En cours', 'Résolu', 'Obsolète')),
   color text not null default '#8B5E00' check (color ~ '^#[0-9A-Fa-f]{6}$'),
@@ -27,7 +27,7 @@ create table if not exists public.mk_map_pin_reports (
 create table if not exists public.mk_map_zones (
   id uuid primary key default gen_random_uuid(),
   title text not null check (length(trim(title)) between 1 and 140),
-  type text not null default 'Risque' check (type in ('Risque', 'Intérêt', 'Rumeur', 'Patrouille', 'Enquête', 'Lieu sûr')),
+  type text not null default 'Risque' check (type in ('Risque', 'Intérêt', 'Rumeur', 'Patrouille', 'Enquête', 'Lieu sûr', 'Zones de chasse')),
   risk_level text not null default 'Modéré' check (risk_level in ('Faible', 'Modéré', 'Élevé', 'Critique')),
   status text not null default 'À vérifier' check (status in ('À vérifier', 'Confirmé', 'En cours', 'Résolu', 'Obsolète')),
   color text not null default '#8B5E00' check (color ~ '^#[0-9A-Fa-f]{6}$'),
