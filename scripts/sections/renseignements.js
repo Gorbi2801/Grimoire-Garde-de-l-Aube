@@ -41,6 +41,8 @@ function showTab(id, el){
   // Cacher le bouton "Nouvelle fiche" sur l'onglet carte
   const addWrap = document.getElementById('rens-add-wrap');
   if(addWrap) addWrap.style.display = id==='carte' ? 'none' : '';
+  // Quitter la carte → réinitialiser le viewport pour le prochain fit()
+  if(id !== 'carte') _rensMapViewport = null;
   if(id==='carte') rensRenderCarte();
   else renderTab(id);
   renderArchives();
@@ -1593,16 +1595,6 @@ ${report?.titre||'Rapport'}`,
       edges:{chosen:false},
     };
 
-    // Sauvegarder le viewport actuel avant de recréer le réseau
-    if(rensMapNetwork){
-      try{
-        _rensMapViewport = {
-          scale   : rensMapNetwork.getScale(),
-          position: rensMapNetwork.getViewPosition(),
-        };
-      }catch(e){ _rensMapViewport = null; }
-    }
-
     container.innerHTML = '';
     rensMapNetwork = new vis.Network(container,{nodes,edges},options);
 
@@ -1616,6 +1608,18 @@ ${report?.titre||'Rapport'}`,
     }else{
       rensMapNetwork.fit({animation:false});
     }
+
+    // Sauvegarder le viewport sur chaque interaction utilisateur (plus fiable qu'au re-render)
+    const _saveViewport = () => {
+      try{
+        _rensMapViewport = {
+          scale   : rensMapNetwork.getScale(),
+          position: rensMapNetwork.getViewPosition(),
+        };
+      }catch(e){}
+    };
+    rensMapNetwork.on('zoom',    _saveViewport);
+    rensMapNetwork.on('dragEnd', params=>{ if(!params.nodes.length) _saveViewport(); });
 
     // Positions sauvegardées automatiquement après drag manuel
 
