@@ -1576,7 +1576,6 @@ ${report?.titre||'Rapport'}`,
     // Une fois la physique stabilisée, on la désactive et on sauvegarde toutes les positions
     rensMapNetwork.on('stabilizationIterationsDone', ()=>{
       rensMapNetwork.setOptions({ physics: false });
-      rensMapNetwork.fit({ animation: { duration:600, easingFunction:'easeInOutQuad' } });
       if(!rensCanWrite()) return;
       // Sauvegarder les positions finales calculées pour tous les nœuds
       RENS.mapNodes.forEach(n=>{
