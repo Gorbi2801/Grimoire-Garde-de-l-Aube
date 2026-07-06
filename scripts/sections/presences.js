@@ -99,76 +99,11 @@ async function loadPresences(){
   }
 }
 
-async function renderPresences(){
+function renderPresences(){
   renderPresenceStats();
   renderPresenceControl();
   renderPresenceSummary();
   renderPresenceHistory();
-  await renderPresenceGlobal();
-}
-
-
-// ── Tableau récapitulatif — dernière présence par garde ───────────────
-async function loadLastPresences(){
-  try{
-    const { data, error } = await window.GrimoireSupabase
-      .from('mk_presences')
-      .select('id,user_id,created_at,ended_at')
-      .order('created_at',{ascending:false});
-    if(error)throw error;
-    // Une seule ligne par user_id — la plus récente (order desc => first)
-    const seen = new Set();
-    return (data||[]).filter(row=>{
-      if(seen.has(row.user_id)) return false;
-      seen.add(row.user_id);
-      return true;
-    });
-  }catch(e){
-    console.warn('Impossible de charger les dernières présences.',e);
-    return [];
-  }
-}
-
-async function renderPresenceGlobal(){
-  const el = document.getElementById('presenceGlobal');
-  if(!el) return;
-  const lastRows = await loadLastPresences();
-  if(!lastRows.length){
-    el.innerHTML='<p class="sa-empty">Aucune donnée disponible.</p>';
-    return;
-  }
-  const rows = lastRows.map(row=>{
-    const garde  = typeof gardeRows!=='undefined'
-      ? gardeRows.find(g=>g.user_id===row.user_id)
-      : null;
-    const name   = garde
-      ? presenceEsc([garde.prenom,garde.nom].filter(Boolean).join(' ')||'—')
-      : presenceEsc(row.user_id?.slice(0,8)||'—');
-    const grade  = presenceEsc(garde?.grade||'—');
-    const active = !row.ended_at;
-    const lastDate = active
-      ? `<span style="color:var(--green-dark);font-style:italic;">En service depuis ${presenceEsc(presenceDate(row.created_at))}</span>`
-      : presenceEsc(presenceDate(row.ended_at||row.created_at));
-    const duration = row.ended_at
-      ? presenceDuration(presenceSecondsBetween(row.created_at,row.ended_at))
-      : presenceDuration(presenceSecondsSince(row.created_at));
-    const dot = `<span class="presence-dot ${active?'active':'off'}" title="${active?'En service':'Off'}"></span>`;
-    return `<tr>
-      <td>${dot}</td>
-      <td style="font-family:'Eagle Lake',serif;">${name}</td>
-      <td style="font-family:'IM Fell English',serif;font-style:italic;color:var(--ink-faint);">${grade}</td>
-      <td>${lastDate}</td>
-      <td style="text-align:center;">${duration}</td>
-    </tr>`;
-  }).join('');
-  el.innerHTML=`<table class="pg-table">
-    <thead><tr>
-      <th></th><th>Garde</th><th>Grade</th>
-      <th>Dernière activité</th>
-      <th style="text-align:center;">Durée</th>
-    </tr></thead>
-    <tbody>${rows}</tbody>
-  </table>`;
 }
 
 function renderPresenceStats(){
