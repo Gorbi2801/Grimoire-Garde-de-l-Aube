@@ -25,6 +25,7 @@ const RENS = {
   selectedMapLink: ''
 };
 let rensMapNetwork = null;
+let _rensMapViewport = null; // viewport sauvegardé entre les re-renders
 const RENS_ATTACHMENT_BUCKET = 'renseignements';
 const RENS_ATTACHMENT_MAX_SIZE = 5 * 1024 * 1024;
 const RENS_ATTACHMENT_TYPES = new Set(['image/jpeg','image/png','image/webp','image/gif']);
@@ -1155,6 +1156,7 @@ function injectCarteTab(){
         ${rensCanWrite()?`
           <button type="button" class="btn-add" onclick="rensOpenMapReportPicker('rapport')">+ Ajouter rapport</button>
           <button type="button" class="btn-add" onclick="rensOpenMapReportPicker('fiche')" style="background:var(--gold-dark,#7a6030);margin-left:.4rem;">+ Ajouter fiche</button>
+          <button type="button" class="btn-sm" onclick="rensReorganiserCarte()">↺ Réorganiser</button>
           <!-- Liaison manuelle désactivée — les liens sont automatiques -->
           <button type="button" class="btn-sm" onclick="rensCancelMapLink()">Annuler liaison</button>
           <label class="rens-map-color">Couleur du fil <input id="rensMapLinkColor" type="color" value="#8A1010" onchange="rensSetMapLinkColor(this.value)"></label>
@@ -1484,6 +1486,44 @@ function rensComputeAutoEdges(mapNodes = RENS.mapNodes){
   return edges;
 }
 
+// ── Réorganisation organique de la carte ─────────────────────────────
+function rensReorganiserCarte(){
+  if(!rensMapNetwork) return;
+  // Réinitialiser les positions en mémoire pour forcer un nouveau placement
+  RENS.mapNodes.forEach(n=>{ n.x = null; n.y = null; });
+  // Activer la physique forceAtlas2
+  rensMapNetwork.setOptions({
+    physics: {
+      enabled: true,
+      solver: 'forceAtlas2Based',
+      forceAtlas2Based: {
+        gravitationalConstant : -150,
+        centralGravity        : 0.01,
+        springLength          : 300,
+        springConstant        : 0.08,
+        damping               : 0.7,
+      },
+      stabilization: {
+        enabled        : true,
+        iterations     : 1000,
+        updateInterval : 25,
+        fit            : true,
+      },
+    }
+  });
+  // Une fois stable, désactiver la physique et sauvegarder
+  rensMapNetwork.once('stabilizationIterationsDone', ()=>{
+    rensMapNetwork.setOptions({ physics: false });
+    rensMapNetwork.fit({ animation:{ duration:500, easingFunction:'easeInOutQuad' } });
+    if(!rensCanWrite()) return;
+    RENS.mapNodes.forEach(n=>{
+      const pos = rensMapNetwork.getPosition(n.id);
+      if(pos) rensSaveMapNodePosition(n.id, pos.x, pos.y);
+    });
+    toast('Carte réorganisée et positions sauvegardées.');
+  });
+}
+
 function rensRenderCarte(){
   const container = document.getElementById('rens-network');
   if(!container) return;
@@ -1547,42 +1587,37 @@ ${report?.titre||'Rapport'}`,
     const physicsEnabled  = RENS.mapNodes.length > 1; // inutile avec 0 ou 1 nœud
 
     const options = {
-      physics: physicsEnabled ? {
-        enabled: true,
-        solver: 'forceAtlas2Based',
-        forceAtlas2Based: {
-          gravitationalConstant : -120,
-          centralGravity        : 0.01,
-          springLength          : 280,
-          springConstant        : 0.08,
-          damping               : 0.6,
-        },
-        stabilization: {
-          enabled        : true,
-          iterations     : 800,
-          updateInterval : 30,
-          fit            : true,
-        },
-      } : false,
+      physics: false,
       interaction:{dragNodes:rensCanWrite(),zoomView:true,dragView:true,hover:true},
       nodes:{chosen:false},
       edges:{chosen:false},
     };
 
+    // Sauvegarder le viewport actuel avant de recréer le réseau
+    if(rensMapNetwork){
+      try{
+        _rensMapViewport = {
+          scale   : rensMapNetwork.getScale(),
+          position: rensMapNetwork.getViewPosition(),
+        };
+      }catch(e){ _rensMapViewport = null; }
+    }
+
     container.innerHTML = '';
     rensMapNetwork = new vis.Network(container,{nodes,edges},options);
-    rensMapNetwork.fit({animation:false});
 
-    // Une fois la physique stabilisée, on la désactive et on sauvegarde toutes les positions
-    rensMapNetwork.on('stabilizationIterationsDone', ()=>{
-      rensMapNetwork.setOptions({ physics: false });
-      if(!rensCanWrite()) return;
-      // Sauvegarder les positions finales calculées pour tous les nœuds
-      RENS.mapNodes.forEach(n=>{
-        const pos = rensMapNetwork.getPosition(n.id);
-        if(pos) rensSaveMapNodePosition(n.id, pos.x, pos.y);
+    // Restaurer le viewport ou faire un fit initial si c'est le premier rendu
+    if(_rensMapViewport){
+      rensMapNetwork.moveTo({
+        scale    : _rensMapViewport.scale,
+        position : _rensMapViewport.position,
+        animation: false,
       });
-    });
+    }else{
+      rensMapNetwork.fit({animation:false});
+    }
+
+    // Positions sauvegardées automatiquement après drag manuel
 
     rensMapNetwork.on('click', params=>{
       RENS.selectedMapNode = params.nodes[0] || '';

@@ -38,7 +38,7 @@
     renderTab, goToFiche, saveFiche, deleteFiche, openEditFiche, saveEditFiche,
     saveRapport, openEditRapport, saveEditRapport, deleteRapport, addRelation, deleteRelation,
     addRapportLien, deleteRapportLien, deleteRapportRapport,
-    goToRapport, rensOpenMapReportPicker, rensSetMapReportType, rensSpawnMapReport, rensSpawnMapFiche,
+    goToRapport, rensOpenMapReportPicker, rensSetMapReportType, rensSpawnMapReport, rensSpawnMapFiche, rensReorganiserCarte,
     rensStartMapLink, rensCancelMapLink, rensSetMapLinkColor, rensDeleteSelectedMapItem,
     rensSearch, rensFilter,
     loadSuperadmin, filterSuperadminGardes, selectSuperadminGarde, selectSuperadminProfile,
