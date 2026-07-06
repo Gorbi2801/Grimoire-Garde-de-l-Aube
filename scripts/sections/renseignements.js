@@ -1541,8 +1541,29 @@ ${report?.titre||'Rapport'}`,
     const autoEdges = rensComputeAutoEdges(mapNodes);
     const edges = new vis.DataSet(autoEdges);
 
+    // Déterminer si des nœuds ont des positions par défaut (jamais déplacés)
+    // On active la physique uniquement si au moins un nœud est "neuf" (position 0,0 ou null)
+    const hasUnpositioned = RENS.mapNodes.some(n=>!n.x && !n.y);
+    const physicsEnabled  = RENS.mapNodes.length > 1; // inutile avec 0 ou 1 nœud
+
     const options = {
-      physics:false,
+      physics: physicsEnabled ? {
+        enabled: true,
+        solver: 'forceAtlas2Based',
+        forceAtlas2Based: {
+          gravitationalConstant : -120,
+          centralGravity        : 0.01,
+          springLength          : 280,
+          springConstant        : 0.08,
+          damping               : 0.6,
+        },
+        stabilization: {
+          enabled        : true,
+          iterations     : 800,
+          updateInterval : 30,
+          fit            : true,
+        },
+      } : false,
       interaction:{dragNodes:rensCanWrite(),zoomView:true,dragView:true,hover:true},
       nodes:{chosen:false},
       edges:{chosen:false},
@@ -1551,6 +1572,18 @@ ${report?.titre||'Rapport'}`,
     container.innerHTML = '';
     rensMapNetwork = new vis.Network(container,{nodes,edges},options);
     rensMapNetwork.fit({animation:false});
+
+    // Une fois la physique stabilisée, on la désactive et on sauvegarde toutes les positions
+    rensMapNetwork.on('stabilizationIterationsDone', ()=>{
+      rensMapNetwork.setOptions({ physics: false });
+      rensMapNetwork.fit({ animation: { duration:600, easingFunction:'easeInOutQuad' } });
+      if(!rensCanWrite()) return;
+      // Sauvegarder les positions finales calculées pour tous les nœuds
+      RENS.mapNodes.forEach(n=>{
+        const pos = rensMapNetwork.getPosition(n.id);
+        if(pos) rensSaveMapNodePosition(n.id, pos.x, pos.y);
+      });
+    });
 
     rensMapNetwork.on('click', params=>{
       RENS.selectedMapNode = params.nodes[0] || '';
