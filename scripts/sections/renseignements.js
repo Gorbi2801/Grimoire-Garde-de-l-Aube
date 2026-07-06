@@ -1155,7 +1155,7 @@ function injectCarteTab(){
         ${rensCanWrite()?`
           <button type="button" class="btn-add" onclick="rensOpenMapReportPicker('rapport')">+ Ajouter rapport</button>
           <button type="button" class="btn-add" onclick="rensOpenMapReportPicker('fiche')" style="background:var(--gold-dark,#7a6030);margin-left:.4rem;">+ Ajouter fiche</button>
-          <button type="button" class="btn-sm" onclick="rensStartMapLink()">Relier deux éléments</button>
+          <!-- Liaison manuelle désactivée — les liens sont automatiques -->
           <button type="button" class="btn-sm" onclick="rensCancelMapLink()">Annuler liaison</button>
           <label class="rens-map-color">Couleur du fil <input id="rensMapLinkColor" type="color" value="#8A1010" onchange="rensSetMapLinkColor(this.value)"></label>
           ${rensCanDelete()?`<button type="button" class="btn-sm btn-danger-soft" onclick="rensDeleteSelectedMapItem()">Supprimer sélection</button>`:''}
@@ -1468,7 +1468,13 @@ function rensComputeAutoEdges(mapNodes = RENS.mapNodes){
     });
   };
 
-  // Rapport → Fiche (mk_rens_rapport_liens)
+  // Rapport → Fiche parente (lien automatique : tout rapport posé sur la carte
+  //   est relié à sa fiche d'appartenance si elle est aussi posée)
+  RENS.rapports.forEach(r=>{
+    if(nodeByReport[r.id] && nodeByFiche[r.fiche_id])
+      addEdge(nodeByReport[r.id], nodeByFiche[r.fiche_id]);
+  });
+  // Rapport → Fiche liée (mk_rens_rapport_liens)
   RENS.rapportLiens.forEach(l=>addEdge(nodeByReport[l.rapport_id], nodeByFiche[l.fiche_id]));
   // Rapport → Rapport (mk_rens_rapport_rapport)
   RENS.rapportRapport.forEach(l=>addEdge(nodeByReport[l.rapport_a], nodeByReport[l.rapport_b]));
@@ -1532,18 +1538,8 @@ ${report?.titre||'Rapport'}`,
         font:{face:'serif',size:14,color:'#1c1a18',multi:true}, margin:12,
       };
     }));
-    const manualEdges = RENS.mapLinks.filter(link=>
-      activeNodeIds.has(link.source_node_id) && activeNodeIds.has(link.target_node_id)
-    ).map(link=>({
-      id: link.id,
-      from: link.source_node_id,
-      to: link.target_node_id,
-      color:{color:link.color||'#8A1010',highlight:'#3a2a1a',opacity:0.92},
-      width: RENS.selectedMapLink===link.id ? 4 : 2.2,
-      smooth:{type:'curvedCW',roundness:0.12},
-    }));
     const autoEdges = rensComputeAutoEdges(mapNodes);
-    const edges = new vis.DataSet([...manualEdges, ...autoEdges]);
+    const edges = new vis.DataSet(autoEdges);
 
     const options = {
       physics:false,
