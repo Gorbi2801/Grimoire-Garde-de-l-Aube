@@ -262,7 +262,19 @@ function presenceLogsFilteredRows(){
     }
   }
 
-  return rows;
+  // Dédupliquer — une seule ligne par garde : la session la plus récente
+  const byUser = new Map();
+  rows.forEach(row=>{
+    const existing = byUser.get(row.user_id);
+    if(!existing){ byUser.set(row.user_id, row); return; }
+    // Priorité aux sessions actives, puis à la plus récente
+    if(row.empty && !existing.empty) return;
+    if(!row.empty && existing.empty){ byUser.set(row.user_id, row); return; }
+    const da = new Date(existing.started_at||existing.created_at||0).getTime();
+    const db = new Date(row.started_at||row.created_at||0).getTime();
+    if(db > da) byUser.set(row.user_id, row);
+  });
+  return [...byUser.values()];
 }
 
 function renderPresenceLogsStats(){
@@ -278,7 +290,8 @@ function renderPresenceLogsStats(){
   setText('presenceLogsLinkedCount',`Gardes liés : ${linked}`);
   setText('presenceLogsActiveCount',`Présents : ${active}`);
   setText('presenceLogsInactiveCount',`Inactifs 7j : ${inactive}`);
-  setText('presenceLogsSessionsCount',`Sessions : ${filteredSessions}/${presenceLogsState.rows.length}`);
+  const filteredGardes = [...new Set(filtered.map(r=>r.user_id).filter(Boolean))].length;
+  setText('presenceLogsSessionsCount',`Gardes : ${filteredGardes}/${linked}`);
   setText('presenceLogsWeekTotal',`Total 7j : ${presenceLogsDuration(weekTotal)}`);
 }
 
