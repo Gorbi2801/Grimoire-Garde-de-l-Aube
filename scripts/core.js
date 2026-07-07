@@ -40,7 +40,7 @@ function resetAttempts(){attempts.count=0;attempts.until=0;}
 //  STATE
 // ══════════════════════════════════════════════════════════════════════
 let session=null;
-let activeSection='citoyens';
+let activeSection='agenda';
 // ══════════════════════════════════════════════════════════════════════
 //  LOADER
 // ══════════════════════════════════════════════════════════════════════
