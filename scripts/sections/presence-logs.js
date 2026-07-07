@@ -73,6 +73,52 @@ function presenceLogsRowMatchesPeriod(row,period){
   return end.getTime()>=cutoff.getTime();
 }
 
+// ── Semaine fixe lundi→dimanche (heure de Paris) — local à cet onglet ──
+function presenceLogsParisParts(date){
+  const parts=new Intl.DateTimeFormat('en-GB',{
+    timeZone:'Europe/Paris',hourCycle:'h23',
+    year:'numeric',month:'2-digit',day:'2-digit',
+    hour:'2-digit',minute:'2-digit',second:'2-digit',
+  }).formatToParts(date);
+  const get=type=>Number(parts.find(part=>part.type===type)?.value);
+  return {y:get('year'),m:get('month'),d:get('day'),hh:get('hour'),mm:get('minute'),ss:get('second')};
+}
+
+function presenceLogsParisMidnightToUtc(y,m,d){
+  const guess=Date.UTC(y,m-1,d,0,0,0);
+  const p=presenceLogsParisParts(new Date(guess));
+  const parisAsUtc=Date.UTC(p.y,p.m-1,p.d,p.hh,p.mm,p.ss);
+  return new Date(guess-(parisAsUtc-guess));
+}
+
+function presenceLogsWeekStart(now=new Date()){
+  const p=presenceLogsParisParts(now);
+  const dow=new Date(Date.UTC(p.y,p.m-1,p.d)).getUTCDay(); // 0=dim … 6=sam
+  const daysSinceMonday=(dow+6)%7;
+  const monday=new Date(Date.UTC(p.y,p.m-1,p.d)-daysSinceMonday*86400000);
+  return presenceLogsParisMidnightToUtc(monday.getUTCFullYear(),monday.getUTCMonth()+1,monday.getUTCDate());
+}
+
+function presenceLogsComputeWeekSecondsMap(){
+  const startMs=presenceLogsWeekStart().getTime();
+  const nowMs=Date.now();
+  const map=new Map();
+  for(const row of presenceLogsState.rows){
+    if(!row.user_id)continue;
+    const s=new Date(row.started_at).getTime();
+    const e=row.ended_at?new Date(row.ended_at).getTime():nowMs;
+    if(Number.isNaN(s)||Number.isNaN(e))continue;
+    const from=Math.max(s,startMs);
+    const to=Math.min(e,nowMs);
+    if(to>from)map.set(row.user_id,(map.get(row.user_id)||0)+Math.floor((to-from)/1000));
+  }
+  return map;
+}
+
+function presenceLogsWeekSecondsForUser(userId){
+  return presenceLogsState.weekSecondsMap?.get(userId)||0;
+}
+
 function presenceLogsHydrateRow(row){
   const garde=presenceLogsGardeForUser(row.user_id);
   const profile=presenceLogsProfileForUser(row.user_id);
@@ -108,7 +154,7 @@ function presenceLogsSortValue(row,key){
     return Number.isNaN(time)?null:time;
   }
   if(key==='today_seconds')return Number(row.summary?.today_seconds)||0;
-  if(key==='week_seconds')return Number(row.summary?.week_seconds)||0;
+  if(key==='week_seconds')return presenceLogsWeekSecondsForUser(row.user_id);
   if(key==='total_seconds')return Number(row.summary?.total_seconds)||0;
   if(key==='durationSeconds')return Number(row.durationSeconds)||0;
   return String(row[key]||'').toLowerCase();
@@ -193,6 +239,7 @@ async function loadPresenceLogs(){
 }
 
 function renderPresenceLogs(){
+  presenceLogsState.weekSecondsMap=presenceLogsComputeWeekSecondsMap();
   renderPresenceLogsGradeFilter();
   renderPresenceLogsStats();
   renderPresenceLogsTable();
@@ -219,7 +266,7 @@ function presenceLogsFilteredRows(){
     const haystack=[row.name,row.grade,row.username,row.displayName,row.garde?.specialite].filter(Boolean).join(' ').toLowerCase();
     const matchSearch=!query||haystack.includes(query);
     const matchGrade=grade==='all'||row.grade===grade;
-    const weekSeconds=Number(row.summary?.week_seconds)||0;
+    const weekSeconds=presenceLogsWeekSecondsForUser(row.user_id);
     const matchActivity=activity==='all'||(activity==='active-week'?weekSeconds>0:weekSeconds<=0);
     return matchSearch&&matchGrade&&matchActivity;
   };
@@ -283,8 +330,8 @@ function renderPresenceLogsStats(){
   const filteredSessions=filtered.filter(row=>!row.empty).length;
   const linked=presenceLogsState.gardes.filter(row=>!!row.user_id).length;
   const active=users.filter(row=>row.summary?.is_active===true).length;
-  const inactive=users.filter(row=>(Number(row.summary?.week_seconds)||0)<=0).length;
-  const weekTotal=users.reduce((sum,row)=>sum+(Number(row.summary?.week_seconds)||0),0);
+  const inactive=users.filter(row=>presenceLogsWeekSecondsForUser(row.userId)<=0).length;
+  const weekTotal=users.reduce((sum,row)=>sum+presenceLogsWeekSecondsForUser(row.userId),0);
 
   const setText=(id,text)=>{const el=document.getElementById(id);if(el)el.textContent=text;};
   setText('presenceLogsLinkedCount',`Gardes liés : ${linked}`);
@@ -316,7 +363,7 @@ function renderPresenceLogsTable(){
           <td>—</td>
           <td>0 min</td>
           <td>${presenceLogsDuration(summary.today_seconds||0)}</td>
-          <td>${presenceLogsDuration(summary.week_seconds||0)}</td>
+          <td>${presenceLogsDuration(presenceLogsWeekSecondsForUser(row.user_id))}</td>
           <td>${presenceLogsDuration(summary.total_seconds||0)}</td>
           <td>${summary.last_seen_at?presenceLogsEsc(presenceLogsDate(summary.last_seen_at)):'—'}</td>
         </tr>`;
@@ -335,7 +382,7 @@ function renderPresenceLogsTable(){
         <td>${row.ended_at?presenceLogsEsc(presenceLogsDate(row.ended_at)):'En cours'}</td>
         <td>${presenceLogsDuration(row.durationSeconds)}</td>
         <td>${presenceLogsDuration(summary.today_seconds||0)}</td>
-        <td>${presenceLogsDuration(summary.week_seconds||0)}</td>
+        <td>${presenceLogsDuration(presenceLogsWeekSecondsForUser(row.user_id))}</td>
         <td>${presenceLogsDuration(summary.total_seconds||0)}</td>
         <td>${summary.last_seen_at?presenceLogsEsc(presenceLogsDate(summary.last_seen_at)):'—'}</td>
       </tr>`;
