@@ -7,6 +7,15 @@ const presenceState={
   summaries:[],
 };
 
+// ======================================================================
+//  ANTI-AFK : heartbeat de presence
+//  Intervalle du battement envoye tant qu'une session est ouverte.
+//  TEST : 10000 (10 s). PROD : 60000 (60 s).
+//  Doit rester INFERIEUR au delai de grace SQL (fonction mk_afk_grace()).
+// ======================================================================
+const PRESENCE_HEARTBEAT_MS=10000;
+let presenceHeartbeatTimer=null;
+
 function presenceEsc(value){
   return String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -91,6 +100,7 @@ async function loadPresences(){
     presenceState.rows=data||[];
     presenceState.loaded=true;
     renderPresences();
+    syncPresenceHeartbeat();
     if(msg)msg.textContent='';
   }catch(error){
     console.error(error);
@@ -179,6 +189,37 @@ function renderPresenceHistory(){
 }
 
 
+// ── Heartbeat de presence (anti-AFK) ───────────────────
+async function sendPresenceHeartbeat(){
+  if(!session)return;
+  try{
+    await window.GrimoireSupabase
+      .from('mk_presences')
+      .update({heartbeat_at:new Date().toISOString()})
+      .eq('user_id',session.user.id)
+      .is('ended_at',null);
+  }catch(error){
+    console.warn('Heartbeat de presence echoue.', error);
+  }
+}
+
+function startPresenceHeartbeat(){
+  stopPresenceHeartbeat();
+  sendPresenceHeartbeat();
+  presenceHeartbeatTimer=setInterval(sendPresenceHeartbeat,PRESENCE_HEARTBEAT_MS);
+}
+
+function stopPresenceHeartbeat(){
+  if(presenceHeartbeatTimer){clearInterval(presenceHeartbeatTimer);presenceHeartbeatTimer=null;}
+}
+
+// Aligne le heartbeat sur l'etat reel : actif si une session est ouverte, sinon arrete.
+function syncPresenceHeartbeat(){
+  if(presenceActiveRow())startPresenceHeartbeat();
+  else stopPresenceHeartbeat();
+}
+
+
 // ── Notification Discord ─────────────────────────────────────────────
 async function notifyPresenceDiscord(type) {
   const send = window.GrimoireDiscord?.send || window.sendDiscordNotification;
@@ -208,10 +249,11 @@ async function stopPresence(){
   if(!session)return;
   const active=presenceActiveRow();
   if(!active){toast('Aucune présence ouverte.');return;}
+  stopPresenceHeartbeat();
   try{
     const { error } = await window.GrimoireSupabase
       .from('mk_presences')
-      .update({ended_at:new Date().toISOString()})
+      .update({ended_at:new Date().toISOString(), heartbeat_at:null})
       .eq('id',active.id);
     if(error)throw error;
     await loadPresences();
