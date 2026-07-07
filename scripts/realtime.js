@@ -126,7 +126,20 @@
     }
   }
 
+  // Un simple ping de heartbeat ecrit dans mk_presences mais ne change ni le
+  // debut ni la fin de la session : inutile de rafraichir l'UI. On les ignore
+  // (necessite REPLICA IDENTITY FULL sur mk_presences pour que `old` soit complet).
+  function isHeartbeatOnlyPresenceUpdate(table, payload){
+    if(table!=='mk_presences')return false;
+    const evt=payload.eventType||payload.event;
+    if(evt!=='UPDATE')return false;
+    const n=payload.new, o=payload.old;
+    if(!n||!o||o.started_at===undefined)return false;
+    return n.started_at===o.started_at && n.ended_at===o.ended_at;
+  }
+
   function handleTableChange(table, payload){
+    if(isHeartbeatOnlyPresenceUpdate(table,payload))return;
     realtimeState.lastPayload=payload;
     const sections=TABLE_REFRESH_MAP[table]||[];
     sections.forEach(section=>scheduleRefresh(section,`${table}:${payload.eventType||payload.event||'*'}`));

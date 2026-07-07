@@ -10,10 +10,10 @@ const presenceState={
 // ======================================================================
 //  ANTI-AFK : heartbeat de presence
 //  Intervalle du battement envoye tant qu'une session est ouverte.
-//  TEST : 10000 (10 s). PROD : 60000 (60 s).
+//  PROD : 60000 (60 s). TEST : 10000 (10 s).
 //  Doit rester INFERIEUR au delai de grace SQL (fonction mk_afk_grace()).
 // ======================================================================
-const PRESENCE_HEARTBEAT_MS=10000;
+const PRESENCE_HEARTBEAT_MS=60000;
 let presenceHeartbeatTimer=null;
 
 function presenceEsc(value){
@@ -193,11 +193,18 @@ function renderPresenceHistory(){
 async function sendPresenceHeartbeat(){
   if(!session)return;
   try{
-    await window.GrimoireSupabase
+    const { data, error } = await window.GrimoireSupabase
       .from('mk_presences')
       .update({heartbeat_at:new Date().toISOString()})
       .eq('user_id',session.user.id)
-      .is('ended_at',null);
+      .is('ended_at',null)
+      .select('id');
+    if(error)throw error;
+    // Session cloturee entre-temps (ex : auto-off AFK) -> resynchronise l'affichage
+    if(!data||data.length===0){
+      stopPresenceHeartbeat();
+      if(typeof loadPresences==='function')await loadPresences();
+    }
   }catch(error){
     console.warn('Heartbeat de presence echoue.', error);
   }
@@ -215,8 +222,14 @@ function stopPresenceHeartbeat(){
 
 // Aligne le heartbeat sur l'etat reel : actif si une session est ouverte, sinon arrete.
 function syncPresenceHeartbeat(){
-  if(presenceActiveRow())startPresenceHeartbeat();
-  else stopPresenceHeartbeat();
+  if(presenceActiveRow()){
+    // Ne (re)demarre QUE si aucun heartbeat ne tourne deja. Sinon, chaque
+    // rafraichissement realtime (declenche par l'ecriture du heartbeat lui-meme)
+    // relancerait un ping immediat -> boucle de rafraichissement infinie.
+    if(!presenceHeartbeatTimer)startPresenceHeartbeat();
+  }else{
+    stopPresenceHeartbeat();
+  }
 }
 
 
