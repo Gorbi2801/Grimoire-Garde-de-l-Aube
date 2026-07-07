@@ -72,6 +72,47 @@ function suiviSecondsBetween(startValue,endValue){
   return Math.max(0,Math.floor((end-start)/1000));
 }
 
+// ── Semaine fixe lundi→dimanche (heure de Paris) — local au panneau Suivi ──
+function suiviParisParts(date){
+  const parts=new Intl.DateTimeFormat('en-GB',{
+    timeZone:'Europe/Paris',hourCycle:'h23',
+    year:'numeric',month:'2-digit',day:'2-digit',
+    hour:'2-digit',minute:'2-digit',second:'2-digit',
+  }).formatToParts(date);
+  const get=type=>Number(parts.find(part=>part.type===type)?.value);
+  return {y:get('year'),m:get('month'),d:get('day'),hh:get('hour'),mm:get('minute'),ss:get('second')};
+}
+
+function suiviParisMidnightToUtc(y,m,d){
+  const guess=Date.UTC(y,m-1,d,0,0,0);
+  const p=suiviParisParts(new Date(guess));
+  const parisAsUtc=Date.UTC(p.y,p.m-1,p.d,p.hh,p.mm,p.ss);
+  return new Date(guess-(parisAsUtc-guess));
+}
+
+function suiviWeekStart(now=new Date()){
+  const p=suiviParisParts(now);
+  const dow=new Date(Date.UTC(p.y,p.m-1,p.d)).getUTCDay(); // 0=dim … 6=sam
+  const daysSinceMonday=(dow+6)%7;
+  const monday=new Date(Date.UTC(p.y,p.m-1,p.d)-daysSinceMonday*86400000);
+  return suiviParisMidnightToUtc(monday.getUTCFullYear(),monday.getUTCMonth()+1,monday.getUTCDate());
+}
+
+function suiviWeekSeconds(){
+  const startMs=suiviWeekStart().getTime();
+  const nowMs=Date.now();
+  let total=0;
+  for(const row of suiviState.presences){
+    const s=new Date(row.started_at).getTime();
+    const e=row.ended_at?new Date(row.ended_at).getTime():nowMs;
+    if(Number.isNaN(s)||Number.isNaN(e))continue;
+    const from=Math.max(s,startMs);
+    const to=Math.min(e,nowMs);
+    if(to>from)total+=Math.floor((to-from)/1000);
+  }
+  return total;
+}
+
 function suiviKindLabel(kind){
   return SUIVI_KIND_LABELS[kind]||SUIVI_KIND_LABELS.note;
 }
@@ -215,7 +256,7 @@ function renderGardeSuivi(){
     stats.innerHTML=[
       ['Statut',`${active?'Présent':'Off'}${summary.last_seen_at&&!active?` depuis ${suiviDate(summary.last_seen_at)}`:''}`],
       ['Aujourd\'hui',suiviDuration(summary.today_seconds||0)],
-      ['7 jours',suiviDuration(summary.week_seconds||0)],
+      ['7 jours',suiviDuration(suiviWeekSeconds())],
       ['Total',suiviDuration(summary.total_seconds||0)],
     ].map(([label,value])=>`
       <div class="suivi-stat">
