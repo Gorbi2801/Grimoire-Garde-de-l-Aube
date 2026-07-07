@@ -222,8 +222,14 @@ function stopPresenceHeartbeat(){
 
 // Aligne le heartbeat sur l'etat reel : actif si une session est ouverte, sinon arrete.
 function syncPresenceHeartbeat(){
-  if(presenceActiveRow())startPresenceHeartbeat();
-  else stopPresenceHeartbeat();
+  if(presenceActiveRow()){
+    // Ne (re)demarre QUE si aucun heartbeat ne tourne deja. Sinon, chaque
+    // rafraichissement realtime (declenche par l'ecriture du heartbeat lui-meme)
+    // relancerait un ping immediat -> boucle de rafraichissement infinie.
+    if(!presenceHeartbeatTimer)startPresenceHeartbeat();
+  }else{
+    stopPresenceHeartbeat();
+  }
 }
 
 
