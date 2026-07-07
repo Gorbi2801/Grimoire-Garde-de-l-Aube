@@ -193,11 +193,18 @@ function renderPresenceHistory(){
 async function sendPresenceHeartbeat(){
   if(!session)return;
   try{
-    await window.GrimoireSupabase
+    const { data, error } = await window.GrimoireSupabase
       .from('mk_presences')
       .update({heartbeat_at:new Date().toISOString()})
       .eq('user_id',session.user.id)
-      .is('ended_at',null);
+      .is('ended_at',null)
+      .select('id');
+    if(error)throw error;
+    // Session cloturee entre-temps (ex : auto-off AFK) -> resynchronise l'affichage
+    if(!data||data.length===0){
+      stopPresenceHeartbeat();
+      if(typeof loadPresences==='function')await loadPresences();
+    }
   }catch(error){
     console.warn('Heartbeat de presence echoue.', error);
   }
