@@ -10,10 +10,10 @@ const presenceState={
 // ======================================================================
 //  ANTI-AFK : heartbeat de presence
 //  Intervalle du battement envoye tant qu'une session est ouverte.
-//  TEST : 10000 (10 s). PROD : 60000 (60 s).
+//  PROD : 60000 (60 s). TEST : 10000 (10 s).
 //  Doit rester INFERIEUR au delai de grace SQL (fonction mk_afk_grace()).
 // ======================================================================
-const PRESENCE_HEARTBEAT_MS=10000;
+const PRESENCE_HEARTBEAT_MS=60000;
 let presenceHeartbeatTimer=null;
 
 function presenceEsc(value){
