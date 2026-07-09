@@ -1299,10 +1299,13 @@ function rensSetMapLinkColor(value){
 }
 
 function rensDefaultMapPosition(index = RENS.mapNodes.length){
-  const angle = index * 0.9;
+  // Spirale plus large et angle dore pour eviter les chevauchements
+  const goldenAngle = 2.399963;
+  const angle = index * goldenAngle;
+  const radius = 180 + index * 55;
   return {
-    x: Math.round(Math.cos(angle) * 220),
-    y: Math.round(Math.sin(angle) * 150),
+    x: Math.round(Math.cos(angle) * radius),
+    y: Math.round(Math.sin(angle) * radius * 0.7),
   };
 }
 
@@ -1499,15 +1502,16 @@ function rensReorganiserCarte(){
       enabled: true,
       solver: 'forceAtlas2Based',
       forceAtlas2Based: {
-        gravitationalConstant : -150,
-        centralGravity        : 0.01,
-        springLength          : 300,
-        springConstant        : 0.08,
-        damping               : 0.7,
+        gravitationalConstant : -320,
+        centralGravity        : 0.005,
+        springLength          : 450,
+        springConstant        : 0.04,
+        damping               : 0.6,
+        avoidOverlap          : 0.8,
       },
       stabilization: {
         enabled        : true,
-        iterations     : 1000,
+        iterations     : 1500,
         updateInterval : 25,
         fit            : true,
       },
@@ -1560,7 +1564,8 @@ function rensRenderCarte(){
           shape: 'ellipse',
           color:{ background: selected ? '#f5ead0' : '#e8d49a', border: selected ? '#8a1010' : '#7a6030', highlight:{background:'#f5ead0',border:'#8a1010'} },
           borderWidth: selected ? 3 : 2,
-          font:{face:'serif',size:15,color:'#3a2a0a',bold:true,multi:true}, margin:14,
+          font:{face:'serif',size:14,color:'#3a2a0a',bold:true,multi:true}, margin:10,
+          widthConstraint:{minimum:90,maximum:180},
         };
       }
       const report = RENS.rapports.find(r=>r.id===node.report_id);
@@ -1577,7 +1582,8 @@ ${report?.titre||'Rapport'}`,
         shape: 'box',
         color:{ background: selected ? '#f0d8d8' : colors.bg, border: selected ? '#8a1010' : colors.border, highlight:{background:'#efe1c4',border:'#8a1010'} },
         borderWidth: selected ? 3 : 1.5,
-        font:{face:'serif',size:14,color:'#1c1a18',multi:true}, margin:12,
+        font:{face:'serif',size:12,color:'#1c1a18',multi:true}, margin:8,
+        widthConstraint:{minimum:80,maximum:160},
       };
     }));
     const autoEdges = rensComputeAutoEdges(mapNodes);
@@ -1590,9 +1596,10 @@ ${report?.titre||'Rapport'}`,
 
     const options = {
       physics: false,
-      interaction:{dragNodes:rensCanWrite(),zoomView:true,dragView:true,hover:true},
-      nodes:{chosen:false},
-      edges:{chosen:false},
+      interaction:{dragNodes:rensCanWrite(),zoomView:true,dragView:true,hover:true,tooltipDelay:150},
+      nodes:{chosen:false,shadow:{enabled:true,color:'rgba(0,0,0,0.15)',size:6,x:2,y:3}},
+      edges:{chosen:false,smooth:{type:'continuous',roundness:0.15}},
+      layout:{improvedLayout:true},
     };
 
     container.innerHTML = '';
