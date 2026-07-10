@@ -147,6 +147,14 @@ function discordDate(value: unknown) {
   });
 }
 
+function discordTimestamp(value: unknown, style = 'F') {
+  const raw = text(value);
+  if (!raw) return '—';
+  const date = new Date(raw);
+  if (Number.isNaN(date.getTime())) return '—';
+  return `<t:${Math.floor(date.getTime() / 1000)}:${style}>`;
+}
+
 async function requireCaller(req: Request): Promise<Caller> {
   const authHeader = req.headers.get('Authorization') || '';
   const token = authHeader.replace(/^Bearer\s+/i, '').trim();
@@ -236,20 +244,26 @@ async function buildAgendaMessage(payload: Record<string, unknown>, caller: Call
     ? `${organizerName} (${organizerGrade})`
     : organizerName;
 
+  const title = text(event.title, 'Sans titre');
+  const eventType = text(event.type, 'Événement');
+  const status = text(event.status, 'Prévu');
+  const location = text(event.location, 'Non renseigné');
+  const description = truncate(event.description, 400);
+
   const lines = [
     `<@&${AGENDA_ROLE_ID}>`,
-    '<:aube:1516926588359540856> **Nouvel événement ajouté à l’agenda**',
-    '-# *Un nouveau rendez-vous vient d’être inscrit au programme de la Garde.*',
-    `> **Titre :** ${text(event.title, 'Sans titre')}`,
-    `> **Type :** ${text(event.type, 'Événement')} · **Statut :** ${text(event.status, 'Prévu')}`,
-    `> **Début :** ${discordDate(event.starts_at)}`,
-    `> **Fin :** ${discordDate(event.ends_at)}`,
-    `> **Lieu :** ${text(event.location, 'Non renseigné')}`,
-    `> **Organisateur :** ${organizer}`,
+    '',
+    '<:aube:1516926588359540856> **Nouvel événement ajouté à l\u2019agenda**',
+    '',
+    `> ### ${title}`,
+    `> 📌 ${location}`,
+    `> 📅 ${discordTimestamp(event.starts_at, 'F')}`,
+    `> 🏁 ${discordTimestamp(event.ends_at, 't')}`,
+    `> `,
+    `> ${eventType} · ${status} · *par ${organizer}*`,
   ];
-  const description = truncate(event.description, 450);
-  if (description) lines.push(`\n${description}`);
-  lines.push('\nConsultez l’agenda du grimoire pour les détails et les changements éventuels.');
+  if (description) lines.push('', description);
+  lines.push('', '-# Consultez l\u2019agenda du grimoire pour les détails et les changements éventuels.');
   return lines.join('\n');
 }
 
