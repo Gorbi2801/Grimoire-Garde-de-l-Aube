@@ -169,6 +169,7 @@ async function loadGardes(){
     const [rows]=await Promise.all([
       sbGet('mk_gardes','?user_id=not.is.null&order=nom.asc'),
       typeof loadPresenceSummaries==='function'?loadPresenceSummaries():Promise.resolve([]),
+      typeof loadAbsenceCache==='function'?loadAbsenceCache():Promise.resolve([]),
     ]);
     renderGardes(rows);
   }catch(e){console.error(e);}
@@ -191,7 +192,9 @@ function renderGardes(rows){
     active.textContent=String(activeCount);
   }
   if(absentEl){
-    const absentCount=rows.filter(r=>(r.statut||'actif')==='absent').length;
+    const absentCount=typeof absenceIsActiveForUser==='function'
+      ?rows.filter(r=>r.user_id&&absenceIsActiveForUser(r.user_id)).length
+      :0;
     absentEl.textContent=String(absentCount);
   }
 
@@ -202,8 +205,10 @@ function renderGardes(rows){
       :'—';
     const recruteur=r.recruteur?esc(r.recruteur):'—';
     const specialite=r.specialite||'Guerrier';
-    return `<tr data-search="${esc((r.prenom+' '+r.nom+' '+r.race+' '+r.grade+' '+specialite).toLowerCase())}" data-grade="${esc(r.grade||'')}" data-specialite="${esc(specialite)}" data-statut="${esc(r.statut||'actif')}">
-      <td class="cell-name">${typeof renderPresenceDot==='function'?renderPresenceDot(r.user_id):''}${esc(r.prenom)}${r.nom?" "+esc(r.nom):""}${r.statut==='absent'?'<span class="badge" style="background:rgba(122,16,16,.12);color:#7A1010;border:1px solid #7A1010;margin-left:.4rem;font-size:.78rem;">⚠ Absent</span>':''}</td>
+    const dignite=(r.dignite||'').trim();
+    const isAbsent=typeof absenceIsActiveForUser==='function'&&r.user_id&&absenceIsActiveForUser(r.user_id);
+    return `<tr data-search="${esc((r.prenom+' '+r.nom+' '+r.race+' '+r.grade+' '+specialite+' '+dignite).toLowerCase())}" data-grade="${esc(r.grade||'')}" data-specialite="${esc(specialite)}" data-statut="${isAbsent?'absent':'actif'}">
+      <td class="cell-name">${typeof renderPresenceDot==='function'?renderPresenceDot(r.user_id):''}${esc(r.prenom)}${r.nom?" "+esc(r.nom):""}${typeof renderAbsenceBadge==='function'?renderAbsenceBadge(r.user_id):''}</td>
       <td class="cell-meta">${r.race?`<span class="badge badge-tag">${esc(r.race)}</span>`:'—'}</td>
       <td class="cell-meta">${r.grade?`<span class="badge badge-tag">${esc(r.grade)}</span>`:'—'}</td>
       <td class="cell-meta" style="font-size:1rem;">
@@ -211,8 +216,9 @@ function renderGardes(rows){
         <span style="color:var(--ink-faint);font-style:italic;font-size:1rem;">par ${recruteur}</span>
       </td>
       <td class="cell-meta"><span class="badge badge-tag">${esc(specialite)}</span></td>
+      <td class="cell-meta">${dignite?`<span class="badge badge-tag">${esc(dignite)}</span>`:'—'}</td>
       ${showActions?`<td class="act">${canFollow?`<button class="btn-action btn-gold" onclick="openGardeSuivi('${r.id}')">Suivi</button>`:''}${canEdit?`${r.user_id&&typeof presenceIsActiveForUser==='function'&&presenceIsActiveForUser(r.user_id)?`<button class="btn-del" style="color:#7A1010;border-color:#7A1010;" onclick="forceStopPresence('${r.user_id}','${escJs(r.prenom+(r.nom?' '+r.nom:''))}')">Hors service</button> `:''}` +
-        `<button class="btn-del" onclick="toggleAbsenceGarde('${r.id}','${r.statut||'actif'}')">${r.statut==='absent'?'Réactiver':'Absenter'}</button> <button class="btn-del" onclick="editGarde('${r.id}')">Modifier</button> <button class="btn-del" onclick="delGarde('${r.id}')">Révoquer</button>`:''}</td>`:''}
+        `<button class="btn-del" onclick="editGarde('${r.id}')">Modifier</button> <button class="btn-del" onclick="delGarde('${r.id}')">Révoquer</button>`:''}</td>`:''}
     </tr>`;
   }).join('');
   // Tri par défaut : par grade, selon la hiérarchie de l'Ordre — absents en bas

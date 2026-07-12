@@ -11,6 +11,7 @@ const SECTION_LABELS={
   inventaire:'Inventaire',
   lois:'Codex',
   presences:'Présences',
+  absences:'Absences',
   'presence-logs':'Logs présences',
   agenda:'Agenda',
   patrouilles:'Patrouilles',
@@ -18,7 +19,7 @@ const SECTION_LABELS={
   missives:'Missives',
   renseignements:'Renseignements',
 };
-const DEFAULT_SECTION_ORDER=['citoyens','biblio','garde','commerces','diplomatie','cour','inventaire','lois','presences','agenda','patrouilles','carte','missives','renseignements'];
+const DEFAULT_SECTION_ORDER=['citoyens','biblio','garde','commerces','diplomatie','cour','inventaire','lois','presences','absences','agenda','patrouilles','carte','missives','renseignements'];
 
 function normalizeUsername(value){
   return value.trim().toLowerCase();
@@ -111,7 +112,7 @@ async function loadCurrentGarde(userId){
   if(!userId)return null;
   const { data, error } = await window.GrimoireSupabase
     .from('mk_gardes')
-    .select('id,user_id,prenom,nom,race,grade,specialite,date_recrutement,recruteur')
+    .select('id,user_id,prenom,nom,race,grade,specialite,dignite,date_recrutement,recruteur')
     .eq('user_id', userId)
     .maybeSingle();
 
@@ -300,6 +301,7 @@ function renderProfilePage(){
       ['Nom RP',nomRp],
       ['Race',garde.race||'—'],
       ['Grade',garde.grade||'—'],
+      ['Dignité',garde.dignite||'—'],
       ['Spécialité',garde.specialite||'—'],
       ['Date de recrutement',garde.date_recrutement||'—'],
       ['Recruteur',garde.recruteur||'—'],
@@ -331,6 +333,7 @@ async function loadAccessibleSections(){
   if(canAccessSection('inventaire'))jobs.push(loadInventaire(),loadOrdresFab(),loadRecettes());
   if(canAccessSection('lois'))jobs.push(loadLois());
   if(canAccessSection('presences')&&typeof loadPresences==='function')jobs.push(loadPresences());
+  if(canAccessSection('absences')&&typeof loadAbsences==='function')jobs.push(loadAbsences());
   if(canAccessSection('patrouilles')&&typeof loadPatrouilles==='function')jobs.push(loadPatrouilles());
   if(canAccessSection('carte')&&typeof initCarte==='function')jobs.push(initCarte());
   if(canAccessSection('missives')&&typeof loadMissives==='function')jobs.push(loadMissives());

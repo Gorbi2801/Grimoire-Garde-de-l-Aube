@@ -7,6 +7,7 @@ const suiviState={
   authors:{},
   lois:[],
   presences:[],
+  absences:[],
   summary:null,
 };
 
@@ -134,6 +135,7 @@ async function openGardeSuivi(id){
   suiviState.entries=[];
   suiviState.authors={};
   suiviState.presences=[];
+  suiviState.absences=[];
   suiviState.summary=null;
   renderGardeSuivi();
   const overlay=document.getElementById('suivi-modal-overlay');
@@ -153,7 +155,7 @@ async function loadGardeSuivi(){
   if(msg)msg.textContent='Chargement...';
   const userId=suiviState.garde.user_id;
   try{
-    const [entriesResult,loisResult,presencesResult,summaryResult]=await Promise.all([
+    const [entriesResult,loisResult,presencesResult,summaryResult,absencesResult]=await Promise.all([
       window.GrimoireSupabase
         .from('mk_garde_suivi')
         .select('id,garde_id,author_user_id,kind,loi_id,title,body,created_at')
@@ -175,17 +177,25 @@ async function loadGardeSuivi(){
         .select('user_id,is_active,active_since,last_seen_at,total_seconds,today_seconds,week_seconds')
         .eq('user_id',userId)
         .maybeSingle():Promise.resolve({data:null,error:null}),
+      userId?window.GrimoireSupabase
+        .from('mk_absences')
+        .select('id,user_id,starts_at,ends_at,reason_hrp,reason_rp,created_at')
+        .eq('user_id',userId)
+        .order('starts_at',{ascending:false})
+        .limit(30):Promise.resolve({data:[],error:null}),
     ]);
 
     if(entriesResult.error)throw entriesResult.error;
     if(loisResult.error)console.warn('Impossible de charger le Codex du suivi.', loisResult.error);
     if(presencesResult.error)console.warn('Impossible de charger les présences du suivi.', presencesResult.error);
     if(summaryResult.error)console.warn('Impossible de charger le résumé de présence du suivi.', summaryResult.error);
+    if(absencesResult.error)console.warn('Impossible de charger les absences du suivi.', absencesResult.error);
 
     suiviState.entries=entriesResult.data||[];
     suiviState.authors=await loadGardeSuiviAuthors(suiviState.entries);
     suiviState.lois=loisResult.error?[]:(loisResult.data||[]);
     suiviState.presences=presencesResult.error?[]:(presencesResult.data||[]);
+    suiviState.absences=absencesResult.error?[]:(absencesResult.data||[]);
     suiviState.summary=summaryResult.error?null:(summaryResult.data||null);
     renderGardeSuivi();
     if(msg)msg.textContent='';
@@ -236,6 +246,7 @@ function renderGardeSuivi(){
   const stats=document.getElementById('suiviPresenceStats');
   const lois=document.getElementById('suiviLoi');
   const history=document.getElementById('suiviHistoryBody');
+  const absenceHistory=document.getElementById('suiviAbsenceHistoryBody');
   const entries=document.getElementById('suiviEntries');
 
   if(title)title.textContent=`Suivi — ${suiviGardeName(garde)}`;
@@ -243,6 +254,7 @@ function renderGardeSuivi(){
     details.innerHTML=[
       ['Garde',suiviGardeName(garde)],
       ['Grade',garde.grade||'—'],
+      ['Dignité',garde.dignite||'—'],
       ['Race',garde.race||'—'],
       ['Spécialité',garde.specialite||'Guerrier'],
       ['Recrutement',garde.date_recrutement?new Date(garde.date_recrutement).toLocaleDateString('fr-FR'):'—'],
@@ -253,8 +265,13 @@ function renderGardeSuivi(){
   if(stats){
     const summary=suiviState.summary||{};
     const active=summary.is_active===true;
+    const activeAbsence=suiviState.absences.find(row=>{
+      const start=new Date(row.starts_at);
+      const end=new Date(row.ends_at);
+      return !Number.isNaN(start.getTime())&&!Number.isNaN(end.getTime())&&start<=new Date()&&end>=new Date();
+    });
     stats.innerHTML=[
-      ['Statut',`${active?'Présent':'Off'}${summary.last_seen_at&&!active?` depuis ${suiviDate(summary.last_seen_at)}`:''}`],
+      ['Statut',activeAbsence?`Absent jusqu'au ${suiviDate(activeAbsence.ends_at)}`:`${active?'Présent':'Off'}${summary.last_seen_at&&!active?` depuis ${suiviDate(summary.last_seen_at)}`:''}`],
       ['Aujourd\'hui',suiviDuration(summary.today_seconds||0)],
       ['7 jours',suiviDuration(suiviWeekSeconds())],
       ['Total',suiviDuration(summary.total_seconds||0)],
@@ -282,6 +299,23 @@ function renderGardeSuivi(){
     `).join('');
     if(!suiviState.presences.length){
       history.innerHTML='<tr><td colspan="3" class="sa-empty">Aucune présence consultable.</td></tr>';
+    }
+  }
+
+  if(absenceHistory){
+    absenceHistory.innerHTML=suiviState.absences.map(row=>{
+      const motif=[row.reason_hrp,row.reason_rp].filter(Boolean).join(' / ')||'—';
+      return `
+        <tr>
+          <td>${suiviEsc(suiviDate(row.starts_at))}</td>
+          <td>${suiviEsc(suiviDate(row.ends_at))}</td>
+          <td>${typeof absenceDuration==='function'?suiviEsc(absenceDuration(row.starts_at,row.ends_at)):suiviEsc(suiviDuration(suiviSecondsBetween(row.starts_at,row.ends_at)))}</td>
+          <td>${suiviEsc(motif)}</td>
+        </tr>
+      `;
+    }).join('');
+    if(!suiviState.absences.length){
+      absenceHistory.innerHTML='<tr><td colspan="4" class="sa-empty">Aucune absence déclarée.</td></tr>';
     }
   }
 

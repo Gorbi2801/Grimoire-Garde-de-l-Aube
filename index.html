@@ -116,6 +116,7 @@
   </div>
   <nav class="nav-sections">
     <button class="nav-btn" onclick="switchSection('presences',this)"><span class="nav-icon"><img src="assets/sections_logo/presences.png" alt="" style="width:44px;height:44px;"></span>Présences</button>
+    <button class="nav-btn" onclick="switchSection('absences',this)"><span class="nav-icon"><img src="assets/sections_logo/absences.png" alt="" style="width:44px;height:44px;"></span>Absences</button>
     <button class="nav-btn" onclick="switchSection('agenda',this)"><span class="nav-icon nav-letter-icon"><img src="assets/sections_logo/agenda.png" alt="" style="width:44px;height:44px;"></span>Agenda</button>
     <button class="nav-btn" onclick="switchSection('patrouilles',this)"><span class="nav-icon"><img src="assets/sections_logo/patrouilles.png" alt="" style="width:44px;height:44px;"></span>Patrouilles</button>
     <button class="nav-btn" onclick="switchSection('garde',this)"><span class="nav-icon"><img src="assets/sections_logo/garde.png" alt="" style="width:44px;height:44px;"></span>Garde</button>
@@ -336,7 +337,7 @@
       <button class="btn-sort asc" id="gar-sort-grade-btn" onclick="sortTable('gar-tbody','grade','gar-sort-grade-btn')">Grade</button>
     </div>
     <div class="table-wrap">
-      <table><thead><tr><th>Prénom &amp; Nom</th><th>Race</th><th>Grade</th><th>Recrutement</th><th>Spécialité</th><th id="gar-act-head" style="display:none;">Actions</th></tr></thead>
+      <table><thead><tr><th>Prénom &amp; Nom</th><th>Race</th><th>Grade</th><th>Recrutement</th><th>Spécialité</th><th>Dignité</th><th id="gar-act-head" style="display:none;">Actions</th></tr></thead>
       <tbody id="gar-tbody"></tbody></table>
     </div>
     </div><!-- /gar-page-1 -->
@@ -417,31 +418,33 @@
   <div class="section-page" id="page-cour">
     <div class="sect-header">
       <h2><img src="assets/sections_logo/cour.png" alt="Cour" style="width:40px;height:40px;vertical-align:middle;margin-right:0.4rem;"> Cour de l'Ordre</h2>
-      <p>Membres officiels de la Cour et leurs fonctions au sein de l'Ordre</p>
-      <div class="sect-stats"><div class="stat-chip">Membres : <strong id="cour-total">—</strong></div></div>
+      <p>Dignités confiées aux Gardes pour servir l'Ordre sans modifier la hiérarchie militaire</p>
+      <div class="sect-stats"><div class="stat-chip">Dignitaires : <strong id="cour-total">—</strong></div></div>
     </div>
     <div id="cour-add-wrap" class="add-form-wrap" style="display:none;">
-      <div class="add-form-head" onclick="toggleForm('cour-form')"><span>+ Nommer un membre de la cour</span><span class="chev">▼</span></div>
+      <div class="add-form-head" onclick="toggleForm('cour-form')"><span>+ Accorder une dignité</span><span class="chev">▼</span></div>
       <div class="add-form-body" id="cour-form">
         <div class="form-grid">
-          <div class="form-field"><label>Prénom</label><input id="cour-prenom" type="text" placeholder="Prénom..."></div>
-          <div class="form-field"><label>Nom</label><input id="cour-nom" type="text" placeholder="Nom..."></div>
-          <div class="form-field"><label>Titre</label>
-            <select id="cour-titre"><option value="">— Sélectionner —</option><option>Intendant de Fort-Aube</option><option>Émissaire de l'Aube</option><option>Trésorier de l'Ordre</option><option>Maître des Secrets</option><option>Maître des Forges</option></select>
+          <div class="form-field"><label>Garde</label>
+            <select id="cour-garde"><option value="">— Sélectionner un garde —</option></select>
+          </div>
+          <div class="form-field"><label>Dignité</label>
+            <select id="cour-titre"><option value="">— Sélectionner —</option></select>
           </div>
         </div>
-        <button class="btn-submit" id="cour-submit-btn" onclick="addCour()">Nommer</button>
+        <button class="btn-submit" id="cour-submit-btn" onclick="addCour()">Accorder</button>
       </div>
     </div>
+    <div id="cour-dignites-summary" style="margin:1rem 0 1.25rem;"></div>
     <div class="toolbar">
-      <div class="search-wrap"><span style="color:var(--ink-faint);font-size:1rem;">🔍</span><input id="cour-search" type="text" placeholder="Rechercher un membre..." oninput="filterRows('cour-tbody',this.value)"></div>
+      <div class="search-wrap"><span style="color:var(--ink-faint);font-size:1rem;">🔍</span><input id="cour-search" type="text" placeholder="Rechercher un garde ou une dignité..." oninput="filterRows('cour-tbody',this.value)"></div>
       <select class="filter-sel" id="cour-filter-titre" onchange="filterRows('cour-tbody',document.getElementById('cour-search').value)">
-        <option value="">Tous les titres</option><option>Intendant de Fort-Aube</option><option>Émissaire de l'Aube</option><option>Trésorier de l'Ordre</option><option>Maître des Secrets</option><option>Maître des Forges</option>
+        <option value="">Toutes les dignités</option>
       </select>
       <button class="btn-sort asc" id="cour-sort-btn" onclick="sortTable('cour-tbody','name','cour-sort-btn')">Nom</button>
     </div>
     <div class="table-wrap">
-      <table><thead><tr><th>Prénom &amp; Nom</th><th>Titre</th><th id="cour-act-head" style="display:none;">Actions</th></tr></thead>
+      <table><thead><tr><th>Garde</th><th>Dignité</th><th id="cour-act-head" style="display:none;">Actions</th></tr></thead>
       <tbody id="cour-tbody"></tbody></table>
     </div>
   </div>
@@ -751,6 +754,57 @@
           <div class="biblio-creature-name">L'INÉBRANLABLE</div>
           <p class="biblio-body">Le titre le plus rarement décerné. Il distingue une loyauté qui n'a jamais vacillé, quelles qu'aient été les circonstances — ni la peur, ni la perte, ni le doute n'ont suffi à l'entamer. L'Ordre ne l'accorde qu'après l'avoir vu résister à une épreuve qu'il n'avait pas lui-même organisée.</p>
         </div>
+      </div>
+    </div>
+    <!-- ══ DIGNITÉS DE L'ORDRE ══ -->
+    <div style="margin-bottom:1.25rem;">
+      <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.charte-arr').textContent=this.nextElementSibling.style.display==='none'?'▶':'▼';"
+        style="cursor:pointer;display:flex;align-items:center;gap:.55rem;font-family:'Eagle Lake',serif;
+               font-size:1rem;letter-spacing:.06em;color:var(--green-dark);padding:.45rem 0;
+               border-bottom:1px solid var(--border-g);">
+        <span class="charte-arr">▶</span> Les Dignités de l'Ordre
+        <span style="font-family:'IM Fell English',serif;font-style:italic;font-size:1rem;color:var(--ink-faint);margin-left:.4rem;">(cliquer pour déplier)</span>
+      </div>
+      <div style="display:none;margin-top:.75rem;">
+        <p style="font-family:'IM Fell English',serif;font-style:italic;font-size:1rem;color:var(--ink-mid);margin-bottom:1rem;padding:0 .2rem;">Les Dignités de l'Ordre sont accordées aux Gardes ayant démontré un investissement, des compétences particulières ou ayant gagné la confiance de leurs frères d'armes et du commandement. Elles confèrent des responsabilités spécifiques au sein de la Garde de l'Aube, sans modifier la hiérarchie militaire.</p>
+
+        <div class="biblio-creature">
+          <div class="biblio-creature-name">MAÎTRE D'ARMES</div>
+          <p class="biblio-body">Responsable de la formation des Gardes, de l'organisation des exercices, de l'évaluation des recrues et de la transmission des doctrines et formations de combat de la Garde de l'Aube.</p>
+        </div>
+
+        <div class="biblio-creature">
+          <div class="biblio-creature-name">INTENDANT DE FORT AUBE</div>
+          <p class="biblio-body">Responsable de la vie quotidienne du fort, de l'organisation des bivouacs, de l'accueil des membres et du maintien de la cohésion entre les Gardes. Il supervise également les ressources de l'Ordre : minerai, forge, nourriture, potions, équipements et approvisionnements divers.</p>
+          <p class="biblio-note">L'Intendant peut désigner des responsables spécialisés, comme un Maître des Forges ou un Maître des Potions, chargés de faire remonter les besoins de leur domaine.</p>
+        </div>
+
+        <div class="biblio-creature">
+          <div class="biblio-creature-name">GARDIEN DU GRIMOIRE</div>
+          <p class="biblio-body">Responsable de la conservation, de la mise à jour et de la transmission des connaissances de l'Ordre. Il veille aussi à la préservation des traditions, cérémonies, serments et de la mémoire des frères et sœurs tombés au combat.</p>
+        </div>
+
+        <div class="biblio-creature">
+          <div class="biblio-creature-name">MAÎTRE DES RENSEIGNEMENTS</div>
+          <p class="biblio-body">Responsable de la collecte, de la centralisation et de l'analyse des informations concernant les vampires et toute autre menace pesant sur Bordeciel. Il doit être tenu informé de l'ensemble des renseignements de la Garde et assister le commandement dans la préparation des missions.</p>
+        </div>
+
+        <div class="biblio-creature">
+          <div class="biblio-creature-name">GARDIEN DE FORT AUBE</div>
+          <p class="biblio-body">Responsable de la sécurité du fort, de la surveillance des visiteurs et du maintien des défenses. Il veille également à l'application des protocoles liés aux morsures, aux contaminations vampiriques et aux éventuelles procédures de quarantaine.</p>
+        </div>
+
+        <div class="biblio-creature">
+          <div class="biblio-creature-name">MAÎTRE DES RECRUES</div>
+          <p class="biblio-body">Responsable de l'accueil, de l'encadrement et de l'intégration des nouveaux membres de la Garde de l'Aube. Il accompagne les recrues dans leurs premiers pas et veille à leur bonne compréhension des règles, traditions et devoirs qui leur incombent.</p>
+        </div>
+
+        <div class="biblio-creature">
+          <div class="biblio-creature-name">PRÉVÔT DE L'ORDRE</div>
+          <p class="biblio-body">Responsable de la discipline au sein de la Garde. Il veille au respect du règlement, constate les éventuels manquements et peut conseiller le commandement sur les mesures disciplinaires à appliquer.</p>
+        </div>
+
+        <p class="biblio-note">Ces dignités n'accordent aucun rang supplémentaire. Elles constituent une marque de confiance et peuvent être retirées ou confiées à un autre membre selon les besoins de l'Ordre. Plusieurs Gardes peuvent détenir une même dignité lorsque la situation l'exige, à condition d'agir de manière coordonnée.</p>
       </div>
     </div>
     <!-- ══ VALEURS DE LA GARDE ══ -->
@@ -1472,6 +1526,11 @@
         <div class="presence-summary" id="presenceSummary"></div>
       </div>
 
+      <div class="profile-card presence-summary-card">
+        <div class="profile-title">Absences</div>
+        <div class="presence-summary" id="presenceAbsenceSummary"></div>
+      </div>
+
       <div class="profile-card presence-history-card">
         <div class="profile-title">Jours précédents</div>
         <div class="table-wrap presence-table-wrap">
@@ -1489,6 +1548,91 @@
       </div>
     </div>
     <p class="sa-status" id="presenceMsg"></p>
+  </section>
+
+  <section class="section-page" id="page-absences">
+    <div class="sect-header">
+      <h2><img src="assets/sections_logo/absences.png" alt="Absences" style="width:40px;height:40px;vertical-align:middle;margin-right:0.4rem;"> Absences</h2>
+      <p>Registre des indisponibilités déclarées par les gardes.</p>
+      <div class="sect-stats">
+        <span class="stat-chip" id="absenceActiveCount">En cours : 0</span>
+        <span class="stat-chip" id="absenceUpcomingCount">À venir : 0</span>
+        <span class="stat-chip" id="absenceArchivedCount">Terminées : 0</span>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span>⌕</span>
+        <input id="absenceSearch" placeholder="Rechercher garde, motif..." oninput="filterAbsences()">
+      </div>
+      <select class="filter-sel" id="absenceStatusFilter" onchange="filterAbsences()">
+        <option value="open">En cours et à venir</option>
+        <option value="active">En cours</option>
+        <option value="upcoming">À venir</option>
+        <option value="past">Terminées</option>
+        <option value="all">Toutes</option>
+      </select>
+      <button class="btn-submit" onclick="loadAbsences()">Actualiser</button>
+    </div>
+
+    <div class="profile-card" id="absenceFormCard">
+      <div class="profile-title">Déclarer une absence</div>
+      <div class="form-grid">
+        <label class="form-field">
+          <span>Début</span>
+          <input id="absenceStart" type="datetime-local" onchange="updateAbsenceDurationPreview()">
+        </label>
+        <label class="form-field">
+          <span>Fin</span>
+          <input id="absenceEnd" type="datetime-local" onchange="updateAbsenceDurationPreview()">
+        </label>
+        <label class="form-field" style="grid-column:1/-1;">
+          <span>Motif HRP</span>
+          <textarea id="absenceReasonHrp" rows="3" placeholder="Optionnel"></textarea>
+        </label>
+        <label class="form-field" style="grid-column:1/-1;">
+          <span>Motif RP</span>
+          <textarea id="absenceReasonRp" rows="3" placeholder="Optionnel"></textarea>
+        </label>
+      </div>
+      <div class="superadmin-actions">
+        <span class="sa-muted" id="absenceDurationPreview">Durée : —</span>
+        <button class="btn-del" id="absenceCancelEditBtn" onclick="cancelAbsenceEdit()" style="display:none;">Annuler</button>
+        <button class="btn-submit" id="absenceSubmitBtn" onclick="saveAbsence()">Déclarer l'absence</button>
+      </div>
+    </div>
+
+    <p class="sa-status" id="absenceMsg"></p>
+
+    <div class="profile-card">
+      <div class="profile-title">Absences en cours et à venir</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Garde</th><th>Période</th><th>Durée</th><th>Motif HRP</th><th>Motif RP</th><th>Statut</th><th id="absenceActHead">Actions</th></tr>
+          </thead>
+          <tbody id="absenceBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="profile-card">
+      <div class="profile-title" style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;">
+        <span>Archives des absences</span>
+        <button class="btn-action" onclick="toggleAbsenceArchive()">Afficher / masquer</button>
+      </div>
+      <div id="absenceArchiveWrap" style="display:none;">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Garde</th><th>Période</th><th>Durée</th><th>Motif HRP</th><th>Motif RP</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="absenceArchiveBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </section>
 
   <section class="section-page" id="page-agenda">
@@ -1692,6 +1836,7 @@
       <div class="sect-stats">
         <span class="stat-chip" id="presenceLogsLinkedCount">Gardes liés : 0</span>
         <span class="stat-chip" id="presenceLogsActiveCount">Présents : 0</span>
+        <span class="stat-chip" id="presenceLogsAbsentCount">Absents : 0</span>
         <span class="stat-chip" id="presenceLogsInactiveCount">Inactifs 7j : 0</span>
         <span class="stat-chip" id="presenceLogsSessionsCount">Sessions : 0</span>
         <span class="stat-chip" id="presenceLogsWeekTotal">Total 7j : 0 min</span>
@@ -1914,6 +2059,13 @@
             <tbody id="suiviHistoryBody"></tbody>
           </table>
         </div>
+        <div class="profile-title" style="margin-top:1rem;">Absences</div>
+        <div class="table-wrap presence-table-wrap suivi-presence-log">
+          <table>
+            <thead><tr><th>Début</th><th>Fin</th><th>Durée</th><th>Motif</th></tr></thead>
+            <tbody id="suiviAbsenceHistoryBody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -1968,6 +2120,7 @@
 <script src="scripts/sections/inventaire.js"></script>
 <script src="scripts/sections/lois.js"></script>
 <script src="scripts/sections/presences.js"></script>
+<script src="scripts/sections/absences.js"></script>
 <script src="scripts/sections/presence-logs.js"></script>
 <script src="scripts/sections/agenda.js"></script>
 <script src="scripts/sections/patrouilles.js"></script>

@@ -8,6 +8,7 @@ const presenceLogsState={
   summaries:[],
   gardes:[],
   profiles:[],
+  absences:[],
   sortKey:null,
   sortDirection:null,
 };
@@ -54,6 +55,17 @@ function presenceLogsProfileForUser(userId){
 
 function presenceLogsSummaryForUser(userId){
   return presenceLogsState.summaries.find(row=>row.user_id===userId)||null;
+}
+
+function presenceLogsActiveAbsenceForUser(userId){
+  if(!userId)return null;
+  const now=new Date();
+  return presenceLogsState.absences.find(row=>{
+    if(row.user_id!==userId)return false;
+    const start=new Date(row.starts_at);
+    const end=new Date(row.ends_at);
+    return !Number.isNaN(start.getTime())&&!Number.isNaN(end.getTime())&&start<=now&&end>=now;
+  })||null;
 }
 
 function presenceLogsPeriodCutoff(period){
@@ -126,6 +138,7 @@ function presenceLogsHydrateRow(row){
   const name=presenceLogsGardeName(garde,summary,profile);
   const grade=garde?.grade||summary?.grade||'—';
   const username=profile?.username||summary?.username||'—';
+  const activeAbsence=presenceLogsActiveAbsenceForUser(row.user_id);
   return {
     ...row,
     garde,
@@ -135,11 +148,13 @@ function presenceLogsHydrateRow(row){
     grade,
     username,
     displayName:profile?.display_name||summary?.display_name||username,
+    activeAbsence,
     durationSeconds:presenceLogsSeconds(row.started_at,row.ended_at),
   };
 }
 
 function presenceLogsStatusRank(row){
+  if(row.activeAbsence)return -1;
   if(row.empty)return 2;
   if(!row.ended_at)return 0;
   return 1;
@@ -196,7 +211,7 @@ async function loadPresenceLogs(){
   if(msg)msg.textContent='Chargement des logs de présence...';
 
   try{
-    const [presenceResult,summaryResult,gardeResult,profileResult]=await Promise.all([
+    const [presenceResult,summaryResult,gardeResult,profileResult,absenceResult]=await Promise.all([
       window.GrimoireSupabase
         .from('mk_presences')
         .select('id,user_id,started_at,ended_at,created_at')
@@ -215,17 +230,23 @@ async function loadPresenceLogs(){
         .from('mk_profiles')
         .select('user_id,username,display_name,is_superadmin')
         .order('username',{ascending:true}),
+      window.GrimoireSupabase
+        .from('mk_absences')
+        .select('id,user_id,starts_at,ends_at,reason_hrp,reason_rp')
+        .order('starts_at',{ascending:false}),
     ]);
 
     if(presenceResult.error)throw presenceResult.error;
     if(summaryResult.error)throw summaryResult.error;
     if(gardeResult.error)throw gardeResult.error;
     if(profileResult.error)throw profileResult.error;
+    if(absenceResult.error)throw absenceResult.error;
 
     presenceLogsState.rows=presenceResult.data||[];
     presenceLogsState.summaries=summaryResult.data||[];
     presenceLogsState.gardes=gardeResult.data||[];
     presenceLogsState.profiles=profileResult.data||[];
+    presenceLogsState.absences=absenceResult.data||[];
     presenceLogsState.loaded=true;
     renderPresenceLogs();
     if(msg)msg.textContent='';
@@ -327,15 +348,17 @@ function presenceLogsFilteredRows(){
 function renderPresenceLogsStats(){
   const users=presenceLogsAllUsers();
   const filtered=presenceLogsFilteredRows();
-  const filteredSessions=filtered.filter(row=>!row.empty).length;
-  const linked=presenceLogsState.gardes.filter(row=>!!row.user_id).length;
-  const active=users.filter(row=>row.summary?.is_active===true).length;
-  const inactive=users.filter(row=>presenceLogsWeekSecondsForUser(row.userId)<=0).length;
+    const filteredSessions=filtered.filter(row=>!row.empty).length;
+    const linked=presenceLogsState.gardes.filter(row=>!!row.user_id).length;
+    const active=users.filter(row=>row.summary?.is_active===true).length;
+    const absent=users.filter(row=>presenceLogsActiveAbsenceForUser(row.userId)).length;
+    const inactive=users.filter(row=>presenceLogsWeekSecondsForUser(row.userId)<=0).length;
   const weekTotal=users.reduce((sum,row)=>sum+presenceLogsWeekSecondsForUser(row.userId),0);
 
   const setText=(id,text)=>{const el=document.getElementById(id);if(el)el.textContent=text;};
   setText('presenceLogsLinkedCount',`Gardes liés : ${linked}`);
   setText('presenceLogsActiveCount',`Présents : ${active}`);
+  setText('presenceLogsAbsentCount',`Absents : ${absent}`);
   setText('presenceLogsInactiveCount',`Inactifs 7j : ${inactive}`);
   const filteredGardes = [...new Set(filtered.map(r=>r.user_id).filter(Boolean))].length;
   setText('presenceLogsSessionsCount',`Gardes : ${filteredGardes}/${linked}`);
@@ -350,6 +373,7 @@ function renderPresenceLogsTable(){
   tbody.innerHTML=rows.map(row=>{
     const summary=row.summary||{};
     if(row.empty){
+      const absence=presenceLogsActiveAbsenceForUser(row.user_id);
       return `
         <tr class="presence-log-empty">
           <td class="cell-name">
@@ -358,7 +382,10 @@ function renderPresenceLogsTable(){
             <span>${presenceLogsEsc(row.grade)}</span>
           </td>
           <td>${presenceLogsEsc(row.username)}</td>
-          <td><span class="presence-log-status empty">Aucun pointage</span></td>
+          <td>
+            <span class="presence-log-status ${absence?'closed':'empty'}">${absence?'Absent':'Aucun pointage'}</span>
+            ${absence?`<br><span class="sa-muted">jusqu'au ${presenceLogsEsc(presenceLogsDate(absence.ends_at))}</span>`:''}
+          </td>
           <td>—</td>
           <td>—</td>
           <td>0 min</td>
@@ -369,6 +396,7 @@ function renderPresenceLogsTable(){
         </tr>`;
     }
     const isActive=!row.ended_at;
+    const absence=row.activeAbsence;
     return `
       <tr class="${isActive?'presence-log-open':''}">
         <td class="cell-name">
@@ -377,7 +405,10 @@ function renderPresenceLogsTable(){
           <span>${presenceLogsEsc(row.grade)}</span>
         </td>
         <td>${presenceLogsEsc(row.username)}</td>
-        <td><span class="presence-log-status ${isActive?'active':'closed'}">${isActive?'En cours':'Clôturée'}</span></td>
+        <td>
+          <span class="presence-log-status ${absence?'closed':isActive?'active':'closed'}">${absence?'Absent':isActive?'En cours':'Clôturée'}</span>
+          ${absence?`<br><span class="sa-muted">jusqu'au ${presenceLogsEsc(presenceLogsDate(absence.ends_at))}</span>`:''}
+        </td>
         <td>${presenceLogsEsc(presenceLogsDate(row.started_at))}</td>
         <td>${row.ended_at?presenceLogsEsc(presenceLogsDate(row.ended_at)):'En cours'}</td>
         <td>${presenceLogsDuration(row.durationSeconds)}</td>

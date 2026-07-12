@@ -4,6 +4,28 @@
 const GRADE_ORDER=["Commandeur de l'Aube","Sénéchal de l'Aube","Exécuteur de la Garde","Traqueur de la Garde","Patrouilleur de la Garde","Aspirant de la Garde"];
 const SPECIALITE_ORDER=["Sans spécialité","Minage","Menuiserie","Forge","Alchimie","Chasse","Cuisine","Couture","Guerrier"];
 const PEINE_ORDER=['Infraction mineure','Infraction majeure','Crime','Crime capital','Haute trahison'];
+const DIGNITES_ORDRE=[
+  "Maître d'armes",
+  'Intendant de Fort Aube',
+  'Gardien du Grimoire',
+  'Maître des Renseignements',
+  'Gardien de Fort Aube',
+  'Maître des Recrues',
+  "Prévôt de l'Ordre",
+];
+const DIGNITE_DESC={
+  "Maître d'armes":"Formation des Gardes, exercices, évaluation des recrues et transmission des doctrines de combat.",
+  'Intendant de Fort Aube':"Vie quotidienne du fort, ressources, bivouacs, accueil et cohésion entre les Gardes.",
+  'Gardien du Grimoire':"Conservation du savoir, traditions, cérémonies, serments et mémoire des tombés.",
+  'Maître des Renseignements':"Collecte, centralisation et analyse des informations sur les vampires et autres menaces.",
+  'Gardien de Fort Aube':"Sécurité du fort, surveillance des visiteurs, défenses et protocoles de contamination.",
+  'Maître des Recrues':"Accueil, encadrement et intégration des nouveaux membres de la Garde.",
+  "Prévôt de l'Ordre":"Discipline interne, constat des manquements et conseil au commandement sur les sanctions.",
+};
+if(typeof window!=='undefined'){
+  window.DIGNITES_ORDRE=DIGNITES_ORDRE;
+  window.DIGNITE_DESC=DIGNITE_DESC;
+}
 function sortTable(tbodyId,mode,btnId){
   const tbody=document.getElementById(tbodyId);const btn=document.getElementById(btnId);if(!tbody||!btn)return;
   const isAsc=btn.classList.contains('asc');const dir=isAsc?'desc':'asc';

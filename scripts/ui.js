@@ -12,6 +12,7 @@ function switchSection(sec,btn){
   if(btn)btn.classList.add('active');
   activeSection=sec;
   if(sec==='presences'&&typeof loadPresences==='function')loadPresences();
+  if(sec==='absences'&&typeof loadAbsences==='function')loadAbsences();
   if(sec==='agenda'&&typeof loadAgenda==='function')loadAgenda();
   if(sec==='patrouilles'&&typeof loadPatrouilles==='function')loadPatrouilles();
   if(sec==='missives'&&typeof loadMissives==='function')loadMissives();
@@ -34,7 +35,7 @@ function showProfilePage(){
 let editState=null; // {type:'citoyens'|'garde'|'commerce'|'cour'|'inventaire', id}
 const EDIT_FORM_TYPE={'cit-form':'citoyens','gar-form':'garde','com-form':'commerce','cour-form':'cour','inv-form':'inventaire'};
 const EDIT_SUBMIT_BTN={citoyens:'cit-submit-btn',garde:'gar-submit-btn',commerce:'com-submit-btn',cour:'cour-submit-btn',inventaire:'inv-submit-btn'};
-const EDIT_SUBMIT_DEFAULT={'cit-submit-btn':'Inscrire au registre','gar-submit-btn':'Enrôler','com-submit-btn':'Enregistrer','cour-submit-btn':'Nommer','inv-submit-btn':'Ajouter au stock'};
+const EDIT_SUBMIT_DEFAULT={'cit-submit-btn':'Inscrire au registre','gar-submit-btn':'Enrôler','com-submit-btn':'Enregistrer','cour-submit-btn':'Accorder','inv-submit-btn':'Ajouter au stock'};
 function openFormById(id){
   const head=document.querySelector(`[onclick="toggleForm('${id}')"]`);
   const body=document.getElementById(id);
@@ -96,9 +97,9 @@ async function exportSection(){
   try{
     let csv='',filename='';
     if(activeSection==='citoyens'){const r=await sbGet('mk_citoyens','?order=nom.asc');csv='Prénom,Nom,Race,Métier\n'+r.map(x=>`"${x.prenom}","${x.nom}","${x.race||''}","${x.metier||''}"`).join('\n');filename='civils_aube.csv';}
-    else if(activeSection==='garde'){const r=await sbGet('mk_gardes','?order=nom.asc');csv='Prénom,Nom,Race,Grade,Spécialité\n'+r.map(x=>`"${x.prenom}","${x.nom}","${x.race||''}","${x.grade||''}","${x.specialite||'Guerrier'}"`).join('\n');filename='garde_aube.csv';}
+    else if(activeSection==='garde'){const r=await sbGet('mk_gardes','?order=nom.asc');csv='Prénom,Nom,Race,Grade,Spécialité,Dignité\n'+r.map(x=>`"${x.prenom}","${x.nom}","${x.race||''}","${x.grade||''}","${x.specialite||'Guerrier'}","${x.dignite||''}"`).join('\n');filename='garde_aube.csv';}
     else if(activeSection==='commerces'){const r=await sbGet('mk_transactions','?order=date.desc');csv='Date,Type,Objet,Prix,Vendeur/Acheteur,Garde\n'+r.map(x=>`"${x.date||''}","${x.type||''}","${(x.objet||'').replace(/"/g,"'")}","${(x.valeur||'').replace(/"/g,"'")}","${(x.partie_externe||'').replace(/"/g,"'")}","${(x.enregistre_par||'').replace(/"/g,"'")}"`).join('\n');filename='transactions_aube.csv';}
-    else if(activeSection==='cour'){const r=await sbGet('mk_cour','?order=titre.asc');csv='Prénom,Nom,Titre\n'+r.map(x=>`"${x.prenom}","${x.nom}","${x.titre||''}"`).join('\n');filename='cour_aube.csv';}
+    else if(activeSection==='cour'){const r=await sbGet('mk_gardes','?dignite=not.is.null&order=dignite.asc');csv='Prénom,Nom,Grade,Dignité\n'+r.map(x=>`"${x.prenom}","${x.nom}","${x.grade||''}","${x.dignite||''}"`).join('\n');filename='cour_aube.csv';}
     else if(activeSection==='inventaire'){const r=await sbGet('mk_inventaire','?order=nom.asc');csv='Objet,Catégorie,Quantité\n'+r.map(x=>`"${x.nom}","${x.categorie||''}",${x.quantite}`).join('\n');filename='inventaire_aube.csv';}
     else if(activeSection==='lois'){const r=await sbGet('mk_lois','?order=created_at.asc');csv='Titre,Peine,Sanction,Description\n'+r.map(x=>`"${x.titre}","${x.peine||''}","${x.sanction||''}","${(x.description||'').replace(/"/g,"'")}"`).join('\n');filename='reglement_aube.csv';}
     else{toast('Export non disponible pour cette section.');return;}

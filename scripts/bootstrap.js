@@ -20,6 +20,8 @@
     revertInvEntry, undoInvChange:revertInvEntry,
     addLoi, saveLoi:addLoi, delLoi,
     loadMissives, setMissiveTab, filterMissives, selectMissive, sendMissive,
+    loadAbsences, filterAbsences, saveAbsence, editAbsence, deleteAbsence,
+    cancelAbsenceEdit, toggleAbsenceArchive, updateAbsenceDurationPreview,
     loadAgenda, setAgendaView, moveAgendaRange, goAgendaToday, filterAgenda,
     selectAgendaEvent, openAgendaCreate, editAgendaEvent, cancelAgendaEdit,
     saveAgendaEvent, deleteAgendaEvent,

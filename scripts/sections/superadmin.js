@@ -7,6 +7,7 @@ const superadminState={
   profiles:[],
   presences:[],
   presenceSummaries:[],
+  absences:[],
   selectedGardeId:null,
   selectedProfileUserId:null,
 };
@@ -38,6 +39,21 @@ function saGardeForUser(userId){
   return superadminState.gardes.find(garde=>garde.user_id===userId)||null;
 }
 
+function saActiveAbsenceForUser(userId){
+  if(!userId)return null;
+  const now=new Date();
+  return superadminState.absences.find(row=>{
+    const start=new Date(row.starts_at);
+    const end=new Date(row.ends_at);
+    return row.user_id===userId&&!Number.isNaN(start.getTime())&&!Number.isNaN(end.getTime())&&start<=now&&end>=now;
+  })||null;
+}
+
+function saAbsencesForUser(userId){
+  if(!userId)return [];
+  return superadminState.absences.filter(row=>row.user_id===userId).slice(0,8);
+}
+
 function saSelectedGarde(){
   return superadminState.gardes.find(garde=>garde.id===superadminState.selectedGardeId)||null;
 }
@@ -67,10 +83,10 @@ async function loadSuperadmin(){
   const msg=document.getElementById('superadminMsg');
   if(msg)msg.textContent='Chargement...';
   try{
-    const [gardesResult,profilesResult,presencesResult,presenceSummaries]=await Promise.all([
+    const [gardesResult,profilesResult,presencesResult,presenceSummaries,absencesResult]=await Promise.all([
       window.GrimoireSupabase
         .from('mk_gardes')
-        .select('id,user_id,prenom,nom,race,grade,specialite,date_recrutement,recruteur')
+        .select('id,user_id,prenom,nom,race,grade,specialite,dignite,date_recrutement,recruteur')
         .order('nom',{ascending:true}),
       window.GrimoireSupabase
         .from('mk_profiles')
@@ -82,16 +98,22 @@ async function loadSuperadmin(){
         .order('started_at',{ascending:false})
         .limit(500),
       typeof loadPresenceSummaries==='function'?loadPresenceSummaries():Promise.resolve([]),
+      window.GrimoireSupabase
+        .from('mk_absences')
+        .select('id,user_id,starts_at,ends_at,reason_hrp,reason_rp')
+        .order('starts_at',{ascending:false}),
     ]);
 
     if(gardesResult.error)throw gardesResult.error;
     if(profilesResult.error)throw profilesResult.error;
     if(presencesResult.error)console.warn('Impossible de charger les présences superadmin.', presencesResult.error);
+    if(absencesResult.error)console.warn('Impossible de charger les absences superadmin.', absencesResult.error);
 
     superadminState.gardes=gardesResult.data||[];
     superadminState.profiles=profilesResult.data||[];
     superadminState.presences=presencesResult.error?[]:(presencesResult.data||[]);
     superadminState.presenceSummaries=presenceSummaries||[];
+    superadminState.absences=absencesResult.error?[]:(absencesResult.data||[]);
     superadminState.loaded=true;
 
     if(superadminState.selectedGardeId&&!saSelectedGarde()){
@@ -143,6 +165,7 @@ function renderSuperadminGardes(){
       garde.race,
       garde.grade,
       garde.specialite,
+      garde.dignite,
       profile?.username,
       profile?.display_name,
     ].filter(Boolean).join(' ').toLowerCase();
@@ -152,8 +175,9 @@ function renderSuperadminGardes(){
   tbody.innerHTML=rows.map(garde=>{
     const profile=saProfileForUser(garde.user_id);
     const selected=garde.id===superadminState.selectedGardeId?' class="superadmin-selected-row"':'';
+    const absence=saActiveAbsenceForUser(garde.user_id);
     return `<tr${selected}>
-      <td class="cell-name">${typeof renderPresenceDot==='function'?renderPresenceDot(garde.user_id):''}${saEsc(saGardeName(garde))}</td>
+      <td class="cell-name">${typeof renderPresenceDot==='function'?renderPresenceDot(garde.user_id):''}${saEsc(saGardeName(garde))}${absence?'<span class="badge" style="background:rgba(122,16,16,.12);color:#7A1010;border:1px solid #7A1010;margin-left:.4rem;font-size:.78rem;">Absent</span>':''}</td>
       <td class="cell-meta">${garde.grade?`<span class="badge badge-tag">${saEsc(garde.grade)}</span>`:'—'}</td>
       <td class="cell-meta">${profile?saEsc(saProfileName(profile)):'<span class="sa-muted">Non lié</span>'}</td>
       <td class="act"><button class="btn-submit superadmin-row-btn" onclick="selectSuperadminGarde('${saEsc(garde.id)}')">Ouvrir</button></td>
@@ -197,6 +221,7 @@ function renderSuperadminDetail(){
       <dt>Garde</dt><dd>${saEsc(saGardeName(garde))}</dd>
       <dt>Grade</dt><dd>${saEsc(garde.grade||'—')}</dd>
       <dt>Spécialité</dt><dd>${saEsc(garde.specialite||'—')}</dd>
+      <dt>Dignité</dt><dd>${saEsc(garde.dignite||'—')}</dd>
       <dt>Compte lié</dt><dd>${linkedProfile?saEsc(saProfileName(linkedProfile)):'—'}</dd>
     </dl>
 
@@ -245,6 +270,8 @@ function renderSuperadminPresence(userId){
 
   const summary=saPresenceSummaryForUser(userId);
   const rows=saPresenceRowsForUser(userId);
+  const absence=saActiveAbsenceForUser(userId);
+  const absenceRows=saAbsencesForUser(userId);
   const active=summary?.is_active===true;
   const duration=typeof presenceDuration==='function'?presenceDuration:seconds=>`${Math.floor(Number(seconds||0)/60)} min`;
   const date=typeof presenceDate==='function'?presenceDate:value=>value||'—';
@@ -252,7 +279,7 @@ function renderSuperadminPresence(userId){
   return `
     <div class="superadmin-subtitle">Présences</div>
     <dl class="profile-details superadmin-details">
-      <dt>Statut</dt><dd><span class="presence-status">${typeof renderPresenceDot==='function'?renderPresenceDot(userId):''}${active?'Présent':'Off'}</span></dd>
+      <dt>Statut</dt><dd><span class="presence-status">${typeof renderPresenceDot==='function'?renderPresenceDot(userId):''}${absence?`Absent jusqu'au ${saEsc(date(absence.ends_at))}`:active?'Présent':'Off'}</span></dd>
       <dt>Depuis</dt><dd>${active&&summary?.active_since?saEsc(date(summary.active_since)):'—'}</dd>
       <dt>Dernière présence</dt><dd>${summary?.last_seen_at?saEsc(date(summary.last_seen_at)):'—'}</dd>
       <dt>Aujourd'hui</dt><dd>${duration(summary?.today_seconds||0)}</dd>
@@ -276,6 +303,29 @@ function renderSuperadminPresence(userId){
               <td>${duration(typeof presenceSecondsBetween==='function'?presenceSecondsBetween(row.started_at,row.ended_at):0)}</td>
             </tr>
           `).join('')||'<tr><td colspan="3" class="sa-empty">Aucune présence enregistrée.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+    <div class="superadmin-subtitle">Absences</div>
+    <div class="table-wrap presence-admin-log">
+      <table>
+        <thead>
+          <tr>
+            <th>Début</th>
+            <th>Fin</th>
+            <th>Durée</th>
+            <th>Motif</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${absenceRows.map(row=>`
+            <tr>
+              <td>${saEsc(date(row.starts_at))}</td>
+              <td>${saEsc(date(row.ends_at))}</td>
+              <td>${typeof absenceDuration==='function'?saEsc(absenceDuration(row.starts_at,row.ends_at)):duration(typeof presenceSecondsBetween==='function'?presenceSecondsBetween(row.starts_at,row.ends_at):0)}</td>
+              <td>${saEsc([row.reason_hrp,row.reason_rp].filter(Boolean).join(' / ')||'—')}</td>
+            </tr>
+          `).join('')||'<tr><td colspan="4" class="sa-empty">Aucune absence déclarée.</td></tr>'}
         </tbody>
       </table>
     </div>`;

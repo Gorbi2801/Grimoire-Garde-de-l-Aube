@@ -89,7 +89,10 @@ async function loadPresences(){
   const msg=document.getElementById('presenceMsg');
   if(msg)msg.textContent='Chargement des présences...';
   try{
-    await loadPresenceSummaries();
+    await Promise.all([
+      loadPresenceSummaries(),
+      typeof loadAbsenceCache==='function'?loadAbsenceCache():Promise.resolve([]),
+    ]);
     const { data, error } = await window.GrimoireSupabase
       .from('mk_presences')
       .select('id,user_id,started_at,ended_at,created_at')
@@ -113,6 +116,7 @@ function renderPresences(){
   renderPresenceStats();
   renderPresenceControl();
   renderPresenceSummary();
+  if(typeof renderPresenceAbsenceSummary==='function')renderPresenceAbsenceSummary();
   renderPresenceHistory();
 }
 
