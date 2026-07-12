@@ -14,6 +14,7 @@ function switchSection(sec,btn){
   if(sec==='presences'&&typeof loadPresences==='function')loadPresences();
   if(sec==='absences'&&typeof loadAbsences==='function')loadAbsences();
   if(sec==='agenda'&&typeof loadAgenda==='function')loadAgenda();
+  if(sec==='cour'&&typeof loadCour==='function')loadCour();
   if(sec==='patrouilles'&&typeof loadPatrouilles==='function')loadPatrouilles();
   if(sec==='missives'&&typeof loadMissives==='function')loadMissives();
   if(sec==='superadmin'&&typeof loadSuperadmin==='function')loadSuperadmin();
