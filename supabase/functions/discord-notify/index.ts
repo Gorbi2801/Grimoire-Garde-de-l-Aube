@@ -215,15 +215,40 @@ function buildRenseignementMessage(action: string, payload: Record<string, unkno
   if (!isFiche && action !== 'renseignement_rapport') throw new Error('Action renseignement inconnue.');
 
   const detail = truncate(payload.detail, 180);
-  const title = isFiche
-    ? '<:corbeau:1517815921258008697> **Nouvelle fiche versée aux archives**'
-    : '<:corbeau:1517815921258008697> **Nouveau rapport déposé**';
-  const subtitle = isFiche
-    ? "-# *Une nouvelle fiche vient d'être versée aux archives de Fort-Aube.*"
-    : "-# *Un nouveau rapport de renseignement vient d'être déposé.*";
-  const detailLine = detail ? `\n> **${isFiche ? 'Fiche' : 'Rapport'} :** ${detail}` : '';
+  const category = text(payload.category || payload.ficheType, '');
+  const ficheName = text(payload.ficheName, '');
 
-  return `${title}\n${subtitle}${detailLine}\n> **Par :** ${authorLine(caller)}\n\n<:aube:1516926588359540856> Consultez les archives et transmettez tout élément complémentaire à votre supérieur.`;
+  const categoryMap: Record<string, string> = {
+    'lieu': '📍 Lieu',
+    'individu': '👤 Individu',
+    'groupe': '👥 Groupe',
+  };
+  const categoryLabel = categoryMap[category.toLowerCase()] || category || null;
+
+  if (isFiche) {
+    const lines = [
+      '<:corbeau:1517815921258008697> **Nouvelle fiche versée aux archives**',
+      '',
+      detail ? `> ### ${detail}` : '',
+      categoryLabel ? `> ${categoryLabel}` : '',
+      `> *par ${authorLine(caller)}*`,
+      '',
+      '-# Consultez les archives et transmettez tout élément complémentaire à votre supérieur.',
+    ];
+    return lines.filter(l => l !== '').join('\n');
+  }
+
+  // Rapport
+  const lines = [
+    '<:corbeau:1517815921258008697> **Nouveau rapport déposé**',
+    '',
+    detail ? `> **Rapport :** ${detail}` : '',
+    ficheName ? `> **Fiche :** ${ficheName}${categoryLabel ? ` *(${categoryLabel})*` : ''}` : '',
+    `> **Par :** ${authorLine(caller)}`,
+    '',
+    '-# Consultez les archives et transmettez tout élément complémentaire à votre supérieur.',
+  ];
+  return lines.filter(l => l !== '').join('\n');
 }
 
 async function buildAgendaMessage(payload: Record<string, unknown>, caller: Caller) {

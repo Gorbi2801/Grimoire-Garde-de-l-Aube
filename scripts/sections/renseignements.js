@@ -840,10 +840,11 @@ function buildNewFicheFormHTML(){
 }
 
 // ── Notification Discord ─────────────────────────────────────────────
-async function notifyDiscordRenseignement(type, detail){
+async function notifyDiscordRenseignement(type, opts){
   const send = window.GrimoireDiscord?.send || window.sendDiscordNotification;
   if(typeof send!=='function')return;
-  await send(type==='fiche'?'renseignement_fiche':'renseignement_rapport',{detail});
+  const payload = typeof opts==='string' ? {detail:opts} : (opts||{});
+  await send(type==='fiche'?'renseignement_fiche':'renseignement_rapport', payload);
 }
 
 // ── CRUD Fiches ──────────────────────────────────────────────────────
@@ -866,7 +867,7 @@ async function saveFiche(){
     try{await sbPost('mk_rens_fiches',fallbackPayload);}
     catch(fallbackError){ alert('Erreur : '+fallbackError.message); return; }
   }
-  await notifyDiscordRenseignement('fiche', nom);
+  await notifyDiscordRenseignement('fiche', {detail:nom, category:type});
   document.getElementById('rens-add-form').style.display='none';
   await rensLoad();
   // Aller sur le bon onglet
@@ -1015,7 +1016,7 @@ async function saveRapport(ficheId){
       alert('Rapport enregistré, mais une pièce jointe n’a pas pu être ajoutée : '+error.message);
     }
   }
-  await notifyDiscordRenseignement('rapport', titre||'Sans titre');
+  await notifyDiscordRenseignement('rapport', {detail:titre||'Sans titre', ficheName:fiche?.nom||null, ficheType:fiche?.type||null});
   await rensLoad();
 }
 
