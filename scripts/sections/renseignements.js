@@ -408,6 +408,7 @@ function buildRapportHTML(r){
       </div>
       <div style="display:flex;gap:.3rem;">
         ${peutModifier?`<button class="btn-sm" onclick="event.stopPropagation();openEditRapport('${r.id}')">Modifier</button>`:''}
+        ${peutModifier?`<button class="btn-sm" onclick="event.stopPropagation();openTransferRapport('${r.id}')">Transférer</button>`:''}
         ${peutSupprimer?`<button class="btn-sm" onclick="event.stopPropagation();deleteRapport('${r.id}','${r.fiche_id}')">Suppr.</button>`:''}
       </div>
     </div>
@@ -1068,6 +1069,52 @@ async function deleteRapport(rapId, ficheId){
   }
   catch(error){ alert('Erreur : '+error.message); return; }
   await rensLoad();
+}
+
+// ── Transfert d'un rapport vers une autre fiche ───────────────────────
+function openTransferRapport(rapId){
+  document.querySelectorAll('.rapport-transfer-form').forEach(el=>el.remove());
+  const r = RENS.rapports.find(x=>x.id===rapId);
+  if(!r) return;
+  const autres = RENS.fiches.filter(f=>f.id!==r.fiche_id && !rensIsArchived(f));
+  if(!autres.length){ toast('Aucune autre fiche disponible.'); return; }
+  const opts = ['lieux','individus','groupes'].map(type=>{
+    const dispo = autres.filter(f=>f.type===type);
+    if(!dispo.length) return '';
+    return `<optgroup label="${type==='lieux'?'Lieux':type==='individus'?'Individus':'Groupes'}">
+      ${dispo.map(f=>`<option value="${f.id}">${escH(f.nom)}</option>`).join('')}
+    </optgroup>`;
+  }).join('');
+  const form = document.createElement('div');
+  form.className = 'rapport-transfer-form';
+  form.style.cssText = 'padding:.6rem .8rem;background:rgba(28,26,24,.05);border-top:1px dashed var(--border-g);display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-top:.4rem;';
+  form.innerHTML = `
+    <span style="font-family:'Eagle Lake',serif;font-size:.82rem;color:var(--ink-faint);">Transférer vers :</span>
+    <select id="transfer-sel-${rapId}" style="flex:1;font-family:'IM Fell English',serif;font-size:.9rem;min-width:160px;background:var(--parch);border:1px solid var(--border-g);color:var(--ink);padding:.3rem .5rem;">
+      <option value="">— Choisir une fiche —</option>
+      ${opts}
+    </select>
+    <button class="btn-add" style="font-size:.78rem;padding:.28rem .7rem;" onclick="transferRapport('${rapId}')">Confirmer</button>
+    <button class="btn-sm" onclick="this.closest('.rapport-transfer-form').remove()">Annuler</button>`;
+  const body = document.getElementById('rap-'+rapId)?.querySelector('.rapport-acc-body');
+  if(body) body.appendChild(form);
+  else document.getElementById('rap-'+rapId)?.appendChild(form);
+}
+
+async function transferRapport(rapId){
+  const sel = document.getElementById('transfer-sel-'+rapId);
+  const newFicheId = sel?.value;
+  if(!newFicheId){ toast('Sélectionne une fiche cible.'); return; }
+  const newFiche = RENS.fiches.find(f=>f.id===newFicheId);
+  if(!confirm(`Transférer ce rapport vers "${newFiche?.nom||'cette fiche'}" ?`)) return;
+  try{
+    await sbPatch('mk_rens_rapports',`?id=eq.${rapId}`,{ fiche_id: newFicheId });
+    document.querySelectorAll('.rapport-transfer-form').forEach(el=>el.remove());
+    await rensLoad();
+    toast(`Rapport transféré vers "${escH(newFiche?.nom||'la fiche cible')}".`);
+  }catch(error){
+    alert('Erreur : '+error.message);
+  }
 }
 
 // ── CRUD Relations ───────────────────────────────────────────────────

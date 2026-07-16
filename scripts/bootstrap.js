@@ -38,7 +38,7 @@
     saveNoteModal, saveNote:saveNoteModal, openNoteModal, closeNoteModal,
     showTab, toggleFiche, toggleRap, toggleAdd, toggleRelForm, removeRel,
     renderTab, goToFiche, saveFiche, deleteFiche, openEditFiche, saveEditFiche,
-    saveRapport, openEditRapport, saveEditRapport, deleteRapport, addRelation, deleteRelation,
+    saveRapport, openEditRapport, saveEditRapport, deleteRapport, openTransferRapport, transferRapport, addRelation, deleteRelation,
     addRapportLien, deleteRapportLien, deleteRapportRapport,
     goToRapport, rensOpenMapReportPicker, rensSetMapReportType, rensSpawnMapReport, rensSpawnMapFiche, rensReorganiserCarte,
     rensStartMapLink, rensCancelMapLink, rensSetMapLinkColor, rensDeleteSelectedMapItem,
