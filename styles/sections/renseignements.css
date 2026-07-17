@@ -167,7 +167,13 @@ body{background:#1C1A18;font-family:'IM Fell English',Georgia,serif;font-size:16
 .rens-table thead th{background:var(--parch-deep);font-family:'Eagle Lake',serif;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--border-g);}
 .rens-table .rens-th-chevron{width:1.8rem;}
 .rens-table .rens-th-count{text-align:center;width:5rem;}
+.rens-table .rens-th-date{width:7.5rem;}
 .rens-table .rens-th-actions{text-align:right;width:auto;}
+.rens-sort-btn{display:inline-flex;align-items:center;gap:.25rem;background:transparent;border:0;padding:0;color:inherit;font:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer;}
+.rens-sort-btn:hover{color:var(--green-dark);}
+.rens-sort-btn::after{content:'↕';font-size:.74rem;opacity:.48;}
+.rens-sort-btn.asc::after{content:'↑';opacity:1;}
+.rens-sort-btn.desc::after{content:'↓';opacity:1;}
 
 .rens-table tbody tr.rens-row{cursor:pointer;background:var(--parch-dark);border-bottom:1px solid var(--border-g);transition:background .15s;}
 .rens-table tbody tr.rens-row:hover{background:rgba(0,0,0,.035);}
@@ -182,6 +188,7 @@ body{background:#1C1A18;font-family:'IM Fell English',Georgia,serif;font-size:16
 .rens-table tr.rens-row.open .fiche-chevron{transform:rotate(90deg);display:inline-block;}
 .rens-row-name{font-family:'Eagle Lake',serif;font-size:1rem;color:var(--green-dark);}
 .rens-row-count{text-align:center;font-family:'Eagle Lake',serif;font-size:.88rem;color:var(--ink-mid);}
+.rens-row-date{white-space:nowrap;color:var(--ink-mid);font-size:.92rem;}
 .rens-row-actions{text-align:right;white-space:nowrap;}
 .rens-row-actions .badge{margin-right:.4rem;}
 

@@ -15,6 +15,7 @@ const RENS = {
   activeTab: 'lieux',
   searchQ:   '',
   filterStatut: '',
+  sortDate: '',
   archivesOpen: false,
   mapReady: true,
   mapPickerType: 'all',
@@ -192,20 +193,104 @@ function rensIsArchived(fiche){
   return !!fiche?.archived_at;
 }
 
+function sortRensByDate(){
+  RENS.sortDate = RENS.sortDate === 'desc' ? 'asc' : 'desc';
+  rensRenderAll();
+}
+
+function rensUpdateDateSortButtons(){
+  document.querySelectorAll('[data-rens-sort-date]').forEach(btn=>{
+    btn.classList.toggle('asc', RENS.sortDate === 'asc');
+    btn.classList.toggle('desc', RENS.sortDate === 'desc');
+  });
+}
+
+function rensFormatDate(value){
+  if(!value)return '—';
+  const date = new Date(value);
+  if(Number.isNaN(date.getTime()))return '—';
+  return date.toLocaleDateString('fr-FR');
+}
+
+function rensSearchText(value){
+  if(value === null || value === undefined)return '';
+  if(Array.isArray(value))return value.map(rensSearchText).join(' ');
+  if(typeof value === 'object')return Object.entries(value).map(([key,val])=>`${key} ${rensSearchText(val)}`).join(' ');
+  return String(value);
+}
+
+function rensFicheMatchesSearch(fiche, query){
+  const searchParts = [
+    fiche.nom,
+    fiche.statut,
+    fiche.notes,
+    fiche.type,
+    fiche.created_by_name,
+    fiche.created_by_grade,
+    rensSearchText(fiche.meta),
+  ];
+
+  const ficheReports = RENS.rapports.filter(r=>r.fiche_id===fiche.id);
+  ficheReports.forEach(report=>{
+    searchParts.push(
+      report.titre,
+      report.fiabilite,
+      report.contenu,
+      report.action_recommandee,
+      report.created_by_name,
+      report.created_by_grade
+    );
+
+    RENS.rapportLiens
+      .filter(link=>link.rapport_id===report.id)
+      .forEach(link=>{
+        const linkedFiche = RENS.fiches.find(f=>f.id===link.fiche_id);
+        if(linkedFiche)searchParts.push(linkedFiche.nom, linkedFiche.notes, linkedFiche.statut, rensSearchText(linkedFiche.meta));
+      });
+
+    RENS.rapportRapport
+      .filter(link=>link.rapport_a===report.id || link.rapport_b===report.id)
+      .forEach(link=>{
+        const linkedReportId = link.rapport_a===report.id ? link.rapport_b : link.rapport_a;
+        const linkedReport = RENS.rapports.find(r=>r.id===linkedReportId);
+        if(linkedReport)searchParts.push(linkedReport.titre, linkedReport.contenu, linkedReport.action_recommandee);
+      });
+  });
+
+  RENS.relations
+    .filter(rel=>rel.fiche_source===fiche.id || rel.fiche_cible===fiche.id)
+    .forEach(rel=>{
+      const linkedFicheId = rel.fiche_source===fiche.id ? rel.fiche_cible : rel.fiche_source;
+      const linkedFiche = RENS.fiches.find(f=>f.id===linkedFicheId);
+      if(linkedFiche)searchParts.push(linkedFiche.nom, linkedFiche.notes, linkedFiche.statut, rensSearchText(linkedFiche.meta));
+    });
+
+  return searchParts.join(' ').toLowerCase().includes(query);
+}
+
 function rensFilterFicheList(fiches){
   if(RENS.searchQ){
-    const q = RENS.searchQ.toLowerCase();
-    fiches = fiches.filter(f=>f.nom.toLowerCase().includes(q));
+    const q = RENS.searchQ.trim().toLowerCase();
+    if(q)fiches = fiches.filter(f=>rensFicheMatchesSearch(f, q));
   }
   if(RENS.filterStatut) fiches = fiches.filter(f=>f.statut===RENS.filterStatut);
 
-  // Tri de priorité : Urgentes en premier, puis Recherché, Surveillance, Neutre/Neutralisé
-  const statutOrder = {recherche:1, surveillance:2, neutre:3, neutralise:4};
   fiches = [...fiches].sort((a,b)=>{
+    if(RENS.sortDate){
+      const da = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const db = b.created_at ? new Date(b.created_at).getTime() : 0;
+      const diff = da - db;
+      if(diff) return RENS.sortDate === 'asc' ? diff : -diff;
+      return (a.nom||'').localeCompare(b.nom||'');
+    }
+
+    // Tri de priorité : Urgentes en premier, puis Recherché, Surveillance, Neutre/Neutralisé
+    const statutOrder = {recherche:1, surveillance:2, neutre:3, neutralise:4};
     const ua = a.urgente?0:1, ub = b.urgente?0:1;
     if(ua!==ub) return ua-ub;
     const sa = statutOrder[a.statut]??3, sb = statutOrder[b.statut]??3;
-    return sa-sb;
+    if(sa!==sb)return sa-sb;
+    return (a.nom||'').localeCompare(b.nom||'');
   });
 
   return fiches;
@@ -231,10 +316,12 @@ function renderTab(type){
   const listEl = container.querySelector('.fiches-list');
   if(!listEl) return;
   if(fiches.length===0){
-    listEl.innerHTML = '<tr><td colspan="5" style="font-style:italic;color:var(--ink-faint);font-size:.92rem;padding:.7rem .9rem;">Aucune fiche.</td></tr>';
+    listEl.innerHTML = '<tr><td colspan="6" style="font-style:italic;color:var(--ink-faint);font-size:.92rem;padding:.7rem .9rem;">Aucune fiche.</td></tr>';
+    rensUpdateDateSortButtons();
     return;
   }
   listEl.innerHTML = fiches.map(f=>buildFicheHTML(f)).join('');
+  rensUpdateDateSortButtons();
 }
 
 // ── Construction HTML d'une fiche ────────────────────────────────────
@@ -262,6 +349,7 @@ function buildFicheHTML(f){
   const peutAjouter = rensCanWrite();
   const peutModifier = rensCanEditOwn(f);
   const peutSupprimer = rensCanDelete();
+  const createdDate = rensFormatDate(f.created_at);
 
   return `
   <tr class="rens-row${f.urgente?' urgente':''}${archived?' archived':''}" id="fiche-${f.id}" data-id="${f.id}" data-tab="${f.type}" onclick="toggleFiche('fiche-${f.id}')">
@@ -269,6 +357,7 @@ function buildFicheHTML(f){
     <td class="rens-row-name">${escH(f.nom)}</td>
     <td>${badgeArchived}${badgeStatut || '<span style="color:var(--ink-faint);font-style:italic;">Neutre</span>'}</td>
     <td class="rens-row-count">${raps.length>0?raps.length:'—'}</td>
+    <td class="rens-row-date">${createdDate}</td>
     <td class="rens-row-actions" onclick="event.stopPropagation()">
       ${badgeUrgente}
       ${peutModifier&&!archived?`<button class="btn-sm" onclick="openEditFiche('${f.id}')">Modifier</button>`:''}
@@ -278,7 +367,7 @@ function buildFicheHTML(f){
     </td>
   </tr>
   <tr class="fiche-detail-row" id="detail-fiche-${f.id}">
-    <td colspan="5">
+    <td colspan="6">
       <div class="fiche-body">
         ${quickFields?`<div class="fiche-quick">${quickFields}</div>`:''}
         ${f.notes?`<div style="font-size:.9rem;color:var(--ink);background:rgba(28,26,24,.04);border-left:3px solid var(--border-g);padding:.5rem .75rem;margin-bottom:.75rem;white-space:pre-wrap;">${escH(f.notes)}</div>`:''}
@@ -330,6 +419,7 @@ function renderArchives(){
               <th>Nom</th>
               <th>Statut</th>
               <th class="rens-th-count">Rapports</th>
+              <th class="rens-th-date"><button type="button" class="rens-sort-btn" data-rens-sort-date onclick="sortRensByDate()">Date</button></th>
               <th class="rens-th-actions">Actions</th>
             </tr>
           </thead>
@@ -337,6 +427,7 @@ function renderArchives(){
         </table>
       </div>`:'<p class="rens-archives-empty">Aucune archive ne correspond aux filtres actifs.</p>'}
     </div>`;
+  rensUpdateDateSortButtons();
 }
 
 function buildRelationsHTML(f, rels){
