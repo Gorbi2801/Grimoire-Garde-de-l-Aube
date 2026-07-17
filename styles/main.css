@@ -244,7 +244,9 @@ header{background:linear-gradient(180deg,var(--green-dark) 0%,var(--green) 100%)
 .patrouille-form-grid{grid-template-columns:repeat(3,minmax(150px,1fr));}
 .patrouille-members-field{grid-column:1/2;}
 .patrouille-objective-field{grid-column:2/-1;}
-.patrouille-create-card textarea{background:var(--parch);border:1px solid var(--border-g);color:var(--ink);font-family:'IM Fell English',serif;font-size:1rem;padding:0.45rem 0.6rem;resize:vertical;width:100%;box-sizing:border-box;}
+.patrouille-create-card textarea,.patrouille-card textarea{background:var(--parch);border:1px solid var(--border-g);color:var(--ink);font-family:'IM Fell English',serif;font-size:1rem;padding:0.45rem 0.6rem;resize:vertical;width:100%;box-sizing:border-box;}
+.patrouille-edit-grid{margin-bottom:0.9rem;}
+.patrouille-notes-field{grid-column:1/-1;}
 .patrouille-selected-members{display:flex;flex-direction:column;gap:0.35rem;min-height:116px;max-height:190px;overflow:auto;margin-top:0.45rem;border:1px solid rgba(93,73,47,0.22);background:rgba(240,230,200,0.35);padding:0.45rem;box-sizing:border-box;}
 .patrouille-selected-guard{display:flex;align-items:center;justify-content:space-between;gap:0.6rem;width:100%;border:1px solid rgba(93,73,47,0.28);background:rgba(226,212,168,0.55);color:var(--ink);font-family:'IM Fell English',serif;font-size:0.98rem;text-align:left;padding:0.35rem 0.45rem;cursor:pointer;}
 .patrouille-selected-guard:hover{border-color:#8B3030;background:rgba(139,48,48,0.1);}
@@ -267,7 +269,7 @@ header{background:linear-gradient(180deg,var(--green-dark) 0%,var(--green) 100%)
 .patrouille-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:0.8rem;}
 .patrouille-card h3{font-family:'Eagle Lake',serif;font-size:1.12rem;color:var(--ink);letter-spacing:0.05em;margin:0.2rem 0 0;line-height:1.25;}
 .patrouille-status{font-family:'Eagle Lake',serif;color:var(--green-dark);font-size:0.86rem;letter-spacing:0.08em;text-transform:uppercase;}
-.patrouille-card-actions{display:flex;justify-content:flex-end;flex:0 0 auto;}
+.patrouille-card-actions{display:flex;justify-content:flex-end;gap:0.45rem;flex:0 0 auto;flex-wrap:wrap;}
 .patrouille-details{margin-bottom:0.75rem;}
 .patrouille-objective{margin:0.75rem 0;color:var(--ink);line-height:1.5;}
 .patrouille-members{display:flex;flex-wrap:wrap;gap:0.35rem;margin-top:0.75rem;}

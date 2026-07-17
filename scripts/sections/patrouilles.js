@@ -7,6 +7,8 @@ const patrouilleState={
   members:[],
   guards:[],
   selectedMemberIds:[],
+  editingId:null,
+  editingMemberIds:[],
 };
 
 function patrouilleEsc(value){
@@ -70,6 +72,13 @@ function activePatrouilleForUser(userId){
   const activeIds=new Set(activePatrouilles().map(row=>row.id));
   const member=patrouilleState.members.find(row=>row.user_id===userId&&activeIds.has(row.patrouille_id));
   return member?patrouilleState.rows.find(row=>row.id===member.patrouille_id):null;
+}
+
+function patrouilleGuardStatus(row,currentPatrouilleId=''){
+  const active=activePatrouilleForUser(row.user_id);
+  if(active&&active.id===currentPatrouilleId)return 'dans cette sortie';
+  if(active)return `dehors : ${active.location||active.title||'patrouille'}`;
+  return row.is_active?'présent':'off';
 }
 
 function canManagePatrouille(row){
@@ -148,8 +157,7 @@ function renderPatrouilleGuardSelect(){
     select.innerHTML=[
       '<option value="">Ajouter un garde...</option>',
       ...rows.map(row=>{
-        const active=activePatrouilleForUser(row.user_id);
-        const status=active?`dehors : ${active.location||active.title||'patrouille'}`:(row.is_active?'présent':'off');
+        const status=patrouilleGuardStatus(row);
         return `<option value="${patrouilleEsc(row.user_id)}">${patrouilleEsc(patrouilleGuardName(row))}${row.grade?` — ${patrouilleEsc(row.grade)}`:''} (${patrouilleEsc(status)})</option>`;
       }),
     ].join('');
@@ -162,8 +170,7 @@ function renderPatrouilleGuardSelect(){
     .filter(Boolean);
 
   selected.innerHTML=rows.map(row=>{
-    const active=activePatrouilleForUser(row.user_id);
-    const status=active?`dehors : ${active.location||active.title||'patrouille'}`:(row.is_active?'présent':'off');
+    const status=patrouilleGuardStatus(row);
     return `<button type="button" class="patrouille-selected-guard" onclick="removePatrouilleMember('${patrouilleEsc(row.user_id)}')" title="Retirer ${patrouilleEsc(patrouilleGuardName(row))}">
       <span>${typeof renderPresenceDot==='function'?renderPresenceDot(row.user_id):''}${patrouilleEsc(patrouilleGuardName(row))}${row.grade?` — ${patrouilleEsc(row.grade)}`:''} <small>${patrouilleEsc(status)}</small></span>
       <strong aria-hidden="true">×</strong>
@@ -182,6 +189,52 @@ function addPatrouilleMember(userId){
 function removePatrouilleMember(userId){
   patrouilleState.selectedMemberIds=patrouilleState.selectedMemberIds.filter(id=>id!==userId);
   renderPatrouilleGuardSelect();
+}
+
+function renderEditPatrouilleGuardSelect(row){
+  const select=document.getElementById(`patrouilleEditMemberPicker-${row.id}`);
+  const selected=document.getElementById(`patrouilleEditSelectedMembers-${row.id}`);
+  const selectedIds=new Set(patrouilleState.editingMemberIds);
+
+  if(select){
+    const rows=sortedPatrouilleGuards().filter(guard=>!selectedIds.has(guard.user_id));
+    select.innerHTML=[
+      '<option value="">Ajouter un garde...</option>',
+      ...rows.map(guard=>{
+        const status=patrouilleGuardStatus(guard,row.id);
+        return `<option value="${patrouilleEsc(guard.user_id)}">${patrouilleEsc(patrouilleGuardName(guard))}${guard.grade?` — ${patrouilleEsc(guard.grade)}`:''} (${patrouilleEsc(status)})</option>`;
+      }),
+    ].join('');
+    select.value='';
+  }
+
+  if(!selected)return;
+  const rows=patrouilleState.editingMemberIds
+    .map(userId=>patrouilleGuard(userId))
+    .filter(Boolean);
+
+  selected.innerHTML=rows.map(guard=>{
+    const status=patrouilleGuardStatus(guard,row.id);
+    return `<button type="button" class="patrouille-selected-guard" onclick="removeEditPatrouilleMember('${patrouilleEsc(guard.user_id)}')" title="Retirer ${patrouilleEsc(patrouilleGuardName(guard))}">
+      <span>${typeof renderPresenceDot==='function'?renderPresenceDot(guard.user_id):''}${patrouilleEsc(patrouilleGuardName(guard))}${guard.grade?` — ${patrouilleEsc(guard.grade)}`:''} <small>${patrouilleEsc(status)}</small></span>
+      <strong aria-hidden="true">×</strong>
+    </button>`;
+  }).join('')||'<p class="sa-empty">Aucun garde ajouté.</p>';
+}
+
+function addEditPatrouilleMember(userId){
+  if(!userId||!patrouilleGuard(userId))return;
+  if(!patrouilleState.editingMemberIds.includes(userId)){
+    patrouilleState.editingMemberIds.push(userId);
+  }
+  const row=patrouilleState.rows.find(item=>item.id===patrouilleState.editingId);
+  if(row)renderEditPatrouilleGuardSelect(row);
+}
+
+function removeEditPatrouilleMember(userId){
+  patrouilleState.editingMemberIds=patrouilleState.editingMemberIds.filter(id=>id!==userId);
+  const row=patrouilleState.rows.find(item=>item.id===patrouilleState.editingId);
+  if(row)renderEditPatrouilleGuardSelect(row);
 }
 
 function renderPatrouilleBoard(){
@@ -237,6 +290,8 @@ function renderPatrouilleList(){
     const members=patrouilleMembers(row);
     const creator=patrouilleGuard(row.created_by);
     const active=row.status==='active'&&!row.ended_at;
+    const editing=active&&patrouilleState.editingId===row.id&&canManagePatrouille(row);
+    if(editing)return buildPatrouilleEditCard(row,members,creator);
     return `<article class="patrouille-card ${active?'active':'closed'}">
       <div class="patrouille-card-head">
         <div>
@@ -244,6 +299,7 @@ function renderPatrouilleList(){
           <h3>${patrouilleEsc(row.title||'Patrouille')}</h3>
         </div>
         <div class="patrouille-card-actions">
+          ${active&&canManagePatrouille(row)?`<button class="btn-sm" onclick="openEditPatrouille('${patrouilleEsc(row.id)}')">Modifier</button>`:''}
           ${active&&canManagePatrouille(row)?`<button class="btn-submit" onclick="closePatrouille('${patrouilleEsc(row.id)}')">Clôturer</button>`:''}
         </div>
       </div>
@@ -265,7 +321,74 @@ function renderPatrouilleList(){
     </article>`;
   }).join('');
 
+  const editingRow=rows.find(row=>row.id===patrouilleState.editingId);
+  if(editingRow)renderEditPatrouilleGuardSelect(editingRow);
+
   if(!rows.length)list.innerHTML='<p class="sa-empty">Aucune patrouille enregistrée.</p>';
+}
+
+function buildPatrouilleEditCard(row,members,creator){
+  const duration=row.planned_duration_minutes??'';
+  return `<article class="patrouille-card active editing">
+    <div class="patrouille-card-head">
+      <div>
+        <span class="patrouille-status">Modification en cours</span>
+        <h3>${patrouilleEsc(row.title||'Patrouille')}</h3>
+      </div>
+      <div class="patrouille-card-actions">
+        <button class="btn-sm" onclick="cancelEditPatrouille()">Annuler</button>
+        <button class="btn-submit" onclick="savePatrouilleEdit('${patrouilleEsc(row.id)}')">Enregistrer</button>
+      </div>
+    </div>
+    <div class="form-grid patrouille-form-grid patrouille-edit-grid">
+      <label class="form-field">
+        <span>Titre</span>
+        <input id="patrouilleEditTitle-${row.id}" value="${patrouilleEsc(row.title||'')}" placeholder="Patrouille, escorte, reconnaissance...">
+      </label>
+      <label class="form-field">
+        <span>Lieu</span>
+        <input id="patrouilleEditLocation-${row.id}" value="${patrouilleEsc(row.location||'')}" placeholder="Destination ou zone de sortie">
+      </label>
+      <label class="form-field">
+        <span>Durée prévue</span>
+        <input id="patrouilleEditDuration-${row.id}" type="number" min="0" step="15" value="${patrouilleEsc(duration)}" placeholder="Minutes, optionnel">
+      </label>
+      <label class="form-field patrouille-members-field">
+        <span>Gardes</span>
+        <select id="patrouilleEditMemberPicker-${row.id}" onchange="addEditPatrouilleMember(this.value)"></select>
+        <div class="patrouille-selected-members" id="patrouilleEditSelectedMembers-${row.id}"></div>
+      </label>
+      <label class="form-field patrouille-objective-field">
+        <span>Objectif</span>
+        <textarea id="patrouilleEditObjective-${row.id}" rows="6" placeholder="But de la sortie, consignes, risques connus...">${patrouilleEsc(row.objective||'')}</textarea>
+      </label>
+      <label class="form-field patrouille-notes-field">
+        <span>Notes</span>
+        <textarea id="patrouilleEditNotes-${row.id}" rows="3" placeholder="Notes optionnelles...">${patrouilleEsc(row.notes||'')}</textarea>
+      </label>
+    </div>
+    <dl class="profile-details patrouille-details">
+      <dt>Départ</dt><dd>${patrouilleEsc(patrouilleDate(row.started_at))}</dd>
+      <dt>Temps dehors</dt><dd>${patrouilleEsc(patrouilleElapsed(row.started_at,row.ended_at))}</dd>
+      <dt>Responsable</dt><dd>${patrouilleEsc(creator?`${patrouilleGuardName(creator)}${patrouilleGuardMeta(creator)?` — ${patrouilleGuardMeta(creator)}`:''}`:'Compte inconnu')}</dd>
+      <dt>Membres actuels</dt><dd>${members.length}</dd>
+    </dl>
+  </article>`;
+}
+
+function openEditPatrouille(id){
+  const row=patrouilleState.rows.find(item=>item.id===id);
+  if(!row||row.status!=='active'||row.ended_at||!canManagePatrouille(row)){toast('Modification refusée.');return;}
+  patrouilleState.editingId=id;
+  patrouilleState.editingMemberIds=patrouilleMembers(row).map(member=>member.user_id).filter(userId=>patrouilleGuard(userId));
+  renderPatrouilleList();
+  renderEditPatrouilleGuardSelect(row);
+}
+
+function cancelEditPatrouille(){
+  patrouilleState.editingId=null;
+  patrouilleState.editingMemberIds=[];
+  renderPatrouilleList();
 }
 
 function selectedPatrouilleMemberIds(){
@@ -341,5 +464,65 @@ async function closePatrouille(id){
   }catch(error){
     console.error(error);
     toast('Erreur lors de la clôture.');
+  }
+}
+
+async function savePatrouilleEdit(id){
+  const row=patrouilleState.rows.find(item=>item.id===id);
+  if(!row||row.status!=='active'||row.ended_at||!canManagePatrouille(row)){toast('Modification refusée.');return;}
+
+  const title=(document.getElementById(`patrouilleEditTitle-${id}`)?.value||'').trim();
+  const location=(document.getElementById(`patrouilleEditLocation-${id}`)?.value||'').trim();
+  const objective=(document.getElementById(`patrouilleEditObjective-${id}`)?.value||'').trim();
+  const notes=(document.getElementById(`patrouilleEditNotes-${id}`)?.value||'').trim();
+  const durationValue=(document.getElementById(`patrouilleEditDuration-${id}`)?.value||'').trim();
+  const plannedDuration=durationValue?Math.max(0,parseInt(durationValue,10)||0):null;
+  const memberIds=[...new Set(patrouilleState.editingMemberIds.filter(userId=>patrouilleGuard(userId)))];
+
+  if(!location){toast('Lieu requis.');return;}
+  if(!objective){toast('Objectif requis.');return;}
+  if(!memberIds.length){toast('Ajoute au moins un garde.');return;}
+
+  try{
+    const { error } = await window.GrimoireSupabase
+      .from('mk_patrouilles')
+      .update({
+        title:title||'Patrouille',
+        location,
+        objective,
+        planned_duration_minutes:plannedDuration,
+        notes:notes||null,
+      })
+      .eq('id',id);
+    if(error)throw error;
+
+    const currentIds=patrouilleMembers(row).map(member=>member.user_id);
+    const toAdd=memberIds.filter(userId=>!currentIds.includes(userId));
+    const toRemove=currentIds.filter(userId=>!memberIds.includes(userId));
+
+    if(toAdd.length){
+      const rows=toAdd.map(userId=>({patrouille_id:id,user_id:userId}));
+      const { error:insertError } = await window.GrimoireSupabase
+        .from('mk_patrouille_members')
+        .insert(rows);
+      if(insertError)throw insertError;
+    }
+
+    if(toRemove.length){
+      const { error:deleteError } = await window.GrimoireSupabase
+        .from('mk_patrouille_members')
+        .delete()
+        .eq('patrouille_id',id)
+        .in('user_id',toRemove);
+      if(deleteError)throw deleteError;
+    }
+
+    patrouilleState.editingId=null;
+    patrouilleState.editingMemberIds=[];
+    await loadPatrouilles();
+    toast('Patrouille modifiée.');
+  }catch(error){
+    console.error(error);
+    toast('Erreur lors de la modification.');
   }
 }

@@ -91,20 +91,29 @@ with check (
 );
 
 drop policy if exists "close own patrouille or admin" on public.mk_patrouilles;
-create policy "close own patrouille or admin"
+drop policy if exists "manage own active patrouille or admin" on public.mk_patrouilles;
+create policy "manage own active patrouille or admin"
 on public.mk_patrouilles
 for update
 to authenticated
 using (
+  public.can_access_section('patrouilles')
+  and
   status = 'active'
   and ended_at is null
   and (created_by = auth.uid() or public.can_edit_section('patrouilles'))
 )
 with check (
-  status = 'closed'
-  and ended_at is not null
-  and ended_at <= now() + interval '5 minutes'
+  public.can_access_section('patrouilles')
   and (created_by = auth.uid() or public.can_edit_section('patrouilles'))
+  and (
+    (status = 'active' and ended_at is null)
+    or (
+      status = 'closed'
+      and ended_at is not null
+      and ended_at <= now() + interval '5 minutes'
+    )
+  )
 );
 
 drop policy if exists "read patrouille members" on public.mk_patrouille_members;
@@ -129,13 +138,30 @@ with check (
   )
 );
 
+drop policy if exists "delete members for own patrouille" on public.mk_patrouille_members;
+create policy "delete members for own patrouille"
+on public.mk_patrouille_members
+for delete
+to authenticated
+using (
+  exists (
+    select 1
+    from public.mk_patrouilles p
+    where p.id = patrouille_id
+      and p.status = 'active'
+      and p.ended_at is null
+      and (p.created_by = auth.uid() or public.can_edit_section('patrouilles'))
+  )
+);
+
 revoke all on public.mk_patrouilles from anon;
 revoke all on public.mk_patrouilles from authenticated;
 grant select on public.mk_patrouilles to authenticated;
 grant insert(created_by, title, location, objective, planned_duration_minutes) on public.mk_patrouilles to authenticated;
-grant update(status, ended_at, notes) on public.mk_patrouilles to authenticated;
+grant update(title, location, objective, planned_duration_minutes, status, ended_at, notes) on public.mk_patrouilles to authenticated;
 
 revoke all on public.mk_patrouille_members from anon;
 revoke all on public.mk_patrouille_members from authenticated;
 grant select on public.mk_patrouille_members to authenticated;
 grant insert(patrouille_id, user_id) on public.mk_patrouille_members to authenticated;
+grant delete on public.mk_patrouille_members to authenticated;
