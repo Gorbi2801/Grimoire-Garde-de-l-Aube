@@ -1366,11 +1366,21 @@ function rensRapportLabel(report){
 
 function rensMapTypeColors(type){
   return {
-    lieux:{bg:'#c8b89a',border:'#8a6a3a'},
-    individus:{bg:'#9aabbc',border:'#3a5a7a'},
-    groupes:{bg:'#9ab8a0',border:'#3a6a4a'},
-    autres:{bg:'#d8c8aa',border:'#7a6a4a'},
-  }[type]||{bg:'#d8c8aa',border:'#7a6a4a'};
+    lieux    :{bg:'#b8785a',border:'#7a4a2a',text:'#fff8f4'},   // terre cuite
+    individus:{bg:'#5a7aaa',border:'#2a4a7a',text:'#f0f4ff'},   // bleu acier
+    groupes  :{bg:'#5a8a6a',border:'#2a5a3a',text:'#f0fff4'},   // vert forêt
+    autres   :{bg:'#8a7a5a',border:'#5a4a2a',text:'#fff8f0'},   // brun
+  }[type]||{bg:'#8a7a5a',border:'#5a4a2a',text:'#fff8f0'};
+}
+
+// Couleurs des rapports selon fiabilité
+function rensRapportColors(fiabilite){
+  return {
+    confirme  :{bg:'#d4ead4',border:'#3a6a3a'},
+    urgente   :{bg:'#ead4d4',border:'#8a1010'},
+    nonverif  :{bg:'#eae0c4',border:'#8a6a2a'},
+    fausse    :{bg:'#d8d8d8',border:'#6a6a6a'},
+  }[fiabilite]||{bg:'#eae0c4',border:'#8a6a2a'};
 }
 
 function rensMapReportListHtml(){
@@ -1633,33 +1643,66 @@ function rensComputeAutoEdges(mapNodes = RENS.mapNodes){
 // ── Réorganisation organique de la carte ─────────────────────────────
 function rensReorganiserCarte(){
   if(!rensMapNetwork) return;
-  // Réinitialiser les positions en mémoire pour forcer un nouveau placement
-  RENS.mapNodes.forEach(n=>{ n.x = null; n.y = null; });
-  // Activer la physique forceAtlas2
-  rensMapNetwork.setOptions({
-    physics: {
-      enabled: true,
-      solver: 'forceAtlas2Based',
-      forceAtlas2Based: {
-        gravitationalConstant : -320,
-        centralGravity        : 0.005,
-        springLength          : 450,
-        springConstant        : 0.04,
-        damping               : 0.6,
-        avoidOverlap          : 0.8,
-      },
-      stabilization: {
-        enabled        : true,
-        iterations     : 1500,
-        updateInterval : 25,
-        fit            : true,
-      },
+
+  // ── Pré-positionner : fiches en cercle, rapports autour de leur fiche ──
+  const ficheNodes   = RENS.mapNodes.filter(n=>n.node_type==='fiche');
+  const rapportNodes = RENS.mapNodes.filter(n=>n.node_type!=='fiche');
+  const total        = ficheNodes.length;
+  const ficheRadius  = Math.max(300, total * 80); // rayon du cercle de fiches
+
+  // Fiches en cercle régulier
+  ficheNodes.forEach((n,i)=>{
+    const angle = (2*Math.PI*i/total) - Math.PI/2;
+    n.x = Math.round(Math.cos(angle)*ficheRadius);
+    n.y = Math.round(Math.sin(angle)*ficheRadius);
+  });
+
+  // Rapports autour de leur fiche parente
+  rapportNodes.forEach(n=>{
+    const report    = RENS.rapports.find(r=>r.id===n.report_id);
+    const ficheNode = ficheNodes.find(fn=>fn.fiche_id===report?.fiche_id);
+    if(ficheNode){
+      // Décalage aléatoire mais cohérent autour de la fiche
+      const hash  = n.id.charCodeAt(0)*137+n.id.charCodeAt(1||0)*31;
+      const angle = (hash % 360) * Math.PI/180;
+      n.x = Math.round((ficheNode.x||0)+Math.cos(angle)*160);
+      n.y = Math.round((ficheNode.y||0)+Math.sin(angle)*160);
+    } else {
+      n.x = Math.round((Math.random()-0.5)*ficheRadius*2);
+      n.y = Math.round((Math.random()-0.5)*ficheRadius*2);
     }
   });
-  // Une fois stable, désactiver la physique et sauvegarder
-  rensMapNetwork.once('stabilizationIterationsDone', ()=>{
-    rensMapNetwork.setOptions({ physics: false });
-    rensMapNetwork.fit({ animation:{ duration:500, easingFunction:'easeInOutQuad' } });
+
+  // Appliquer les positions et lancer une physique légère pour affiner
+  const posUpdate = {};
+  RENS.mapNodes.forEach(n=>{ posUpdate[n.id]={x:n.x,y:n.y}; });
+  rensMapNetwork.setData({
+    nodes: rensMapNetwork.body.data.nodes,
+    edges: rensMapNetwork.body.data.edges,
+  });
+  RENS.mapNodes.forEach(n=>{
+    try{ rensMapNetwork.moveNode(n.id, n.x, n.y); }catch(e){}
+  });
+
+  rensMapNetwork.setOptions({
+    physics:{
+      enabled:true,
+      solver:'barnesHut',
+      barnesHut:{
+        gravitationalConstant:-8000,
+        centralGravity:0.05,
+        springLength:200,
+        springConstant:0.04,
+        damping:0.5,
+        avoidOverlap:1,
+      },
+      stabilization:{enabled:true,iterations:500,updateInterval:25,fit:true},
+    }
+  });
+
+  rensMapNetwork.once('stabilizationIterationsDone',()=>{
+    rensMapNetwork.setOptions({physics:false});
+    rensMapNetwork.fit({animation:{duration:600,easingFunction:'easeInOutQuad'}});
     if(!rensCanWrite()) return;
     RENS.mapNodes.forEach(n=>{
       const pos = rensMapNetwork.getPosition(n.id);
@@ -1691,38 +1734,41 @@ function rensRenderCarte(){
       const isFiche = node.node_type === 'fiche';
       const selected = RENS.selectedMapNode===node.id;
       if(isFiche){
-        const fiche = RENS.fiches.find(f=>f.id===node.fiche_id);
-        const rapsCount = RENS.rapports.filter(r=>r.fiche_id===node.fiche_id).length;
+        const fiche     = RENS.fiches.find(f=>f.id===node.fiche_id);
+        const rapsCount = RENS.rapports.filter(r=>r.fiche_id===node.fiche_id&&!r.archive).length;
+        const tc        = rensMapTypeColors(fiche?.type||'autres');
+        const typeLabel = {lieux:'Lieu',individus:'Individu',groupes:'Groupe'}[fiche?.type]||'';
+        const nomLabel  = (fiche?.nom||'Fiche').length>20?(fiche?.nom||'Fiche').substring(0,18)+'\u2026':(fiche?.nom||'Fiche');
         return {
           id: node.id, ficheId: node.fiche_id,
-          x: Number.isFinite(Number(node.x)) ? Number(node.x) : rensDefaultMapPosition(index).x,
-          y: Number.isFinite(Number(node.y)) ? Number(node.y) : rensDefaultMapPosition(index).y,
-          label: `${fiche?.nom||'Fiche'}${rapsCount?`
-(${rapsCount} rapport${rapsCount>1?'s':''})` :''}`,
-          title: fiche?.nom||'Fiche centrale',
+          x: Number.isFinite(Number(node.x))?Number(node.x):rensDefaultMapPosition(index).x,
+          y: Number.isFinite(Number(node.y))?Number(node.y):rensDefaultMapPosition(index).y,
+          label: `${nomLabel}${rapsCount?'\n\u25cf '+rapsCount+' rapport'+(rapsCount>1?'s':''):''}`,
+          title: `<b>${fiche?.nom||'Fiche'}</b><br>${typeLabel} \u00b7 ${rapsCount} rapport${rapsCount>1?'s':''}`,
           shape: 'ellipse',
-          color:{ background: selected ? '#f5ead0' : '#e8d49a', border: selected ? '#8a1010' : '#7a6030', highlight:{background:'#f5ead0',border:'#8a1010'} },
-          borderWidth: selected ? 3 : 2,
-          font:{face:'serif',size:14,color:'#3a2a0a',bold:true,multi:true}, margin:10,
-          widthConstraint:{minimum:90,maximum:180},
+          color:{background:selected?'#f5ead0':tc.bg, border:selected?'#8a1010':tc.border, highlight:{background:'#f5ead0',border:'#8a1010'}},
+          borderWidth: selected?4:3,
+          font:{face:'serif',size:16,color:tc.text,bold:true,multi:false},
+          margin:16, mass:3,
+          widthConstraint:{minimum:120,maximum:200},
         };
       }
-      const report = RENS.rapports.find(r=>r.id===node.report_id);
-      const fiche = rensFicheForRapport(report);
-      const type = rensRapportType(report);
-      const colors = rensMapTypeColors(type);
+      const report    = RENS.rapports.find(r=>r.id===node.report_id);
+      const fiche     = rensFicheForRapport(report);
+      const rc        = rensRapportColors(report?.fiabilite||'nonverif');
+      const fiabIcon  = {confirme:'\u2705',urgente:'\uD83D\uDD34',nonverif:'\u26A0\uFE0F',fausse:'\u274C'}[report?.fiabilite]||'\u26A0\uFE0F';
+      const titreLabel= (report?.titre||'Rapport').length>22?(report?.titre||'Rapport').substring(0,20)+'\u2026':(report?.titre||'Rapport');
       return {
         id: node.id, reportId: node.report_id,
-        x: Number.isFinite(Number(node.x)) ? Number(node.x) : rensDefaultMapPosition(index).x,
-        y: Number.isFinite(Number(node.y)) ? Number(node.y) : rensDefaultMapPosition(index).y,
-        label: `${fiche?.nom||'Fiche'}
-${report?.titre||'Rapport'}`,
-        title: rensRapportLabel(report),
+        x: Number.isFinite(Number(node.x))?Number(node.x):rensDefaultMapPosition(index).x,
+        y: Number.isFinite(Number(node.y))?Number(node.y):rensDefaultMapPosition(index).y,
+        label: `${fiabIcon} ${titreLabel}`,
+        title: `<b>${report?.titre||'Rapport'}</b><br>${fiche?.nom||''}`,
         shape: 'box',
-        color:{ background: selected ? '#f0d8d8' : colors.bg, border: selected ? '#8a1010' : colors.border, highlight:{background:'#efe1c4',border:'#8a1010'} },
-        borderWidth: selected ? 3 : 1.5,
-        font:{face:'serif',size:12,color:'#1c1a18',multi:true}, margin:8,
-        widthConstraint:{minimum:80,maximum:160},
+        color:{background:selected?'#f0d8d8':rc.bg, border:selected?'#8a1010':rc.border, highlight:{background:'#efe1c4',border:'#8a1010'}},
+        borderWidth: selected?3:1.5,
+        font:{face:'serif',size:12,color:'#2a1a0a',multi:false}, margin:8, mass:1,
+        widthConstraint:{minimum:90,maximum:170},
       };
     }));
     const autoEdges = rensComputeAutoEdges(mapNodes);
