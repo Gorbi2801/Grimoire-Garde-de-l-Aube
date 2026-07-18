@@ -1694,6 +1694,7 @@ function rensReorganiserCarte(){
   });
 
   rensMapNetwork.once('stabilizationIterationsDone',()=>{
+    rensMapNetwork.stopSimulation();
     rensMapNetwork.setOptions({physics:false});
     rensMapNetwork.fit({animation:{duration:600,easingFunction:'easeInOutQuad'}});
     if(!rensCanWrite()) return;
