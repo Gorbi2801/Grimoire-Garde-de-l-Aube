@@ -1673,16 +1673,9 @@ function rensReorganiserCarte(){
     }
   });
 
-  // Appliquer les positions et lancer une physique légère pour affiner
-  const posUpdate = {};
-  RENS.mapNodes.forEach(n=>{ posUpdate[n.id]={x:n.x,y:n.y}; });
-  rensMapNetwork.setData({
-    nodes: rensMapNetwork.body.data.nodes,
-    edges: rensMapNetwork.body.data.edges,
-  });
-  RENS.mapNodes.forEach(n=>{
-    try{ rensMapNetwork.moveNode(n.id, n.x, n.y); }catch(e){}
-  });
+  // Appliquer les positions directement dans le DataSet vis.js (sans setData)
+  const nodeUpdates = RENS.mapNodes.map(n=>({ id: n.id, x: n.x, y: n.y }));
+  try{ rensMapNetwork.body.data.nodes.update(nodeUpdates); }catch(e){ console.warn('update nodes:', e); }
 
   rensMapNetwork.setOptions({
     physics:{
