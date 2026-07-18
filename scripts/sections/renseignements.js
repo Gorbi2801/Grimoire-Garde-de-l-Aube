@@ -1723,6 +1723,25 @@ function rensRenderCarte(){
   container.innerHTML = '<p class="rens-map-empty">Préparation du tableau d\'enquête...</p>';
   rensLoadVisNetwork(()=>{
     const activeNodeIds = new Set(mapNodes.map(node=>node.id));
+
+    // ── Pré-calculer le degré de connexion de chaque nœud ────────────────
+    // Plus un nœud a de liens, plus il sera grand visuellement
+    const nodeByReport = {}, nodeByFiche = {};
+    mapNodes.forEach(n=>{
+      if(n.report_id) nodeByReport[n.report_id] = n.id;
+      if(n.fiche_id)  nodeByFiche[n.fiche_id]   = n.id;
+    });
+    const degree = {}; // nodeId → nb de connexions
+    mapNodes.forEach(n=>{ degree[n.id] = 0; });
+    const countEdge = (a,b)=>{ if(a&&b&&a!==b){ degree[a]=(degree[a]||0)+1; degree[b]=(degree[b]||0)+1; }};
+    RENS.rapports.forEach(r=>countEdge(nodeByReport[r.id], nodeByFiche[r.fiche_id]));
+    RENS.rapportLiens.forEach(l=>countEdge(nodeByReport[l.rapport_id], nodeByFiche[l.fiche_id]));
+    RENS.rapportRapport.forEach(l=>countEdge(nodeByReport[l.rapport_a], nodeByReport[l.rapport_b]));
+    RENS.relations.forEach(l=>countEdge(nodeByFiche[l.fiche_source], nodeByFiche[l.fiche_cible]));
+    const maxDeg = Math.max(1, ...Object.values(degree));
+    // Facteur de taille : de 1.0 (0 lien) à 2.2 (max liens)
+    const scaleFactor = id => 1.0 + 1.2*(degree[id]||0)/maxDeg;
+
     const nodes = new vis.DataSet(mapNodes.map((node,index)=>{
       const isFiche = node.node_type === 'fiche';
       const selected = RENS.selectedMapNode===node.id;
@@ -1732,6 +1751,11 @@ function rensRenderCarte(){
         const tc        = rensMapTypeColors(fiche?.type||'autres');
         const typeLabel = {lieux:'Lieu',individus:'Individu',groupes:'Groupe'}[fiche?.type]||'';
         const nomLabel  = (fiche?.nom||'Fiche').length>20?(fiche?.nom||'Fiche').substring(0,18)+'\u2026':(fiche?.nom||'Fiche');
+        const sf        = scaleFactor(node.id);
+        const baseMargin= Math.round(16*sf);
+        const minW      = Math.round(120*sf);
+        const maxW      = Math.round(200*sf);
+        const fontSize  = Math.round(14+4*((sf-1)/1.2));
         return {
           id: node.id, ficheId: node.fiche_id,
           x: Number.isFinite(Number(node.x))?Number(node.x):rensDefaultMapPosition(index).x,
@@ -1740,10 +1764,10 @@ function rensRenderCarte(){
           title: `<b>${fiche?.nom||'Fiche'}</b><br>${typeLabel} \u00b7 ${rapsCount} rapport${rapsCount>1?'s':''}`,
           shape: 'ellipse',
           color:{background:selected?'#f5ead0':tc.bg, border:selected?'#8a1010':tc.border, highlight:{background:'#f5ead0',border:'#8a1010'}},
-          borderWidth: selected?4:3,
-          font:{face:'serif',size:16,color:tc.text,bold:true,multi:false},
-          margin:16, mass:3,
-          widthConstraint:{minimum:120,maximum:200},
+          borderWidth: selected?4:Math.round(2.5*Math.min(sf,1.8)),
+          font:{face:'serif',size:fontSize,color:tc.text,bold:true,multi:false},
+          margin:baseMargin, mass:3,
+          widthConstraint:{minimum:minW,maximum:maxW},
         };
       }
       const report    = RENS.rapports.find(r=>r.id===node.report_id);
@@ -1751,6 +1775,10 @@ function rensRenderCarte(){
       const rc        = rensRapportColors(report?.fiabilite||'nonverif');
       const fiabIcon  = {confirme:'\u2705',urgente:'\uD83D\uDD34',nonverif:'\u26A0\uFE0F',fausse:'\u274C'}[report?.fiabilite]||'\u26A0\uFE0F';
       const titreLabel= (report?.titre||'Rapport').length>22?(report?.titre||'Rapport').substring(0,20)+'\u2026':(report?.titre||'Rapport');
+      const sfr       = scaleFactor(node.id);
+      const baseMarginR = Math.round(8*sfr);
+      const minWR     = Math.round(90*sfr);
+      const maxWR     = Math.round(170*sfr);
       return {
         id: node.id, reportId: node.report_id,
         x: Number.isFinite(Number(node.x))?Number(node.x):rensDefaultMapPosition(index).x,
@@ -1760,8 +1788,9 @@ function rensRenderCarte(){
         shape: 'box',
         color:{background:selected?'#f0d8d8':rc.bg, border:selected?'#8a1010':rc.border, highlight:{background:'#efe1c4',border:'#8a1010'}},
         borderWidth: selected?3:1.5,
-        font:{face:'serif',size:12,color:'#2a1a0a',multi:false}, margin:8, mass:1,
-        widthConstraint:{minimum:90,maximum:170},
+        font:{face:'serif',size:Math.round(11+3*((sfr-1)/1.2)),color:'#2a1a0a',multi:false},
+        margin:baseMarginR, mass:1,
+        widthConstraint:{minimum:minWR,maximum:maxWR},
       };
     }));
     const autoEdges = rensComputeAutoEdges(mapNodes);
