@@ -1677,33 +1677,18 @@ function rensReorganiserCarte(){
   const nodeUpdates = RENS.mapNodes.map(n=>({ id: n.id, x: n.x, y: n.y }));
   try{ rensMapNetwork.body.data.nodes.update(nodeUpdates); }catch(e){ console.warn('update nodes:', e); }
 
-  rensMapNetwork.setOptions({
-    physics:{
-      enabled:true,
-      solver:'barnesHut',
-      barnesHut:{
-        gravitationalConstant:-8000,
-        centralGravity:0.05,
-        springLength:200,
-        springConstant:0.04,
-        damping:0.5,
-        avoidOverlap:1,
-      },
-      stabilization:{enabled:true,iterations:500,updateInterval:25,fit:true},
-    }
-  });
+  // Pas de physique — positionnement géométrique pur, stable immédiatement
+  rensMapNetwork.stopSimulation();
+  rensMapNetwork.setOptions({ physics: false });
+  rensMapNetwork.fit({ animation:{ duration:600, easingFunction:'easeInOutQuad' } });
 
-  rensMapNetwork.once('stabilizationIterationsDone',()=>{
-    rensMapNetwork.stopSimulation();
-    rensMapNetwork.setOptions({physics:false});
-    rensMapNetwork.fit({animation:{duration:600,easingFunction:'easeInOutQuad'}});
-    if(!rensCanWrite()) return;
+  // Sauvegarder les positions calculées
+  if(rensCanWrite()){
     RENS.mapNodes.forEach(n=>{
-      const pos = rensMapNetwork.getPosition(n.id);
-      if(pos) rensSaveMapNodePosition(n.id, pos.x, pos.y);
+      rensSaveMapNodePosition(n.id, n.x, n.y);
     });
-    toast('Carte réorganisée et positions sauvegardées.');
-  });
+  }
+  toast('Carte réorganisée.');
 }
 
 function rensRenderCarte(){
