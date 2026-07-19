@@ -66,6 +66,13 @@ type DiscordPayload = {
   content?: string;
   embeds?: Record<string, unknown>[];
   allowed_mentions?: Record<string, unknown>;
+  files?: DiscordFile[];
+};
+
+type DiscordFile = {
+  name: string;
+  content: string;
+  type: string;
 };
 
 function getSupabaseSecretKey() {
@@ -104,6 +111,15 @@ function text(value: unknown, fallback = '') {
 function truncate(value: unknown, max = 450) {
   const raw = text(value);
   return raw.length > max ? `${raw.slice(0, max)}...` : raw;
+}
+
+function fileSafeName(value: unknown, fallback = 'rapport') {
+  return text(value, fallback)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9_-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80) || fallback;
 }
 
 function webhookFor(action: string) {
@@ -254,6 +270,23 @@ function reportAuthor(report: RensReport, caller: Caller) {
   return grade && grade !== '—' ? `${name} (${grade})` : name;
 }
 
+function buildRenseignementTextFile(reportTitle: string, fields: Record<string, unknown>[], reportContent: string, reportAction: string) {
+  const fieldLines = fields
+    .map((field) => `${text(field.name)}\n${text(field.value)}`)
+    .join('\n\n');
+  return [
+    reportTitle,
+    ''.padEnd(Math.min(reportTitle.length, 80), '='),
+    '',
+    fieldLines,
+    '',
+    'Contenu du rapport',
+    '------------------',
+    reportContent || 'Aucun contenu renseigné.',
+    reportAction ? ['', 'Action recommandée', '-------------------', reportAction].join('\n') : '',
+  ].filter(Boolean).join('\n');
+}
+
 async function requireCaller(req: Request): Promise<Caller> {
   const authHeader = req.headers.get('Authorization') || '';
   const token = authHeader.replace(/^Bearer\s+/i, '').trim();
@@ -395,10 +428,11 @@ async function buildRenseignementMessage(action: string, payload: Record<string,
     }
   }
 
-  const reportTitle = text(report?.titre) || detail || 'Rapport sans titre';
+  const reportTitle = text(report?.titre) || detail || text(payload.titre) || 'Rapport sans titre';
   const reportReliability = rensReliabilityLabel(report?.fiabilite || payload.fiabilite);
-  const reportContent = text(report?.contenu || payload.contenu, 'Aucun contenu renseigné.');
-  const reportAction = text(report?.action_recommandee || payload.action_recommandee);
+  const payloadContent = text(payload.contenu || payload.content || payload.reportContent || payload.description);
+  const reportContent = text(report?.contenu) || payloadContent || 'Aucun contenu renseigné.';
+  const reportAction = text(report?.action_recommandee) || text(payload.action_recommandee || payload.action || payload.recommendedAction);
   const reportDate = report?.created_at ? discordTimestamp(report.created_at, 'F') : discordTimestamp(new Date().toISOString(), 'F');
   const ficheTitle = text(fiche?.nom) || ficheName || 'Fiche inconnue';
   const ficheType = rensCategoryLabel(text(fiche?.type || category));
@@ -438,6 +472,21 @@ async function buildRenseignementMessage(action: string, payload: Record<string,
     });
   }
 
+  const files: DiscordFile[] = [];
+  const shouldAttachFullReport = reportContent.length > 2500 || reportAction.length > 700;
+  if (shouldAttachFullReport) {
+    files.push({
+      name: `${fileSafeName(reportTitle)}.txt`,
+      content: buildRenseignementTextFile(reportTitle, fields, reportContent, reportAction),
+      type: 'text/plain;charset=utf-8',
+    });
+    fields.push({
+      name: 'Rapport complet',
+      value: 'Le contenu complet est joint en fichier texte, car il dépasse la limite confortable d’un message Discord.',
+      inline: false,
+    });
+  }
+
   return {
     content: '<:corbeau:1517815921258008697> **Nouveau rapport déposé**',
     embeds: [{
@@ -447,6 +496,7 @@ async function buildRenseignementMessage(action: string, payload: Record<string,
       fields,
       footer: { text: 'Consultez le grimoire pour les relations, archives et pièces jointes complètes.' },
     }],
+    ...(files.length ? { files } : {}),
   };
 }
 
@@ -527,11 +577,26 @@ Deno.serve(async (req) => {
       };
     }
 
-    const response = await fetch(webhook, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(discordPayload),
-    });
+    let response: Response;
+    if (discordPayload.files?.length) {
+      const { files, ...payloadWithoutFiles } = discordPayload;
+      const form = new FormData();
+      form.append('payload_json', JSON.stringify(payloadWithoutFiles));
+      files.forEach((file, index) => {
+        form.append(`files[${index}]`, new Blob([file.content], { type: file.type }), file.name);
+      });
+
+      response = await fetch(webhook, {
+        method: 'POST',
+        body: form,
+      });
+    } else {
+      response = await fetch(webhook, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(discordPayload),
+      });
+    }
 
     if (!response.ok) {
       throw new Error(`Discord a refusé la notification (${response.status}).`);
