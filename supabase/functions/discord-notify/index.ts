@@ -24,6 +24,34 @@ type Garde = {
   grade: string | null;
 };
 
+type RensFiche = {
+  id: string;
+  nom: string | null;
+  type: string | null;
+  statut: string | null;
+  urgente: boolean | null;
+  notes: string | null;
+  created_at: string | null;
+};
+
+type RensReport = {
+  id: string;
+  fiche_id: string | null;
+  titre: string | null;
+  fiabilite: string | null;
+  contenu: string | null;
+  action_recommandee: string | null;
+  created_at: string | null;
+  created_by_name: string | null;
+  created_by_grade: string | null;
+};
+
+type RensAttachment = {
+  file_name: string | null;
+  file_size: number | null;
+  mime_type: string | null;
+};
+
 type Caller = {
   userId: string;
   profile: Profile;
@@ -32,6 +60,12 @@ type Caller = {
 
 type AuthUser = {
   id: string;
+};
+
+type DiscordPayload = {
+  content?: string;
+  embeds?: Record<string, unknown>[];
+  allowed_mentions?: Record<string, unknown>;
 };
 
 function getSupabaseSecretKey() {
@@ -110,6 +144,24 @@ async function fetchSingle<T>(table: string, params: Record<string, string>): Pr
   return rows[0] || null;
 }
 
+async function fetchMany<T>(table: string, params: Record<string, string>): Promise<T[]> {
+  const response = await fetch(restUrl(table, params), {
+    headers: serviceHeaders({ Accept: 'application/json' }),
+  });
+  if (!response.ok) {
+    throw new Error(`Lecture ${table} refusée (${response.status}).`);
+  }
+  return await response.json() as T[];
+}
+
+async function fetchOptionalMany<T>(table: string, params: Record<string, string>): Promise<T[]> {
+  try {
+    return await fetchMany<T>(table, params);
+  } catch (_error) {
+    return [];
+  }
+}
+
 function hasSection(caller: Caller, section: string) {
   return caller.profile.is_superadmin === true || (caller.profile.sections || []).includes(section);
 }
@@ -153,6 +205,53 @@ function discordTimestamp(value: unknown, style = 'F') {
   const date = new Date(raw);
   if (Number.isNaN(date.getTime())) return '—';
   return `<t:${Math.floor(date.getTime() / 1000)}:${style}>`;
+}
+
+function rensCategoryLabel(category: string) {
+  const categoryMap: Record<string, string> = {
+    lieu: '📍 Lieu',
+    lieux: '📍 Lieu',
+    individu: '👤 Individu',
+    individus: '👤 Individu',
+    groupe: '👥 Groupe',
+    groupes: '👥 Groupe',
+  };
+  return categoryMap[category.toLowerCase()] || category || '—';
+}
+
+function rensStatusLabel(value: unknown) {
+  const status = text(value, 'neutre');
+  const statusMap: Record<string, string> = {
+    surveillance: 'Surveillance active',
+    recherche: 'Recherché',
+    neutralise: 'Neutralisé',
+    neutre: 'Neutre',
+  };
+  return statusMap[status] || status;
+}
+
+function rensReliabilityLabel(value: unknown) {
+  const reliability = text(value, 'nonverif');
+  const reliabilityMap: Record<string, string> = {
+    confirme: 'Confirmée',
+    nonverif: 'Non vérifiée',
+    urgente: 'Urgente',
+    fausse: 'Invalidée',
+  };
+  return reliabilityMap[reliability] || reliability;
+}
+
+function discordFileSize(bytes: unknown) {
+  const size = Number(bytes) || 0;
+  if (size < 1024) return `${size} o`;
+  if (size < 1024 * 1024) return `${Math.round(size / 102.4) / 10} Ko`;
+  return `${Math.round(size / 1024 / 102.4) / 10} Mo`;
+}
+
+function reportAuthor(report: RensReport, caller: Caller) {
+  const name = text(report.created_by_name) || callerName(caller);
+  const grade = text(report.created_by_grade) || callerGrade(caller);
+  return grade && grade !== '—' ? `${name} (${grade})` : name;
 }
 
 async function requireCaller(req: Request): Promise<Caller> {
@@ -209,7 +308,7 @@ async function buildPresenceMessage(action: string, payload: Record<string, unkn
   throw new Error('Action présence inconnue.');
 }
 
-function buildRenseignementMessage(action: string, payload: Record<string, unknown>, caller: Caller) {
+async function buildRenseignementMessage(action: string, payload: Record<string, unknown>, caller: Caller): Promise<DiscordPayload> {
   if (!hasSection(caller, 'renseignements')) throw new Error('Accès renseignements requis.');
   const isFiche = action === 'renseignement_fiche';
   if (!isFiche && action !== 'renseignement_rapport') throw new Error('Action renseignement inconnue.');
@@ -220,8 +319,11 @@ function buildRenseignementMessage(action: string, payload: Record<string, unkno
 
   const categoryMap: Record<string, string> = {
     'lieu': '📍 Lieu',
+    'lieux': '📍 Lieu',
     'individu': '👤 Individu',
+    'individus': '👤 Individu',
     'groupe': '👥 Groupe',
+    'groupes': '👥 Groupe',
   };
   const categoryLabel = categoryMap[category.toLowerCase()] || category || null;
 
@@ -235,20 +337,117 @@ function buildRenseignementMessage(action: string, payload: Record<string, unkno
       '',
       '-# Consultez les archives et transmettez tout élément complémentaire à votre supérieur.',
     ];
-    return lines.filter(l => l !== '').join('\n');
+    return { content: lines.filter(l => l !== '').join('\n') };
   }
 
-  // Rapport
-  const lines = [
-    '<:corbeau:1517815921258008697> **Nouveau rapport déposé**',
-    '',
-    detail ? `> **Rapport :** ${detail}` : '',
-    ficheName ? `> **Fiche :** ${ficheName}${categoryLabel ? ` *(${categoryLabel})*` : ''}` : '',
-    `> **Par :** ${authorLine(caller)}`,
-    '',
-    '-# Consultez les archives et transmettez tout élément complémentaire à votre supérieur.',
+  const reportId = text(payload.reportId);
+  let report: RensReport | null = null;
+  let fiche: RensFiche | null = null;
+  let attachments: RensAttachment[] = [];
+  let linkedFiches: RensFiche[] = [];
+  let linkedReports: RensReport[] = [];
+
+  if (/^[0-9a-f-]{36}$/i.test(reportId)) {
+    report = await fetchSingle<RensReport>('mk_rens_rapports', {
+      select: 'id,fiche_id,titre,fiabilite,contenu,action_recommandee,created_at,created_by_name,created_by_grade',
+      id: `eq.${reportId}`,
+      limit: '1',
+    });
+
+    if (report?.fiche_id) {
+      fiche = await fetchSingle<RensFiche>('mk_rens_fiches', {
+        select: 'id,nom,type,statut,urgente,notes,created_at',
+        id: `eq.${report.fiche_id}`,
+        limit: '1',
+      });
+    }
+
+    attachments = await fetchOptionalMany<RensAttachment>('mk_rens_attachments', {
+      select: 'file_name,file_size,mime_type',
+      rapport_id: `eq.${reportId}`,
+      order: 'created_at.asc',
+    });
+
+    const ficheLinks = await fetchOptionalMany<{ fiche_id: string }>('mk_rens_rapport_liens', {
+      select: 'fiche_id',
+      rapport_id: `eq.${reportId}`,
+    });
+    const linkedFicheIds = ficheLinks.map((link) => link.fiche_id).filter(Boolean);
+    if (linkedFicheIds.length) {
+      linkedFiches = await fetchOptionalMany<RensFiche>('mk_rens_fiches', {
+        select: 'id,nom,type,statut,urgente,notes,created_at',
+        id: `in.(${linkedFicheIds.join(',')})`,
+      });
+    }
+
+    const reportLinks = await fetchOptionalMany<{ rapport_a: string; rapport_b: string }>('mk_rens_rapport_rapport', {
+      select: 'rapport_a,rapport_b',
+      or: `(rapport_a.eq.${reportId},rapport_b.eq.${reportId})`,
+    });
+    const linkedReportIds = reportLinks
+      .map((link) => link.rapport_a === reportId ? link.rapport_b : link.rapport_a)
+      .filter(Boolean);
+    if (linkedReportIds.length) {
+      linkedReports = await fetchOptionalMany<RensReport>('mk_rens_rapports', {
+        select: 'id,fiche_id,titre,fiabilite,contenu,action_recommandee,created_at,created_by_name,created_by_grade',
+        id: `in.(${linkedReportIds.join(',')})`,
+      });
+    }
+  }
+
+  const reportTitle = text(report?.titre) || detail || 'Rapport sans titre';
+  const reportReliability = rensReliabilityLabel(report?.fiabilite || payload.fiabilite);
+  const reportContent = text(report?.contenu || payload.contenu, 'Aucun contenu renseigné.');
+  const reportAction = text(report?.action_recommandee || payload.action_recommandee);
+  const reportDate = report?.created_at ? discordTimestamp(report.created_at, 'F') : discordTimestamp(new Date().toISOString(), 'F');
+  const ficheTitle = text(fiche?.nom) || ficheName || 'Fiche inconnue';
+  const ficheType = rensCategoryLabel(text(fiche?.type || category));
+  const ficheStatus = rensStatusLabel(fiche?.statut);
+  const urgent = fiche?.urgente ? ' · Urgente' : '';
+  const author = report ? reportAuthor(report, caller) : authorLine(caller).replace(/\*/g, '');
+
+  const fields: Record<string, unknown>[] = [
+    { name: 'Fiche', value: `${ficheTitle}\n${ficheType} · ${ficheStatus}${urgent}`, inline: true },
+    { name: 'Fiabilité', value: reportReliability, inline: true },
+    { name: 'Auteur', value: author, inline: true },
+    { name: 'Date', value: reportDate, inline: false },
   ];
-  return lines.filter(l => l !== '').join('\n');
+
+  if (reportAction) {
+    fields.push({ name: 'Action recommandée', value: truncate(reportAction, 700), inline: false });
+  }
+  if (linkedFiches.length) {
+    fields.push({
+      name: 'Fiches liées',
+      value: truncate(linkedFiches.map((item) => `${text(item.nom, 'Fiche')} (${rensCategoryLabel(text(item.type))})`).join('\n'), 700),
+      inline: false,
+    });
+  }
+  if (linkedReports.length) {
+    fields.push({
+      name: 'Rapports liés',
+      value: truncate(linkedReports.map((item) => `${text(item.titre, 'Rapport sans titre')} · ${discordDate(item.created_at)}`).join('\n'), 700),
+      inline: false,
+    });
+  }
+  if (attachments.length) {
+    fields.push({
+      name: 'Pièces jointes',
+      value: truncate(attachments.map((att) => `${text(att.file_name, 'Image')} (${discordFileSize(att.file_size)})`).join('\n'), 700),
+      inline: false,
+    });
+  }
+
+  return {
+    content: '<:corbeau:1517815921258008697> **Nouveau rapport déposé**',
+    embeds: [{
+      title: truncate(reportTitle, 240),
+      description: truncate(reportContent, 2500),
+      color: report?.fiabilite === 'urgente' ? 0x8a1010 : 0xb5922e,
+      fields,
+      footer: { text: 'Consultez le grimoire pour les relations, archives et pièces jointes complètes.' },
+    }],
+  };
 }
 
 async function buildAgendaMessage(payload: Record<string, unknown>, caller: Caller) {
@@ -314,12 +513,13 @@ Deno.serve(async (req) => {
     if (!webhook) return json({ ok: true, skipped: true });
 
     let content = '';
+    let discordPayload: DiscordPayload | null = null;
     if (action.startsWith('presence_')) content = await buildPresenceMessage(action, payload, caller);
-    else if (action.startsWith('renseignement_')) content = buildRenseignementMessage(action, payload, caller);
+    else if (action.startsWith('renseignement_')) discordPayload = await buildRenseignementMessage(action, payload, caller);
     else if (action === 'agenda_created') content = await buildAgendaMessage(payload, caller);
     else throw new Error('Action inconnue.');
 
-    const discordPayload: Record<string, unknown> = { content };
+    if (!discordPayload) discordPayload = { content };
     if (action === 'agenda_created') {
       discordPayload.allowed_mentions = {
         parse: [],

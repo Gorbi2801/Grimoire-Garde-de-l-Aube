@@ -296,6 +296,225 @@ function rensFilterFicheList(fiches){
   return fiches;
 }
 
+function rensStatusLabel(value){
+  return {
+    surveillance:'Surveillance active',
+    recherche:'Recherché',
+    neutralise:'Neutralisé',
+    neutre:'Neutre',
+  }[value] || value || 'Neutre';
+}
+
+function rensReliabilityLabel(value){
+  return {
+    confirme:'Confirmée',
+    nonverif:'Non vérifiée',
+    urgente:'Urgente',
+    fausse:'Invalidée',
+  }[value] || value || 'Non vérifiée';
+}
+
+function rensTypeLabel(value){
+  return {
+    lieux:'Lieux',
+    individus:'Individus',
+    groupes:'Groupes',
+  }[value] || value || 'Autres';
+}
+
+function rensExportMetaHTML(meta){
+  const entries = Object.entries(meta || {}).filter(([,value])=>value !== null && value !== undefined && String(value).trim() !== '');
+  if(!entries.length)return '';
+  return `<table class="meta-table"><tbody>${entries.map(([key,value])=>`
+    <tr><th>${escH(key)}</th><td>${escH(rensSearchText(value))}</td></tr>`).join('')}</tbody></table>`;
+}
+
+function rensExportRelationsHTML(fiche){
+  const relations = RENS.relations
+    .filter(rel=>rel.fiche_source===fiche.id || rel.fiche_cible===fiche.id)
+    .map(rel=>{
+      const otherId = rel.fiche_source===fiche.id ? rel.fiche_cible : rel.fiche_source;
+      return RENS.fiches.find(item=>item.id===otherId);
+    })
+    .filter(Boolean);
+
+  if(!relations.length)return '';
+  return `<div class="links"><strong>Fiches liées :</strong> ${relations.map(item=>`${escH(item.nom)} <em>(${escH(rensTypeLabel(item.type))})</em>`).join(', ')}</div>`;
+}
+
+function rensExportReportLinksHTML(report){
+  const linkedFiches = RENS.rapportLiens
+    .filter(link=>link.rapport_id===report.id)
+    .map(link=>RENS.fiches.find(f=>f.id===link.fiche_id))
+    .filter(Boolean);
+
+  const linkedReports = RENS.rapportRapport
+    .filter(link=>link.rapport_a===report.id || link.rapport_b===report.id)
+    .map(link=>{
+      const reportId = link.rapport_a===report.id ? link.rapport_b : link.rapport_a;
+      return RENS.rapports.find(item=>item.id===reportId);
+    })
+    .filter(Boolean);
+
+  const parts = [];
+  if(linkedFiches.length){
+    parts.push(`<div><strong>Fiches liées :</strong> ${linkedFiches.map(item=>`${escH(item.nom)} <em>(${escH(rensTypeLabel(item.type))})</em>`).join(', ')}</div>`);
+  }
+  if(linkedReports.length){
+    parts.push(`<div><strong>Rapports liés :</strong> ${linkedReports.map(item=>`${escH(item.titre||'Rapport sans titre')} <em>(${escH(rensFormatDate(item.created_at))})</em>`).join(', ')}</div>`);
+  }
+  return parts.length ? `<div class="report-links">${parts.join('')}</div>` : '';
+}
+
+function rensExportAttachmentsHTML(report){
+  const attachments = rensAttachmentsForRapport(report.id);
+  if(!attachments.length)return '';
+  return `<div class="attachments"><strong>Pièces jointes :</strong> ${attachments.map(att=>`${escH(att.file_name||'Image')} <em>(${escH(rensFormatFileSize(att.file_size))})</em>`).join(', ')}</div>`;
+}
+
+function rensExportReportHTML(report){
+  const author = rensAuthorLabel(report);
+  return `<article class="report ${report.fiabilite==='urgente'?'urgent':''}">
+    <div class="report-head">
+      <strong>${escH(report.titre||'Rapport sans titre')}</strong>
+      <span>${escH(rensFormatDate(report.created_at))} · ${escH(rensReliabilityLabel(report.fiabilite))}${author?` · ${escH(author)}`:''}</span>
+    </div>
+    <div class="report-content">${escH(report.contenu||'Aucun contenu renseigné.')}</div>
+    ${report.action_recommandee?`<div class="action"><strong>Action recommandée :</strong><br>${escH(report.action_recommandee)}</div>`:''}
+    ${rensExportReportLinksHTML(report)}
+    ${rensExportAttachmentsHTML(report)}
+  </article>`;
+}
+
+function rensExportFicheHTML(fiche){
+  const reports = RENS.rapports
+    .filter(report=>report.fiche_id===fiche.id)
+    .sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||'')));
+  const badges = [
+    rensStatusLabel(fiche.statut),
+    fiche.urgente ? 'Urgente' : '',
+    rensIsArchived(fiche) ? 'Archivée' : '',
+  ].filter(Boolean);
+
+  return `<section class="fiche-export">
+    <header>
+      <div>
+        <small>${escH(rensTypeLabel(fiche.type))}</small>
+        <h2>${escH(fiche.nom||'Fiche sans nom')}</h2>
+      </div>
+      <div class="date">${escH(rensFormatDate(fiche.created_at))}</div>
+    </header>
+    <div class="badges">${badges.map(label=>`<span>${escH(label)}</span>`).join('')}</div>
+    ${fiche.notes?`<p class="notes">${escH(fiche.notes)}</p>`:''}
+    ${rensExportMetaHTML(fiche.meta)}
+    ${rensExportRelationsHTML(fiche)}
+    <h3>Rapports (${reports.length})</h3>
+    ${reports.length?reports.map(rensExportReportHTML).join(''):'<p class="empty">Aucun rapport déposé.</p>'}
+  </section>`;
+}
+
+function rensBuildExportHTML(){
+  const generatedAt = new Date().toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'short'});
+  const activeFiches = RENS.fiches.filter(f=>!rensIsArchived(f));
+  const archivedFiches = RENS.fiches.filter(rensIsArchived);
+  const sections = [
+    ['lieux','Lieux'],
+    ['individus','Individus'],
+    ['groupes','Groupes'],
+  ];
+  const activeHTML = sections.map(([type,label])=>{
+    const rows = activeFiches
+      .filter(f=>f.type===type)
+      .sort((a,b)=>String(a.nom||'').localeCompare(String(b.nom||''),'fr'));
+    return `<section class="group">
+      <h1>${escH(label)}</h1>
+      ${rows.length?rows.map(rensExportFicheHTML).join(''):'<p class="empty">Aucune fiche.</p>'}
+    </section>`;
+  }).join('');
+  const archivesHTML = archivedFiches.length ? `<section class="group archives">
+    <h1>Archives</h1>
+    ${archivedFiches
+      .slice()
+      .sort((a,b)=>String(a.nom||'').localeCompare(String(b.nom||''),'fr'))
+      .map(rensExportFicheHTML)
+      .join('')}
+  </section>` : '';
+
+  return `<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Export renseignements - Garde de l'Aube</title>
+  <style>
+    @page{size:A4;margin:14mm;}
+    *{box-sizing:border-box;}
+    body{margin:0;background:#efe7d2;color:#1f1a14;font-family:Georgia,'Times New Roman',serif;font-size:12px;line-height:1.45;}
+    .cover{border:2px solid #7a6637;padding:18px 22px;margin-bottom:18px;background:#f6eed8;}
+    .cover h1{margin:0 0 6px;font-size:28px;letter-spacing:.04em;color:#243b26;}
+    .cover p{margin:3px 0;color:#5b4b38;font-style:italic;}
+    .summary{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+    .summary span,.badges span{border:1px solid #b5922e;background:#fff8df;padding:3px 7px;color:#3d3428;font-weight:bold;}
+    .group{break-before:page;}
+    .group:first-of-type{break-before:auto;}
+    .group>h1{font-size:21px;color:#243b26;border-bottom:2px solid #b5922e;padding-bottom:5px;margin:18px 0 12px;}
+    .fiche-export{break-inside:avoid;border:1px solid #a79a76;border-left:4px solid #b5922e;background:#f8f0dc;margin:0 0 14px;padding:11px 13px;}
+    .fiche-export header{display:flex;justify-content:space-between;gap:14px;border-bottom:1px solid #c8b98a;padding-bottom:7px;margin-bottom:7px;}
+    .fiche-export small{display:block;text-transform:uppercase;letter-spacing:.1em;color:#6b5a42;font-weight:bold;}
+    .fiche-export h2{margin:2px 0 0;color:#243b26;font-size:18px;}
+    .fiche-export .date{white-space:nowrap;color:#6b5a42;font-style:italic;}
+    .badges{display:flex;gap:5px;flex-wrap:wrap;margin:7px 0;}
+    .notes{white-space:pre-wrap;background:#efe4c8;border-left:3px solid #8a7a58;padding:7px;margin:8px 0;}
+    .meta-table{width:100%;border-collapse:collapse;margin:8px 0;}
+    .meta-table th,.meta-table td{border:1px solid #c8b98a;padding:5px;text-align:left;vertical-align:top;}
+    .meta-table th{width:30%;background:#eadfbd;color:#4b3b2c;}
+    .links,.report-links,.attachments{margin-top:6px;color:#4d4033;}
+    h3{font-size:14px;color:#243b26;margin:11px 0 7px;border-bottom:1px solid #c8b98a;padding-bottom:3px;}
+    .report{break-inside:avoid;border:1px solid #c8b98a;background:#fff9e8;margin:7px 0;padding:8px 9px;}
+    .report.urgent{border-left:4px solid #8a1010;}
+    .report-head{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid #ddcfa5;padding-bottom:4px;margin-bottom:5px;}
+    .report-head strong{font-size:13px;color:#1f1a14;}
+    .report-head span{font-size:11px;color:#6b5a42;text-align:right;}
+    .report-content,.action{white-space:pre-wrap;margin-top:6px;}
+    .action{background:#efe4c8;padding:6px;border-left:3px solid #b5922e;}
+    .empty{color:#6b5a42;font-style:italic;}
+    em{color:#6b5a42;}
+    @media print{.no-print{display:none;}.group{break-before:page;}.group:first-of-type{break-before:auto;}}
+  </style>
+</head>
+<body>
+  <section class="cover">
+    <h1>Registre des Renseignements</h1>
+    <p>Export généré le ${escH(generatedAt)}</p>
+    <p>Ce qui est consigné ici ne sort pas de ces pages.</p>
+    <div class="summary">
+      <span>Fiches actives : ${activeFiches.length}</span>
+      <span>Archives : ${archivedFiches.length}</span>
+      <span>Rapports : ${RENS.rapports.length}</span>
+    </div>
+  </section>
+  ${activeHTML}
+  ${archivesHTML}
+</body>
+</html>`;
+}
+
+function exportRenseignementsPDF(){
+  if(!RENS.fiches.length && !RENS.rapports.length){
+    toast('Aucun renseignement à exporter.');
+    return;
+  }
+  const win = window.open('', '_blank');
+  if(!win){
+    toast('Le navigateur a bloqué la fenêtre d’export.');
+    return;
+  }
+  win.document.open();
+  win.document.write(rensBuildExportHTML());
+  win.document.close();
+  win.focus();
+  setTimeout(()=>win.print(), 350);
+}
+
 function rensFilteredFiches(type){
   let fiches = RENS.fiches.filter(f=>!rensIsArchived(f) && (!type || f.type===type));
   return rensFilterFicheList(fiches);
@@ -1108,7 +1327,15 @@ async function saveRapport(ficheId){
       alert('Rapport enregistré, mais une pièce jointe n’a pas pu être ajoutée : '+error.message);
     }
   }
-  await notifyDiscordRenseignement('rapport', {detail:titre||'Sans titre', ficheName:fiche?.nom||null, ficheType:fiche?.type||null});
+  await notifyDiscordRenseignement('rapport', {
+    reportId: createdReport?.id || null,
+    detail: titre || 'Sans titre',
+    ficheName: fiche?.nom || null,
+    ficheType: fiche?.type || null,
+    fiabilite,
+    contenu,
+    action_recommandee: action || null,
+  });
   await rensLoad();
 }
 
