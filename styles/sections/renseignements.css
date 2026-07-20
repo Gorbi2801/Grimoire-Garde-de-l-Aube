@@ -39,6 +39,7 @@ body{background:#1C1A18;font-family:'IM Fell English',Georgia,serif;font-size:16
 .badge{display:inline-block;font-family:'IM Fell English',serif;font-size:.78rem;font-style:italic;padding:.1rem .55rem;border:1px solid;border-radius:2px;}
 .badge-urgente{background:rgba(122,16,16,.1);color:#7A1010;border-color:rgba(122,16,16,.4);}
 .badge-confirme{background:rgba(45,106,45,.1);color:#2D5A1A;border-color:rgba(45,106,45,.4);}
+.badge-verifie{background:rgba(45,106,45,.1);color:#2D5A1A;border-color:rgba(45,106,45,.4);}
 .badge-nonverif{background:rgba(139,94,0,.1);color:#6B4500;border-color:rgba(139,94,0,.4);}
 .badge-type{background:rgba(28,26,24,.07);color:var(--ink-mid);border-color:var(--border-g);}
 .badge-surveille{background:rgba(139,94,0,.1);color:#6B4500;border-color:rgba(139,94,0,.4);}
@@ -111,6 +112,7 @@ body{background:#1C1A18;font-family:'IM Fell English',Georgia,serif;font-size:16
 .rapports-title{font-family:'Eagle Lake',serif;font-size:.8rem;letter-spacing:.08em;color:var(--green-dark);text-transform:uppercase;margin-bottom:.75rem;display:flex;align-items:center;justify-content:space-between;}
 .rapport-accordion{border:1px solid var(--border-g);margin-bottom:.5rem;background:var(--parch);}
 .rapport-accordion.confirme{border-left:3px solid #2D5A1A;}
+.rapport-accordion.verifie{border-left:3px solid #2D5A1A;}
 .rapport-accordion.nonverif{border-left:3px solid #8B6500;}
 .rapport-accordion.urgente{border-left:3px solid #7A1010;}
 .rapport-acc-head{display:flex;align-items:center;justify-content:space-between;padding:.6rem .85rem;cursor:pointer;user-select:none;gap:.5rem;}

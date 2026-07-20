@@ -285,7 +285,7 @@ function rensFilterFicheList(fiches){
     }
 
     // Tri de priorité : Urgentes en premier, puis Recherché, Surveillance, Neutre/Neutralisé
-    const statutOrder = {recherche:1, surveillance:2, neutre:3, neutralise:4};
+    const statutOrder = {recherche:1, surveillance:2, verifie:3, neutre:4, neutralise:5};
     const ua = a.urgente?0:1, ub = b.urgente?0:1;
     if(ua!==ub) return ua-ub;
     const sa = statutOrder[a.statut]??3, sb = statutOrder[b.statut]??3;
@@ -300,6 +300,7 @@ function rensStatusLabel(value){
   return {
     surveillance:'Surveillance active',
     recherche:'Recherché',
+    verifie:'Vérifié',
     neutralise:'Neutralisé',
     neutre:'Neutre',
   }[value] || value || 'Neutre';
@@ -308,6 +309,7 @@ function rensStatusLabel(value){
 function rensReliabilityLabel(value){
   return {
     confirme:'Confirmée',
+    verifie:'Vérifié',
     nonverif:'Non vérifiée',
     urgente:'Urgente',
     fausse:'Invalidée',
@@ -552,7 +554,7 @@ function buildFicheHTML(f){
   const badgeUrgente = f.urgente ? `<span class="badge badge-urgente">🔴 Urgente</span>` : '';
   const badgeArchived = archived ? `<span class="badge badge-archive">Archivée</span>` : '';
   const badgeStatut  = f.statut && f.statut!=='neutre'
-    ? `<span class="badge badge-${f.statut==='surveillance'?'surveille':f.statut==='recherche'?'recherche':'neutralise'}">${f.statut==='surveillance'?'Surveillance active':f.statut==='recherche'?'Recherché':'Neutralisé'}</span>` : '';
+    ? `<span class="badge badge-${f.statut==='surveillance'?'surveille':f.statut==='recherche'?'recherche':f.statut==='verifie'?'verifie':'neutralise'}">${escH(rensStatusLabel(f.statut))}</span>` : '';
 
   // Champs rapides depuis meta JSON
   const meta = f.meta || {};
@@ -701,7 +703,7 @@ function buildRapportHTML(r){
   const archived = rensReportIsArchived(r);
   const peutModifier = rensCanEditOwn(r) && !archived;
   const peutSupprimer = rensCanDelete() && !archived;
-  const ficheLabel = {confirme:'✅ Confirmée', nonverif:'⚠ Non vérifiée', urgente:'🔴 Urgente', fausse:'❌ Invalidée'}[r.fiabilite]||r.fiabilite;
+  const ficheLabel = {confirme:'✅ Confirmée', verifie:'✅ Vérifié', nonverif:'⚠ Non vérifiée', urgente:'🔴 Urgente', fausse:'❌ Invalidée'}[r.fiabilite]||r.fiabilite;
   const date = r.created_at ? new Date(r.created_at).toLocaleDateString('fr-FR') : '';
   const preview = (r.contenu||'').substring(0,60)+(r.contenu&&r.contenu.length>60?'…':'');
   const author = rensAuthorLabel(r);
@@ -1064,6 +1066,7 @@ function buildAddRapportFormHTML(ficheId){
       <div class="field"><label>Fiabilité</label>
         <select id="raf-fib-${ficheId}">
           <option value="confirme">✅ Confirmée</option>
+          <option value="verifie">✅ Vérifié</option>
           <option value="nonverif" selected>⚠ Non vérifiée</option>
           <option value="fausse">❌ Invalidée</option>
           <option value="urgente">🔴 Urgente</option>
@@ -1091,6 +1094,7 @@ function buildEditRapportFormHTML(r){
       <div class="field"><label>Fiabilité</label>
         <select id="er-fib-${r.id}">
           <option value="confirme"${r.fiabilite==='confirme'?' selected':''}>✅ Confirmée</option>
+          <option value="verifie"${r.fiabilite==='verifie'?' selected':''}>✅ Vérifié</option>
           <option value="nonverif"${r.fiabilite==='nonverif'?' selected':''}>⚠ Non vérifiée</option>
           <option value="urgente"${r.fiabilite==='urgente'?' selected':''}>🔴 Urgente</option>
           <option value="fausse"${r.fiabilite==='fausse'?' selected':''}>❌ Invalidée</option>
@@ -1136,6 +1140,7 @@ function buildNewFicheFormHTML(){
           <option value="neutre">Neutre</option>
           <option value="surveillance">Surveillance active</option>
           <option value="recherche">Recherché</option>
+          <option value="verifie">Vérifié</option>
           <option value="neutralise">Neutralisé</option>
         </select>
       </div>
@@ -1241,6 +1246,7 @@ function buildEditFicheFormHTML(f){
           <option value="neutre"${f.statut==='neutre'?' selected':''}>Neutre</option>
           <option value="surveillance"${f.statut==='surveillance'?' selected':''}>Surveillance active</option>
           <option value="recherche"${f.statut==='recherche'?' selected':''}>Recherché</option>
+          <option value="verifie"${f.statut==='verifie'?' selected':''}>Vérifié</option>
           <option value="neutralise"${f.statut==='neutralise'?' selected':''}>Neutralisé</option>
         </select>
       </div>
@@ -1604,6 +1610,7 @@ function rensMapTypeColors(type){
 function rensRapportColors(fiabilite){
   return {
     confirme  :{bg:'#d4ead4',border:'#3a6a3a'},
+    verifie   :{bg:'#d4ead4',border:'#3a6a3a'},
     urgente   :{bg:'#ead4d4',border:'#8a1010'},
     nonverif  :{bg:'#eae0c4',border:'#8a6a2a'},
     fausse    :{bg:'#d8d8d8',border:'#6a6a6a'},
@@ -1986,7 +1993,7 @@ function rensRenderCarte(){
       const report    = RENS.rapports.find(r=>r.id===node.report_id);
       const fiche     = rensFicheForRapport(report);
       const rc        = rensRapportColors(report?.fiabilite||'nonverif');
-      const fiabIcon  = {confirme:'\u2705',urgente:'\uD83D\uDD34',nonverif:'\u26A0\uFE0F',fausse:'\u274C'}[report?.fiabilite]||'\u26A0\uFE0F';
+      const fiabIcon  = {confirme:'\u2705',verifie:'\u2705',urgente:'\uD83D\uDD34',nonverif:'\u26A0\uFE0F',fausse:'\u274C'}[report?.fiabilite]||'\u26A0\uFE0F';
       const titreLabel= (report?.titre||'Rapport').length>22?(report?.titre||'Rapport').substring(0,20)+'\u2026':(report?.titre||'Rapport');
       const sfr       = scaleFactor(node.id);
       const baseMarginR = Math.round(8*sfr);

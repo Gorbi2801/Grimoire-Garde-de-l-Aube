@@ -240,6 +240,7 @@ function rensStatusLabel(value: unknown) {
   const statusMap: Record<string, string> = {
     surveillance: 'Surveillance active',
     recherche: 'Recherché',
+    verifie: 'Vérifié',
     neutralise: 'Neutralisé',
     neutre: 'Neutre',
   };
@@ -250,6 +251,7 @@ function rensReliabilityLabel(value: unknown) {
   const reliability = text(value, 'nonverif');
   const reliabilityMap: Record<string, string> = {
     confirme: 'Confirmée',
+    verifie: 'Vérifié',
     nonverif: 'Non vérifiée',
     urgente: 'Urgente',
     fausse: 'Invalidée',
