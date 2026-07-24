@@ -875,6 +875,7 @@
     <div class="tab active" onclick="showTab('lieux',this)">Lieux</div>
     <div class="tab" onclick="showTab('individus',this)">Individus</div>
     <div class="tab" onclick="showTab('groupes',this)">Groupes</div>
+    <div class="tab" onclick="showTab('autres',this)">Autres</div>
   </div>
 
   <div class="toolbar">
@@ -933,6 +934,26 @@
 
   <!-- ══ GROUPES ══ -->
   <div id="tab-groupes" style="display:none;">
+    <div class="section-label">…</div>
+    <div class="rens-table-wrap">
+      <table class="rens-table">
+        <thead>
+          <tr>
+            <th class="rens-th-chevron"></th>
+            <th>Nom</th>
+            <th>Statut</th>
+            <th class="rens-th-count">Rapports</th>
+            <th class="rens-th-date"><button type="button" class="rens-sort-btn" data-rens-sort-date onclick="sortRensByDate()">Date</button></th>
+            <th class="rens-th-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="fiches-list"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ AUTRES ══ -->
+  <div id="tab-autres" style="display:none;">
     <div class="section-label">…</div>
     <div class="rens-table-wrap">
       <table class="rens-table">

@@ -88,7 +88,7 @@ function goToFiche(ficheId, tab){
     return;
   }
   const tabBtns = document.querySelectorAll('#page-renseignements .tab');
-  const idx = ['lieux','individus','groupes'].indexOf(tab);
+  const idx = ['lieux','individus','groupes','autres'].indexOf(tab);
   if(idx >= 0 && tabBtns[idx]) showTab(tab, tabBtns[idx]);
   setTimeout(()=>{
     const target = document.getElementById('fiche-'+ficheId);
@@ -176,6 +176,7 @@ function rensRenderStats(){
   const lieux     = activeFiches.filter(f=>f.type==='lieux').length;
   const individus = activeFiches.filter(f=>f.type==='individus').length;
   const groupes   = activeFiches.filter(f=>f.type==='groupes').length;
+  const autres    = activeFiches.filter(f=>f.type==='autres').length;
   const urgents   = activeFiches.filter(f=>f.urgente).length;
   const nbRap     = RENS.rapports.filter(r=>activeIds.has(r.fiche_id)).length;
   const statsEl   = document.getElementById('rens-stats');
@@ -184,6 +185,7 @@ function rensRenderStats(){
     <div class="stat">Lieux : <strong>${lieux}</strong></div>
     <div class="stat">Individus : <strong>${individus}</strong></div>
     <div class="stat">Groupes : <strong>${groupes}</strong></div>
+    ${autres>0?`<div class="stat">Autres : <strong>${autres}</strong></div>`:''}
     ${urgents>0?`<div class="stat" style="color:#7A1010;">🔴 Urgents : <strong>${urgents}</strong></div>`:''}
     <div class="stat">Rapports actifs : <strong>${nbRap}</strong></div>
     ${archivedCount>0?`<div class="stat">Archives : <strong>${archivedCount}</strong></div>`:''}`;
@@ -321,6 +323,7 @@ function rensTypeLabel(value){
     lieux:'Lieux',
     individus:'Individus',
     groupes:'Groupes',
+    autres:'Autres',
   }[value] || value || 'Autres';
 }
 
@@ -423,6 +426,7 @@ function rensBuildExportHTML(){
     ['lieux','Lieux'],
     ['individus','Individus'],
     ['groupes','Groupes'],
+    ['autres','Autres'],
   ];
   const activeHTML = sections.map(([type,label])=>{
     const rows = activeFiches
@@ -532,7 +536,7 @@ function renderTab(type){
   const fiches = rensFilteredFiches(type);
 
   const labelEl = container.querySelector('.section-label');
-  if(labelEl) labelEl.textContent = `${fiches.length} ${type==='lieux'?'lieu(x)':type==='individus'?'individu(s)':'groupe(s)'} recensé(s)`;
+  if(labelEl) labelEl.textContent = `${fiches.length} ${type==='lieux'?'lieu(x)':type==='individus'?'individu(s)':type==='groupes'?'groupe(s)':'autre(s)'} recensé(s)`;
 
   const listEl = container.querySelector('.fiches-list');
   if(!listEl) return;
@@ -660,7 +664,7 @@ function buildRelationsHTML(f, rels){
     const relId   = rel.id;
     const other   = RENS.fiches.find(x=>x.id===otherId);
     if(!other) return '';
-    const typeLabel = other.type==='lieux'?'Lieu':other.type==='individus'?'Individu':'Groupe';
+    const typeLabel = other.type==='lieux'?'Lieu':other.type==='individus'?'Individu':other.type==='groupes'?'Groupe':'Autre';
     return `<a class="fiche-link" onclick="goToFiche('${other.id}','${other.type}')">
       <span class="fl-type">${typeLabel} ·</span> ${escH(other.nom)}
       ${peutSupprimer?`<span class="fl-del" onclick="event.stopPropagation();deleteRelation('${relId}','${f.id}')" title="Supprimer ce lien">×</span>`:''}
@@ -669,10 +673,10 @@ function buildRelationsHTML(f, rels){
 
   // Options disponibles pour le select (toutes fiches sauf soi-même et déjà liées)
   const dejalie = rels.map(r=>r.fiche_source===f.id?r.fiche_cible:r.fiche_source);
-  const opts = ['lieux','individus','groupes'].map(type=>{
+  const opts = ['lieux','individus','groupes','autres'].map(type=>{
     const dispo = RENS.fiches.filter(x=>!rensIsArchived(x) && x.type===type && x.id!==f.id && !dejalie.includes(x.id));
     if(!dispo.length) return '';
-    return `<optgroup label="${type==='lieux'?'Lieux':type==='individus'?'Individus':'Groupes'}">
+    return `<optgroup label="${type==='lieux'?'Lieux':type==='individus'?'Individus':type==='groupes'?'Groupes':'Autres'}">
       ${dispo.map(x=>`<option value="${x.id}">${escH(x.nom)}</option>`).join('')}
     </optgroup>`;
   }).join('');
@@ -749,7 +753,7 @@ function buildRapportLiensHTML(r){
   const liensHTML = liens.map(l=>{
     const fiche = RENS.fiches.find(f=>f.id===l.fiche_id);
     if(!fiche) return '';
-    const typeLabel = fiche.type==='lieux'?'Lieu':fiche.type==='individus'?'Individu':'Groupe';
+    const typeLabel = fiche.type==='lieux'?'Lieu':fiche.type==='individus'?'Individu':fiche.type==='groupes'?'Groupe':'Autre';
     return `<a class="fiche-link" onclick="goToFiche('${fiche.id}','${fiche.type}')">
       <span class="fl-type">${typeLabel} ·</span> ${escH(fiche.nom)}
       ${peutSupprimer?`<span class="fl-del" onclick="event.stopPropagation();deleteRapportLien('${l.id}')" title="Supprimer ce lien">×</span>`:''}
@@ -777,10 +781,10 @@ function buildRapportLiensHTML(r){
   const dejalieFiches   = liens.map(l=>l.fiche_id);
   const dejalieRapports = rapliens.map(l=>l.rapport_a===r.id?l.rapport_b:l.rapport_a);
 
-  const optsFiches = ['lieux','individus','groupes'].map(type=>{
+  const optsFiches = ['lieux','individus','groupes','autres'].map(type=>{
     const dispo = RENS.fiches.filter(x=>!rensIsArchived(x) && x.type===type && x.id!==r.fiche_id && !dejalieFiches.includes(x.id));
     if(!dispo.length) return '';
-    return `<optgroup label="${type==='lieux'?'Lieux':type==='individus'?'Individus':'Groupes'}">
+    return `<optgroup label="${type==='lieux'?'Lieux':type==='individus'?'Individus':type==='groupes'?'Groupes':'Autres'}">
       ${dispo.map(x=>`<option value="f:${x.id}">${escH(x.nom)}</option>`).join('')}
     </optgroup>`;
   }).join('');
@@ -1129,6 +1133,7 @@ function buildNewFicheFormHTML(){
           <option value="lieux">Lieu</option>
           <option value="individus">Individu</option>
           <option value="groupes">Groupe</option>
+          <option value="autres">Autre</option>
         </select>
       </div>
     </div>
@@ -1188,7 +1193,7 @@ async function saveFiche(){
   await rensLoad();
   // Aller sur le bon onglet
   const tabBtns = document.querySelectorAll('#page-renseignements .tab');
-  const idx = ['lieux','individus','groupes'].indexOf(type);
+  const idx = ['lieux','individus','groupes','autres'].indexOf(type);
   if(idx>=0 && tabBtns[idx]) showTab(type, tabBtns[idx]);
 }
 
@@ -1402,10 +1407,10 @@ function openTransferRapport(rapId){
   if(!r) return;
   const autres = RENS.fiches.filter(f=>f.id!==r.fiche_id && !rensIsArchived(f));
   if(!autres.length){ toast('Aucune autre fiche disponible.'); return; }
-  const opts = ['lieux','individus','groupes'].map(type=>{
+  const opts = ['lieux','individus','groupes','autres'].map(type=>{
     const dispo = autres.filter(f=>f.type===type);
     if(!dispo.length) return '';
-    return `<optgroup label="${type==='lieux'?'Lieux':type==='individus'?'Individus':'Groupes'}">
+    return `<optgroup label="${type==='lieux'?'Lieux':type==='individus'?'Individus':type==='groupes'?'Groupes':'Autres'}">
       ${dispo.map(f=>`<option value="${f.id}">${escH(f.nom)}</option>`).join('')}
     </optgroup>`;
   }).join('');
@@ -1541,7 +1546,7 @@ function injectCarteTab(){
       <div id="rensMapPicker" class="rens-map-picker" hidden>
         <div id="rensMapPickerRapport">
           <select id="rensMapReportType" onchange="rensSetMapReportType(this.value)">
-            ${['all','lieux','individus','groupes'].map(type=>`<option value="${type}">${escH({all:'Tous les rapports',lieux:'Lieux',individus:'Individus',groupes:'Groupes'}[type])}</option>`).join('')}
+            ${['all','lieux','individus','groupes','autres'].map(type=>`<option value="${type}">${escH({all:'Tous les rapports',lieux:'Lieux',individus:'Individus',groupes:'Groupes',autres:'Autres'}[type])}</option>`).join('')}
           </select>
           <div id="rensMapReportList" class="rens-map-report-list"></div>
         </div>
@@ -1636,7 +1641,7 @@ function rensMapFicheListHtml(){
   if(!fiches.length)return '<p class="sa-empty">Toutes les fiches sont déjà sur la carte.</p>';
   return fiches.map(f=>`<button type="button" class="rens-map-report-choice" onclick="rensSpawnMapFiche('${escJs(f.id)}')">
     <strong>${escH(f.nom)}</strong>
-    <span>${escH({lieux:'Lieu',individus:'Individu',groupes:'Groupe'}[f.type]||f.type)}${f.notes?` · ${escH(f.notes.slice(0,80))}`:''}</span>
+    <span>${escH({lieux:'Lieu',individus:'Individu',groupes:'Groupe',autres:'Autre'}[f.type]||f.type)}${f.notes?` · ${escH(f.notes.slice(0,80))}`:''}</span>
   </button>`).join('');
 }
 
@@ -1969,7 +1974,7 @@ function rensRenderCarte(){
         const fiche     = RENS.fiches.find(f=>f.id===node.fiche_id);
         const rapsCount = RENS.rapports.filter(r=>r.fiche_id===node.fiche_id&&!r.archive).length;
         const tc        = rensMapTypeColors(fiche?.type||'autres');
-        const typeLabel = {lieux:'Lieu',individus:'Individu',groupes:'Groupe'}[fiche?.type]||'';
+        const typeLabel = {lieux:'Lieu',individus:'Individu',groupes:'Groupe',autres:'Autre'}[fiche?.type]||'';
         const nomLabel  = (fiche?.nom||'Fiche').length>20?(fiche?.nom||'Fiche').substring(0,18)+'\u2026':(fiche?.nom||'Fiche');
         const sf        = scaleFactor(node.id);
         const baseMargin= Math.round(16*sf);
