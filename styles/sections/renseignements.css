@@ -213,3 +213,107 @@ body{background:#1C1A18;font-family:'IM Fell English',Georgia,serif;font-size:16
 .rens-archives-body[hidden]{display:none;}
 .rens-archives-body .rens-table-wrap{margin-bottom:0;}
 .rens-archives-empty{font-style:italic;color:var(--ink-faint);font-size:.92rem;}
+
+/* ══════════════════════════════════════════════════════════════════════
+   TABLEAU D'ENQUÊTE — CORKBOARD
+   ══════════════════════════════════════════════════════════════════════ */
+.cork-board{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:1.2rem;
+  padding:.5rem 0 1rem;
+}
+
+/* Carte / case */
+.cork-card{
+  background:var(--parch-dark);
+  border:1px solid var(--border-g);
+  border-top:3px solid var(--gold);
+  display:flex;
+  flex-direction:column;
+  gap:.5rem;
+  padding:.85rem 1rem 1rem;
+  box-shadow:0 2px 8px rgba(0,0,0,.1);
+  min-height:120px;
+}
+.cork-card--urgente{ border-top-color:#7A1010; }
+.cork-card--orphan { border-top-color:var(--ink-faint); opacity:.85; }
+
+/* En-tête de la carte */
+.cork-card-header{
+  display:flex;
+  align-items:center;
+  gap:.5rem;
+  flex-wrap:wrap;
+  border-bottom:1px solid var(--border-g);
+  padding-bottom:.5rem;
+  margin-bottom:.2rem;
+}
+.cork-card-name{
+  font-family:'Eagle Lake',serif;
+  font-size:1rem;
+  color:var(--green-dark);
+  flex:1;
+}
+
+/* Label de section */
+.cork-section-label{
+  font-family:'Eagle Lake',serif;
+  font-size:.68rem;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+  color:var(--ink-faint);
+  margin-top:.2rem;
+}
+
+/* Membres */
+.cork-members{
+  display:flex;
+  flex-wrap:wrap;
+  gap:.35rem;
+}
+.cork-member{
+  display:inline-flex;
+  align-items:center;
+  gap:.25rem;
+  font-family:'IM Fell English',serif;
+  font-size:.82rem;
+  color:var(--green-dark);
+  background:rgba(201,168,76,.1);
+  border:1px solid rgba(201,168,76,.35);
+  padding:.15rem .5rem;
+  cursor:pointer;
+  transition:background .15s;
+}
+.cork-member:hover{ background:rgba(201,168,76,.25); }
+
+/* Rapports */
+.cork-raps{ display:flex; flex-direction:column; gap:.3rem; }
+.cork-rap{
+  display:flex;
+  align-items:flex-start;
+  gap:.4rem;
+  font-family:'IM Fell English',serif;
+  font-size:.85rem;
+  color:var(--ink);
+  background:var(--parch);
+  border:1px solid var(--border-g);
+  border-left:3px solid var(--gold);
+  padding:.3rem .55rem;
+  cursor:pointer;
+  transition:background .12s;
+  line-height:1.35;
+}
+.cork-rap:hover{ background:rgba(201,168,76,.12); }
+.cork-rap-icon{ flex-shrink:0; font-size:.85rem; }
+.cork-rap-title{ color:var(--ink-mid); }
+
+.cork-empty{
+  font-style:italic;
+  color:var(--ink-faint);
+  font-size:.85rem;
+}
+
+@media(max-width:640px){
+  .cork-board{ grid-template-columns:1fr; }
+}
