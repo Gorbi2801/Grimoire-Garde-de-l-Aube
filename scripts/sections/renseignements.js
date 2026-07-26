@@ -1631,3 +1631,11 @@ function rensRenderCarte(){
 function rensReorganiserCarte(){}
 function rensLoadVisNetwork(){}
 function rensComputeAutoEdges(){ return []; }
+function rensOpenMapReportPicker(){}
+function rensSetMapReportType(){}
+function rensSpawnMapReport(){}
+function rensSpawnMapFiche(){}
+function rensStartMapLink(){}
+function rensCancelMapLink(){}
+function rensSetMapLinkColor(){}
+function rensDeleteSelectedMapItem(){}
