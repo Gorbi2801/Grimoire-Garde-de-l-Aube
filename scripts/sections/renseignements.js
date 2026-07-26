@@ -1627,6 +1627,46 @@ function rensRenderCarte(){
   </div>`;
 }
 
+
+// ── Fonctions utilitaires renseignements ─────────────────────────────
+function rensFicheForRapport(report){
+  return RENS.fiches.find(f=>f.id===report?.fiche_id)||null;
+}
+
+function rensReportIsArchived(report){
+  return rensIsArchived(rensFicheForRapport(report));
+}
+
+function rensRapportType(report){
+  return rensFicheForRapport(report)?.type||'autres';
+}
+
+function rensRapportLabel(report){
+  const fiche = rensFicheForRapport(report);
+  const source = report?.titre||'Rapport';
+  const date = report?.created_at ? new Date(report.created_at).toLocaleDateString('fr-FR') : '';
+  return `${fiche?.nom||'Fiche inconnue'} — ${source}${date?` — ${date}`:''}`;
+}
+
+function rensMapTypeColors(type){
+  return {
+    lieux    :{bg:'#b8785a',border:'#7a4a2a',text:'#fff8f4'},
+    individus:{bg:'#5a7aaa',border:'#2a4a7a',text:'#f0f4ff'},
+    groupes  :{bg:'#5a8a6a',border:'#2a5a3a',text:'#f0fff4'},
+    autres   :{bg:'#8a7a5a',border:'#5a4a2a',text:'#fff8f0'},
+  }[type]||{bg:'#8a7a5a',border:'#5a4a2a',text:'#fff8f0'};
+}
+
+function rensRapportColors(fiabilite){
+  return {
+    confirme:{bg:'#d4ead4',border:'#3a6a3a'},
+    verifie :{bg:'#d4ead4',border:'#3a6a3a'},
+    urgente :{bg:'#ead4d4',border:'#8a1010'},
+    nonverif:{bg:'#eae0c4',border:'#8a6a2a'},
+    fausse  :{bg:'#d8d8d8',border:'#6a6a6a'},
+  }[fiabilite]||{bg:'#eae0c4',border:'#8a6a2a'};
+}
+
 // Garder pour compatibilité bootstrap (ne font plus rien)
 function rensReorganiserCarte(){}
 function rensLoadVisNetwork(){}
