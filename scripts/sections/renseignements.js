@@ -1639,3 +1639,5 @@ function rensStartMapLink(){}
 function rensCancelMapLink(){}
 function rensSetMapLinkColor(){}
 function rensDeleteSelectedMapItem(){}
+
+function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
