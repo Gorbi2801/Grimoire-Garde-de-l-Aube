@@ -126,6 +126,26 @@ async function loadPatrouilles(){
   }
 }
 
+
+function togglePatrouilleForm(){
+  const form = document.getElementById('patrouilleCreateForm');
+  const btn  = document.getElementById('patrouilleCreateBtn');
+  if(!form||!btn) return;
+  const visible = form.style.display !== 'none';
+  form.style.display = visible ? 'none' : '';
+  btn.textContent = visible ? '+ Nouvelle patrouille' : '✕ Annuler';
+}
+
+
+function togglePatrouilleHistory(){
+  const list   = document.getElementById('patrouilleHistoryList');
+  const chevron= document.getElementById('patrouilleHistoryChevron');
+  if(!list) return;
+  const visible = list.style.display !== 'none';
+  list.style.display = visible ? 'none' : '';
+  if(chevron) chevron.textContent = visible ? '▶' : '▼';
+}
+
 function renderPatrouilles(){
   renderPatrouilleStats();
   renderPatrouilleGuardSelect();
@@ -286,7 +306,10 @@ function renderPatrouilleList(){
     return String(b.created_at||'').localeCompare(String(a.created_at||''));
   });
 
-  list.innerHTML=rows.map(row=>{
+  const activeRows = rows.filter(row=>row.status==='active'&&!row.ended_at);
+  const closedRows = rows.filter(row=>row.status!=='active'||row.ended_at);
+
+  const activeHtml = activeRows.map(row=>{
     const members=patrouilleMembers(row);
     const creator=patrouilleGuard(row.created_by);
     const active=row.status==='active'&&!row.ended_at;
@@ -300,7 +323,7 @@ function renderPatrouilleList(){
         </div>
         <div class="patrouille-card-actions">
           ${active&&canManagePatrouille(row)?`<button class="btn-sm" onclick="openEditPatrouille('${patrouilleEsc(row.id)}')">Modifier</button>`:''}
-          ${active&&canManagePatrouille(row)?`<button class="btn-submit" onclick="closePatrouille('${patrouilleEsc(row.id)}')">Clôturer</button>`:''}
+          ${active&&canManagePatrouille(row)?`<button class="btn-submit" onclick="openClosePatrouille('${patrouilleEsc(row.id)}')">Clôturer</button>`:''}
         </div>
       </div>
       <dl class="profile-details patrouille-details">
@@ -318,8 +341,51 @@ function renderPatrouilleList(){
         }).join('')||'<span>Aucun membre</span>'}
       </div>
       ${row.notes?`<p class="patrouille-notes">${patrouilleEsc(row.notes)}</p>`:''}
+      ${active&&canManagePatrouille(row)?`
+      <div id="patrouille-close-form-${row.id}" class="patrouille-close-form" style="display:none;">
+        <textarea id="patrouilleCloseNotes-${row.id}" rows="3" placeholder="Rapport de retour (optionnel)…" style="width:100%;font-family:'IM Fell English',serif;font-size:.92rem;background:var(--parch-dark);border:1px solid var(--border-g);color:var(--ink);padding:.4rem .6rem;resize:vertical;"></textarea>
+        <div style="display:flex;gap:.5rem;margin-top:.4rem;justify-content:flex-end;">
+          <button class="btn-sm" onclick="openClosePatrouille('${patrouilleEsc(row.id)}')">Annuler</button>
+          <button class="btn-submit" onclick="closePatrouille('${patrouilleEsc(row.id)}')">Confirmer la clôture</button>
+        </div>
+      </div>`:''
+      }
     </article>`;
   }).join('');
+
+  const closedHtml = closedRows.map(row=>{
+    const members=patrouilleMembers(row);
+    const creator=patrouilleGuard(row.created_by);
+    return `<article class="patrouille-card closed">
+      <div class="patrouille-card-head">
+        <div>
+          <span class="patrouille-status">Terminée</span>
+          <h3>${patrouilleEsc(row.title||'Patrouille')}</h3>
+        </div>
+      </div>
+      <dl class="profile-details patrouille-details">
+        <dt>Lieu</dt><dd>${patrouilleEsc(row.location||'—')}</dd>
+        <dt>Départ</dt><dd>${patrouilleEsc(patrouilleDate(row.started_at))}</dd>
+        <dt>Durée</dt><dd>${patrouilleEsc(patrouilleElapsed(row.started_at,row.ended_at))}</dd>
+        <dt>Responsable</dt><dd>${patrouilleEsc(creator?`${patrouilleGuardName(creator)}${patrouilleGuardMeta(creator)?` — ${patrouilleGuardMeta(creator)}`:''}`:'Compte inconnu')}</dd>
+      </dl>
+      <p class="patrouille-objective">${patrouilleEsc(row.objective||'')}</p>
+      <div class="patrouille-members">
+        ${members.map(member=>{const guard=patrouilleGuard(member.user_id);return `<span>${typeof renderPresenceDot==='function'?renderPresenceDot(member.user_id):''}${patrouilleEsc(patrouilleGuardName(guard))}</span>`;}).join('')||'<span>Aucun membre</span>'}
+      </div>
+      ${row.notes?`<p class="patrouille-notes">${patrouilleEsc(row.notes)}</p>`:''}
+    </article>`;
+  }).join('');
+
+  const historiquesHtml = closedRows.length ? `
+    <div class="patrouille-history-wrap">
+      <button class="patrouille-history-toggle" onclick="togglePatrouilleHistory()">
+        <span id="patrouilleHistoryChevron">▶</span> Historique des patrouilles (${closedRows.length})
+      </button>
+      <div id="patrouilleHistoryList" style="display:none;">${closedHtml}</div>
+    </div>` : '';
+
+  list.innerHTML = activeHtml + historiquesHtml;
 
   const editingRow=rows.find(row=>row.id===patrouilleState.editingId);
   if(editingRow)renderEditPatrouilleGuardSelect(editingRow);
@@ -341,29 +407,18 @@ function buildPatrouilleEditCard(row,members,creator){
       </div>
     </div>
     <div class="form-grid patrouille-form-grid patrouille-edit-grid">
-      <label class="form-field">
-        <span>Titre</span>
-        <input id="patrouilleEditTitle-${row.id}" value="${patrouilleEsc(row.title||'')}" placeholder="Patrouille, escorte, reconnaissance...">
-      </label>
-      <label class="form-field">
-        <span>Lieu</span>
-        <input id="patrouilleEditLocation-${row.id}" value="${patrouilleEsc(row.location||'')}" placeholder="Destination ou zone de sortie">
-      </label>
-      <label class="form-field">
-        <span>Durée prévue</span>
-        <input id="patrouilleEditDuration-${row.id}" type="number" min="0" step="15" value="${patrouilleEsc(duration)}" placeholder="Minutes, optionnel">
-      </label>
+      <div class="patrouille-edit-readonly">
+        <div class="patrouille-edit-readonly-row"><strong>Titre :</strong> ${patrouilleEsc(row.title||'Patrouille')}</div>
+        <div class="patrouille-edit-readonly-row"><strong>Lieu :</strong> ${patrouilleEsc(row.location||'—')}</div>
+        <div class="patrouille-edit-readonly-row"><strong>Objectif :</strong> ${patrouilleEsc(row.objective||'—')}</div>
+      </div>
       <label class="form-field patrouille-members-field">
         <span>Gardes</span>
         <select id="patrouilleEditMemberPicker-${row.id}" onchange="addEditPatrouilleMember(this.value)"></select>
         <div class="patrouille-selected-members" id="patrouilleEditSelectedMembers-${row.id}"></div>
       </label>
-      <label class="form-field patrouille-objective-field">
-        <span>Objectif</span>
-        <textarea id="patrouilleEditObjective-${row.id}" rows="6" placeholder="But de la sortie, consignes, risques connus...">${patrouilleEsc(row.objective||'')}</textarea>
-      </label>
       <label class="form-field patrouille-notes-field">
-        <span>Notes</span>
+        <span>Notes de mission</span>
         <textarea id="patrouilleEditNotes-${row.id}" rows="3" placeholder="Notes optionnelles...">${patrouilleEsc(row.notes||'')}</textarea>
       </label>
     </div>
@@ -448,15 +503,21 @@ async function createPatrouille(){
   }
 }
 
+function openClosePatrouille(id){
+  // Affiche le formulaire de clôture inline dans la carte
+  const el = document.getElementById(`patrouille-close-form-${id}`);
+  if(el) el.style.display = el.style.display === 'none' ? '' : 'none';
+}
+
 async function closePatrouille(id){
-  const row=patrouilleState.rows.find(item=>item.id===id);
+  const row = patrouilleState.rows.find(item=>item.id===id);
   if(!row||!canManagePatrouille(row)){toast('Clôture refusée.');return;}
-  const notes=window.prompt('Rapport de retour optionnel :', row.notes||'');
-  if(notes===null)return;
+  const notesEl = document.getElementById(`patrouilleCloseNotes-${id}`);
+  const notes   = notesEl ? notesEl.value.trim() : '';
   try{
     const { error } = await window.GrimoireSupabase
       .from('mk_patrouilles')
-      .update({status:'closed',ended_at:new Date().toISOString(),notes:notes.trim()||null})
+      .update({status:'closed',ended_at:new Date().toISOString(),notes:notes||null})
       .eq('id',id);
     if(error)throw error;
     await loadPatrouilles();
@@ -471,28 +532,15 @@ async function savePatrouilleEdit(id){
   const row=patrouilleState.rows.find(item=>item.id===id);
   if(!row||row.status!=='active'||row.ended_at||!canManagePatrouille(row)){toast('Modification refusée.');return;}
 
-  const title=(document.getElementById(`patrouilleEditTitle-${id}`)?.value||'').trim();
-  const location=(document.getElementById(`patrouilleEditLocation-${id}`)?.value||'').trim();
-  const objective=(document.getElementById(`patrouilleEditObjective-${id}`)?.value||'').trim();
   const notes=(document.getElementById(`patrouilleEditNotes-${id}`)?.value||'').trim();
-  const durationValue=(document.getElementById(`patrouilleEditDuration-${id}`)?.value||'').trim();
-  const plannedDuration=durationValue?Math.max(0,parseInt(durationValue,10)||0):null;
   const memberIds=[...new Set(patrouilleState.editingMemberIds.filter(userId=>patrouilleGuard(userId)))];
 
-  if(!location){toast('Lieu requis.');return;}
-  if(!objective){toast('Objectif requis.');return;}
   if(!memberIds.length){toast('Ajoute au moins un garde.');return;}
 
   try{
     const { error } = await window.GrimoireSupabase
       .from('mk_patrouilles')
-      .update({
-        title:title||'Patrouille',
-        location,
-        objective,
-        planned_duration_minutes:plannedDuration,
-        notes:notes||null,
-      })
+      .update({ notes:notes||null })
       .eq('id',id);
     if(error)throw error;
 

@@ -25,7 +25,7 @@
     loadAgenda, setAgendaView, moveAgendaRange, goAgendaToday, filterAgenda,
     selectAgendaEvent, openAgendaCreate, editAgendaEvent, cancelAgendaEdit,
     saveAgendaEvent, deleteAgendaEvent,
-    loadPatrouilles, createPatrouille, closePatrouille, selectPresentPatrouilleGuards,
+    loadPatrouilles, createPatrouille, closePatrouille, openClosePatrouille, togglePatrouilleForm, togglePatrouilleHistory, selectPresentPatrouilleGuards,
     initCarte, loadCarte, carteSetFilter, carteToggleSidebar, carteToggleCreatePanel,
     carteStartPlacement, carteSavePin, carteDeleteSelectedPin, carteSelectPin,
     carteStartZoneDrawing, carteCancelZoneDrawing, carteFinishZoneDrawing,
