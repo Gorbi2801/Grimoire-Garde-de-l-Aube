@@ -12,6 +12,9 @@ const RENS = {
   mapNodes:       [],   // mk_rens_map_nodes
   mapLinks:       [],   // mk_rens_map_links
   attachments:    [],   // mk_rens_attachments
+  reportReads:    [],   // mk_rens_report_reads, personnel au compte connecté
+  reportReadIds:  new Set(),
+  readTrackingReady: false,
   activeTab: 'lieux',
   searchQ:   '',
   filterStatut: '',
@@ -58,7 +61,10 @@ function toggleFiche(id){
 }
 function toggleRap(id){
   const el = document.getElementById(id);
-  if(el) el.classList.toggle('open');
+  if(!el) return;
+  const willOpen = !el.classList.contains('open');
+  el.classList.toggle('open');
+  if(willOpen) rensMarkReportRead(id.replace(/^rap-/, ''));
 }
 function toggleAdd(id){
   const el = document.getElementById(id);
@@ -112,6 +118,7 @@ function goToRapport(rapportId){
     const target = document.getElementById('rap-'+rapportId);
     if(!target) return;
     target.classList.add('open');
+    rensMarkReportRead(rapportId);
     target.scrollIntoView({behavior:'smooth', block:'center'});
     target.classList.add('highlight');
     setTimeout(()=>target.classList.remove('highlight'), 1500);
@@ -138,9 +145,26 @@ async function rensLoadAttachments(){
   }
 }
 
+async function rensLoadReportReads(){
+  RENS.readTrackingReady = false;
+  if(!session?.user?.id || !window.GrimoireSupabase)return [];
+  try{
+    const { data, error } = await window.GrimoireSupabase
+      .from('mk_rens_report_reads')
+      .select('report_id,read_at')
+      .eq('user_id',session.user.id);
+    if(error)throw error;
+    RENS.readTrackingReady = true;
+    return data || [];
+  }catch(error){
+    console.warn('Table des lectures de rapports indisponible: mk_rens_report_reads', error);
+    return [];
+  }
+}
+
 async function rensLoad(){
   RENS.mapReady = true;
-  const [rf, rr, rl, rpl, rrp, mn, ml, atts] = await Promise.all([
+  const [rf, rr, rl, rpl, rrp, mn, ml, atts, reads] = await Promise.all([
     sbGet('mk_rens_fiches','?select=*&order=created_at.desc'),
     sbGet('mk_rens_rapports','?select=*&order=created_at.desc'),
     sbGet('mk_rens_relations','?select=*'),
@@ -148,7 +172,8 @@ async function rensLoad(){
     rensOptionalGet('mk_rens_rapport_rapport','?select=*'),
     rensOptionalGet('mk_rens_map_nodes','?select=*&order=created_at.asc'),
     rensOptionalGet('mk_rens_map_links','?select=*'),
-    rensLoadAttachments()
+    rensLoadAttachments(),
+    rensLoadReportReads()
   ]);
   RENS.fiches          = rf  || [];
   RENS.rapports        = rr  || [];
@@ -158,6 +183,8 @@ async function rensLoad(){
   RENS.mapNodes        = mn  || [];
   RENS.mapLinks        = ml  || [];
   RENS.attachments     = atts || [];
+  RENS.reportReads     = reads || [];
+  RENS.reportReadIds   = new Set(RENS.reportReads.map(row=>row.report_id).filter(Boolean));
   rensRenderAll();
 }
 
@@ -179,6 +206,7 @@ function rensRenderStats(){
   const autres    = activeFiches.filter(f=>f.type==='autres').length;
   const urgents   = activeFiches.filter(f=>f.urgente).length;
   const nbRap     = RENS.rapports.filter(r=>activeIds.has(r.fiche_id)).length;
+  const unread    = rensUnreadActiveReportCount();
   const statsEl   = document.getElementById('rens-stats');
   if(!statsEl) return;
   statsEl.innerHTML = `
@@ -187,12 +215,89 @@ function rensRenderStats(){
     <div class="stat">Groupes : <strong>${groupes}</strong></div>
     ${autres>0?`<div class="stat">Autres : <strong>${autres}</strong></div>`:''}
     ${urgents>0?`<div class="stat" style="color:#7A1010;">🔴 Urgents : <strong>${urgents}</strong></div>`:''}
+    ${RENS.readTrackingReady?`<div class="stat" id="rens-unread-stat" ${unread?'':'hidden'}>Non lus : <strong>${unread}</strong></div>`:''}
     <div class="stat">Rapports actifs : <strong>${nbRap}</strong></div>
     ${archivedCount>0?`<div class="stat">Archives : <strong>${archivedCount}</strong></div>`:''}`;
 }
 
 function rensIsArchived(fiche){
   return !!fiche?.archived_at;
+}
+
+function rensCurrentUserId(){
+  return session?.user?.id || '';
+}
+
+function rensReadSet(){
+  return RENS.reportReadIds || new Set();
+}
+
+function rensReportIsUnread(report){
+  if(!RENS.readTrackingReady || !report?.id || !rensCurrentUserId())return false;
+  if(report.created_by && report.created_by === rensCurrentUserId())return false;
+  return !rensReadSet().has(report.id);
+}
+
+function rensUnreadReportsForFiche(ficheId){
+  return RENS.rapports.filter(report=>report.fiche_id===ficheId && rensReportIsUnread(report));
+}
+
+function rensUnreadActiveReportCount(){
+  const activeIds = new Set(RENS.fiches.filter(f=>!rensIsArchived(f)).map(f=>f.id));
+  return RENS.rapports.filter(report=>activeIds.has(report.fiche_id) && rensReportIsUnread(report)).length;
+}
+
+function rensUnreadLabel(count){
+  return `${count} non lu${count>1?'s':''}`;
+}
+
+function rensUpdateUnreadIndicators(){
+  document.querySelectorAll('[data-rens-unread-fiche]').forEach(el=>{
+    const count = rensUnreadReportsForFiche(el.getAttribute('data-rens-unread-fiche')).length;
+    el.textContent = count ? rensUnreadLabel(count) : '';
+    el.hidden = count <= 0;
+  });
+
+  document.querySelectorAll('[data-rens-unread-report]').forEach(el=>{
+    const report = RENS.rapports.find(row=>row.id===el.getAttribute('data-rens-unread-report'));
+    const unread = rensReportIsUnread(report);
+    el.hidden = !unread;
+    const wrapper = report?.id ? document.getElementById('rap-'+report.id) : null;
+    if(wrapper)wrapper.classList.toggle('unread', unread);
+  });
+
+  const stat = document.getElementById('rens-unread-stat');
+  if(stat){
+    const count = rensUnreadActiveReportCount();
+    stat.innerHTML = count ? `Non lus : <strong>${count}</strong>` : '';
+    stat.hidden = count <= 0;
+  }
+}
+
+async function rensMarkReportRead(rapportId, opts = {}){
+  if(!RENS.readTrackingReady || !rapportId || !rensCurrentUserId())return;
+  const report = RENS.rapports.find(row=>row.id===rapportId);
+  if(!opts.force && !rensReportIsUnread(report))return;
+
+  const now = new Date().toISOString();
+  if(!RENS.reportReads.some(row=>row.report_id===rapportId)){
+    RENS.reportReads.push({report_id:rapportId, read_at:now});
+    RENS.reportReadIds.add(rapportId);
+    rensUpdateUnreadIndicators();
+  }
+
+  try{
+    const { error } = await window.GrimoireSupabase
+      .from('mk_rens_report_reads')
+      .upsert({
+        report_id: rapportId,
+        user_id: rensCurrentUserId(),
+        read_at: now,
+      }, { onConflict: 'report_id,user_id' });
+    if(error)throw error;
+  }catch(error){
+    console.warn('Impossible de marquer le rapport comme lu.', error);
+  }
 }
 
 function sortRensByDate(){
@@ -570,6 +675,7 @@ function buildFicheHTML(f){
 
   // Rapports HTML
   const rapsHTML = raps.map(r=>buildRapportHTML(r)).join('');
+  const unreadCount = rensUnreadReportsForFiche(f.id).length;
 
   const peutAjouter = rensCanWrite();
   const peutModifier = rensCanEditOwn(f);
@@ -581,7 +687,10 @@ function buildFicheHTML(f){
     <td class="rens-row-chevron"><span class="fiche-chevron">▶</span></td>
     <td class="rens-row-name">${escH(f.nom)}</td>
     <td>${badgeArchived}${badgeStatut || '<span style="color:var(--ink-faint);font-style:italic;">Neutre</span>'}</td>
-    <td class="rens-row-count">${raps.length>0?raps.length:'—'}</td>
+    <td class="rens-row-count">
+      ${raps.length>0?raps.length:'—'}
+      ${RENS.readTrackingReady?`<span class="rens-unread-fiche" data-rens-unread-fiche="${f.id}" ${unreadCount?'':'hidden'}>${unreadCount?rensUnreadLabel(unreadCount):''}</span>`:''}
+    </td>
     <td class="rens-row-date">${createdDate}</td>
     <td class="rens-row-actions" onclick="event.stopPropagation()">
       ${badgeUrgente}
@@ -707,16 +816,18 @@ function buildRapportHTML(r){
   const archived = rensReportIsArchived(r);
   const peutModifier = rensCanEditOwn(r) && !archived;
   const peutSupprimer = rensCanDelete() && !archived;
+  const unread = rensReportIsUnread(r);
   const ficheLabel = {confirme:'✅ Confirmée', verifie:'✅ Vérifié', nonverif:'⚠ Non vérifiée', urgente:'🔴 Urgente', fausse:'❌ Invalidée'}[r.fiabilite]||r.fiabilite;
   const date = r.created_at ? new Date(r.created_at).toLocaleDateString('fr-FR') : '';
   const preview = (r.contenu||'').substring(0,60)+(r.contenu&&r.contenu.length>60?'…':'');
   const author = rensAuthorLabel(r);
   return `
-  <div class="rapport-accordion ${r.fiabilite||''}" id="rap-${r.id}">
+  <div class="rapport-accordion ${r.fiabilite||''}${unread?' unread':''}" id="rap-${r.id}">
     <div class="rapport-acc-head" onclick="toggleRap('rap-${r.id}')">
       <div class="rapport-acc-left">
         <span class="rapport-acc-chevron">▶</span>
         <span class="rapport-acc-date">${date}</span>
+        ${RENS.readTrackingReady?`<span class="badge badge-nonlu" data-rens-unread-report="${r.id}" ${unread?'':'hidden'}>Non lu</span>`:''}
         <span class="badge badge-${r.fiabilite==="fausse"?"invalidee":r.fiabilite||"nonverif"}">${ficheLabel}</span>
         <span class="rapport-acc-titre">${escH(r.titre||'Inconnu')}</span>
         <span class="rapport-acc-preview">${escH(preview)}</span>
@@ -1332,6 +1443,7 @@ async function saveRapport(ficheId){
     catch(fallbackError){ alert('Erreur : '+fallbackError.message); return; }
   }
   if(createdReport?.id){
+    await rensMarkReportRead(createdReport.id, {force:true});
     try{
       await uploadRensAttachments(createdReport.id, `raf-files-${ficheId}`);
     }catch(error){

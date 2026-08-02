@@ -46,6 +46,7 @@ body{background:#1C1A18;font-family:'IM Fell English',Georgia,serif;font-size:16
 .badge-recherche{background:rgba(122,16,16,.1);color:#7A1010;border-color:rgba(122,16,16,.4);}
 .badge-neutralise{background:rgba(45,106,45,.1);color:#2D5A1A;border-color:rgba(45,106,45,.4);}
 .badge-archive{background:rgba(28,26,24,.08);color:var(--ink-mid);border-color:rgba(28,26,24,.35);margin-right:.35rem;}
+.badge-nonlu{background:rgba(201,168,76,.22);color:#5A3A05;border-color:rgba(139,94,0,.55);font-style:normal;font-weight:700;}
 
 .fiche-body{display:none;padding:0;}
 .fiche.open .fiche-body{display:block;}
@@ -111,6 +112,7 @@ body{background:#1C1A18;font-family:'IM Fell English',Georgia,serif;font-size:16
 .rapports-section{padding:.8rem 1.1rem;}
 .rapports-title{font-family:'Eagle Lake',serif;font-size:.8rem;letter-spacing:.08em;color:var(--green-dark);text-transform:uppercase;margin-bottom:.75rem;display:flex;align-items:center;justify-content:space-between;}
 .rapport-accordion{border:1px solid var(--border-g);margin-bottom:.5rem;background:var(--parch);}
+.rapport-accordion.unread{background:linear-gradient(90deg,rgba(201,168,76,.14),var(--parch) 42%);}
 .rapport-accordion.confirme{border-left:3px solid #2D5A1A;}
 .rapport-accordion.verifie{border-left:3px solid #2D5A1A;}
 .rapport-accordion.nonverif{border-left:3px solid #8B6500;}
@@ -190,6 +192,8 @@ body{background:#1C1A18;font-family:'IM Fell English',Georgia,serif;font-size:16
 .rens-table tr.rens-row.open .fiche-chevron{transform:rotate(90deg);display:inline-block;}
 .rens-row-name{font-family:'Eagle Lake',serif;font-size:1rem;color:var(--green-dark);}
 .rens-row-count{text-align:center;font-family:'Eagle Lake',serif;font-size:.88rem;color:var(--ink-mid);}
+.rens-unread-fiche{display:block;margin-top:.16rem;font-family:'IM Fell English',serif;font-size:.76rem;font-style:italic;color:#7A1010;white-space:nowrap;}
+.rens-unread-fiche[hidden],.badge-nonlu[hidden]{display:none;}
 .rens-row-date{white-space:nowrap;color:var(--ink-mid);font-size:.92rem;}
 .rens-row-actions{text-align:right;white-space:nowrap;}
 .rens-row-actions .badge{margin-right:.4rem;}
