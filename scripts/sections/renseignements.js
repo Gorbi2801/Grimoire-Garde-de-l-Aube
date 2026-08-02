@@ -62,9 +62,7 @@ function toggleFiche(id){
 function toggleRap(id){
   const el = document.getElementById(id);
   if(!el) return;
-  const willOpen = !el.classList.contains('open');
   el.classList.toggle('open');
-  if(willOpen) rensMarkReportRead(id.replace(/^rap-/, ''));
 }
 function toggleAdd(id){
   const el = document.getElementById(id);
@@ -118,7 +116,6 @@ function goToRapport(rapportId){
     const target = document.getElementById('rap-'+rapportId);
     if(!target) return;
     target.classList.add('open');
-    rensMarkReportRead(rapportId);
     target.scrollIntoView({behavior:'smooth', block:'center'});
     target.classList.add('highlight');
     setTimeout(()=>target.classList.remove('highlight'), 1500);
@@ -834,6 +831,7 @@ function buildRapportHTML(r){
         ${author?`<span class="rapport-acc-author">- ${escH(author)}</span>`:''}
       </div>
       <div style="display:flex;gap:.3rem;">
+        ${unread?`<button class="btn-sm" onclick="event.stopPropagation();rensMarkReportRead('${r.id}')">Marquer lu</button>`:''}
         ${peutModifier?`<button class="btn-sm" onclick="event.stopPropagation();openEditRapport('${r.id}')">Modifier</button>`:''}
         ${peutModifier?`<button class="btn-sm" onclick="event.stopPropagation();openTransferRapport('${r.id}')">Transférer</button>`:''}
         ${peutSupprimer?`<button class="btn-sm" onclick="event.stopPropagation();deleteRapport('${r.id}','${r.fiche_id}')">Suppr.</button>`:''}
