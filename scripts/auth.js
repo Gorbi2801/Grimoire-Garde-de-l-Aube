@@ -225,7 +225,7 @@ function updateAdminUI(){
     if(w)w.style.display=(s==='renseignements'?canAccessSection(s):canEditSection(s))?'block':'none';
   });
   const fonWrap=document.getElementById('fon-add-wrap');if(fonWrap)fonWrap.style.display=canEditSection('commerces')?'block':'none';
-  const ordreFabWrap=document.getElementById('ordre-fab-wrap');if(ordreFabWrap)ordreFabWrap.style.display=canEditSection('inventaire')?'block':'none';
+  const ordreFabAddWrap=document.getElementById('ordre-fab-add-wrap');if(ordreFabAddWrap)ordreFabAddWrap.style.display=canEditSection('inventaire')?'block':'none';
   const recetteWrap=document.getElementById('recette-add-wrap');if(recetteWrap)recetteWrap.style.display=canEditSection('inventaire')?'block':'none';
 }
 

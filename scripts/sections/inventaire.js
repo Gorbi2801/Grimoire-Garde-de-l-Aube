@@ -65,6 +65,7 @@ async function loadOrdresFab(){
 }
 function renderOrdresFab(rows){
   ordresFabRows=rows;
+  const canEdit=canEditSection('inventaire');
   const list=document.getElementById('ordres-fab-list');if(!list)return;
   list.innerHTML=rows.map(r=>{
     const current=r.avancement||0;
@@ -74,12 +75,15 @@ function renderOrdresFab(rows){
     return `<div style="background:var(--parch);border:1px solid var(--border-g);border-left:4px solid ${done?'#2D6A2D':'var(--gold)'};padding:0.7rem 1rem;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;">
         <span style="font-family:'Eagle Lake',serif;font-size:1rem;color:var(--green-dark);">${esc(r.objet)}${done?' ✅':''}</span>
-        <button class="btn-del" onclick="delOrdreFab('${r.id}')">Suppr.</button>
+        ${canEdit?`<button class="btn-del" onclick="delOrdreFab('${r.id}')">Suppr.</button>`:''}
       </div>
       <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
-        <button class="btn-del" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;padding:0;" onclick="incrementOrdreFab('${r.id}',${current},-1)">−</button>
+        ${canEdit
+          ?`<button class="btn-del" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;padding:0;" onclick="incrementOrdreFab('${r.id}',${current},-1)">−</button>
         <input type="number" min="0" value="${current}" style="width:4rem;text-align:center;font-family:'Eagle Lake',serif;font-size:1rem;background:var(--parch-dark);border:1px solid var(--border-g);color:var(--green-dark);padding:.15rem 0;" onchange="setOrdreFabAvancement('${r.id}',${current},this.value)">
-        <button class="btn-del" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;padding:0;" onclick="incrementOrdreFab('${r.id}',${current},1)">+</button>
+        <button class="btn-del" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;padding:0;" onclick="incrementOrdreFab('${r.id}',${current},1)">+</button>`
+          :`<span style="font-family:'Eagle Lake',serif;font-size:1rem;color:var(--green-dark);min-width:2.6rem;text-align:center;">${current}</span>`
+        }
         <span style="font-family:'IM Fell English',serif;font-size:1rem;color:var(--ink-mid);white-space:nowrap;">/ ${objectif}</span>
         <div style="flex:1;min-width:80px;height:8px;background:var(--parch-dark);border:1px solid var(--border-g);overflow:hidden;">
           <div style="height:100%;width:${pct}%;background:${done?'#2D6A2D':'var(--gold)'}; transition:width .3s;"></div>
