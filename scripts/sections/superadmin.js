@@ -25,9 +25,16 @@ function saGardeName(garde){
   return [garde.prenom,garde.nom].filter(Boolean).join(' ')||'—';
 }
 
+function saDisplayNameFromGarde(garde,fallback=''){
+  const name=garde?[garde.prenom,garde.nom].filter(Boolean).join(' ').trim():'';
+  return name||fallback||'Compte';
+}
+
 function saProfileName(profile){
   if(!profile)return 'Aucun compte';
-  const display=profile.display_name&&profile.display_name!==profile.username?` — ${profile.display_name}`:'';
+  const garde=saGardeForUser(profile.user_id);
+  const displayName=saDisplayNameFromGarde(garde,profile.display_name||profile.username);
+  const display=displayName&&displayName!==profile.username?` — ${displayName}`:'';
   return `${profile.username||'Compte'}${display}`;
 }
 
@@ -246,11 +253,10 @@ function renderSuperadminDetail(){
     <div class="superadmin-danger">
       <div>
         <strong>Suppression</strong>
-        <p>La fiche seule garde le compte Auth. La suppression de compte passe par l'Edge Function serveur.</p>
+        <p>Supprime définitivement la fiche garde, le profil et le compte Auth lié.</p>
       </div>
       <div class="superadmin-danger-actions">
-        <button class="btn-del" onclick="deleteSelectedSuperadminGarde()">Supprimer la fiche</button>
-        ${linkedProfile?'<button class="btn-del" onclick="deleteSelectedSuperadminAccount()">Supprimer le compte lié</button>':''}
+        ${linkedProfile?'<button class="btn-del" onclick="deleteSelectedSuperadminAccount()">Supprimer le garde et le compte</button>':'<span class="sa-muted">Aucun compte lié à supprimer.</span>'}
       </div>
     </div>`;
 }
@@ -335,13 +341,11 @@ function renderSuperadminProfileEditor(profile){
   const sections=configuredSections();
   const readSections=Array.isArray(profile.sections)?profile.sections:[];
   const editSections=Array.isArray(profile.sections_edit)?profile.sections_edit:[];
+  const garde=saGardeForUser(profile.user_id);
   return `
     <div class="superadmin-subtitle">Profil et permissions</div>
     <div class="form-grid superadmin-form-grid">
-      <label class="form-field">
-        <span>Nom affiché</span>
-        <input id="superadminDisplayName" value="${saEsc(profile.display_name||'')}">
-      </label>
+      <p class="sa-muted">Identité utilisée : ${saEsc(saDisplayNameFromGarde(garde,profile.username))}</p>
       <label class="superadmin-check">
         <input type="checkbox" id="superadminIsSuperadmin" ${profile.is_superadmin?'checked':''}>
         <span>Superadmin</span>
@@ -426,7 +430,7 @@ async function saveSelectedSuperadminProfile(){
   const editSections=[...document.querySelectorAll('[data-sa-edit]:checked')]
     .map(input=>input.getAttribute('data-sa-edit'))
     .filter(section=>sections.includes(section));
-  const displayName=(document.getElementById('superadminDisplayName')?.value||'').trim()||profile.username;
+  const displayName=saDisplayNameFromGarde(saGardeForUser(profile.user_id),profile.username);
   const isSuperadmin=document.getElementById('superadminIsSuperadmin')?.checked===true;
 
   try{
@@ -453,30 +457,9 @@ async function saveSelectedSuperadminProfile(){
   }
 }
 
-async function deleteSelectedSuperadminGarde(){
-  if(!isSuperadminSession())return;
-  const garde=saSelectedGarde();
-  if(!garde)return;
-  if(!confirm(`Supprimer la fiche garde de ${saGardeName(garde)} ? Le compte Auth ne sera pas supprimé.`))return;
-
-  try{
-    const { error } = await window.GrimoireSupabase
-      .from('mk_gardes')
-      .delete()
-      .eq('id',garde.id);
-    if(error)throw error;
-    superadminState.selectedGardeId=null;
-    superadminState.selectedProfileUserId=null;
-    await loadSuperadmin();
-    if(typeof loadGardes==='function')await loadGardes();
-    toast('Fiche garde supprimée.');
-  }catch(error){
-    console.error(error);
-    toast('Erreur lors de la suppression.');
-  }
-}
-
 function readSuperadminCreateForm(){
+  const prenom=(document.getElementById('superadminCreatePrenom')?.value||'').trim();
+  const nom=(document.getElementById('superadminCreateNom')?.value||'').trim();
   const sections=new Set([...document.querySelectorAll('[data-sa-create-read]:checked')]
     .map(input=>input.getAttribute('data-sa-create-read'))
     .filter(Boolean));
@@ -488,13 +471,13 @@ function readSuperadminCreateForm(){
   return {
     username:(document.getElementById('superadminCreateUsername')?.value||'').trim().toLowerCase(),
     password:document.getElementById('superadminCreatePassword')?.value||'',
-    displayName:(document.getElementById('superadminCreateDisplayName')?.value||'').trim(),
+    displayName:[prenom,nom].filter(Boolean).join(' ').trim(),
     isSuperadmin:document.getElementById('superadminCreateIsSuperadmin')?.checked===true,
     sections:[...sections],
     sectionsEdit,
     garde:{
-      prenom:(document.getElementById('superadminCreatePrenom')?.value||'').trim(),
-      nom:(document.getElementById('superadminCreateNom')?.value||'').trim(),
+      prenom,
+      nom,
       race:(document.getElementById('superadminCreateRace')?.value||'').trim(),
       grade:(document.getElementById('superadminCreateGrade')?.value||'').trim(),
       date_recrutement:document.getElementById('superadminCreateDateRecrutement')?.value||null,
@@ -508,7 +491,6 @@ function clearSuperadminCreateForm(){
   [
     'superadminCreateUsername',
     'superadminCreatePassword',
-    'superadminCreateDisplayName',
     'superadminCreatePrenom',
     'superadminCreateNom',
     'superadminCreateRace',
@@ -548,7 +530,7 @@ async function deleteSelectedSuperadminAccount(){
   const userId=garde?.user_id||null;
   const profile=userId?saProfileForUser(userId):null;
   if(!profile)return;
-  if(!confirm(`Supprimer définitivement le compte ${saProfileName(profile)} ?`))return;
+  if(!confirm(`Supprimer définitivement ${saGardeName(garde)} et le compte ${profile.username||'lié'} ?`))return;
 
   try{
     await callSuperadminFunction('deleteAccount',{userId:profile.user_id});
@@ -556,7 +538,7 @@ async function deleteSelectedSuperadminAccount(){
     superadminState.selectedProfileUserId=null;
     await loadSuperadmin();
     if(typeof loadGardes==='function')await loadGardes();
-    toast('Compte supprimé.');
+    toast('Garde et compte supprimés.');
   }catch(error){
     console.error(error);
     toast(error?.message||'Erreur lors de la suppression du compte.');

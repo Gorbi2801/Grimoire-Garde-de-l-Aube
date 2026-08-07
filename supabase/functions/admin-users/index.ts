@@ -114,13 +114,13 @@ async function requireSuperadmin(req: Request) {
 async function createAccount(payload: Record<string, unknown>) {
   const username = normalizeUsername(payload.username);
   const password = String(payload.password || '');
-  const displayName = String(payload.displayName || username).trim() || username;
   const isSuperadmin = payload.isSuperadmin === true;
   const sections = normalizeSections(payload.sections);
   const sectionsEdit = normalizeSections(payload.sectionsEdit).filter((section) =>
     sections.includes(section)
   );
   const garde = normalizeGarde((payload.garde || null) as Record<string, unknown> | null);
+  const displayName = [garde.prenom, garde.nom].filter(Boolean).join(' ').trim() || username;
 
   assertUsername(username);
   if (password.length < 6) throw new Error('Mot de passe trop court.');

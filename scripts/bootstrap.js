@@ -45,8 +45,7 @@
     rensSearch, rensFilter,
     loadSuperadmin, filterSuperadminGardes, selectSuperadminGarde, selectSuperadminProfile,
     linkSelectedSuperadminProfile, unlinkSelectedSuperadminGarde,
-    saveSelectedSuperadminProfile, deleteSelectedSuperadminGarde,
-    createSuperadminAccount, deleteSelectedSuperadminAccount,
+    saveSelectedSuperadminProfile, createSuperadminAccount, deleteSelectedSuperadminAccount,
     escH, escJs, esc, showMsg, toast,
   };
   Object.entries(pub).forEach(([k,v])=>{ if(typeof v==='function') window[k]=v; });
