@@ -277,12 +277,6 @@ async function rensMarkReportRead(rapportId, opts = {}){
   if(!opts.force && !rensReportIsUnread(report))return;
 
   const now = new Date().toISOString();
-  if(!RENS.reportReads.some(row=>row.report_id===rapportId)){
-    RENS.reportReads.push({report_id:rapportId, read_at:now});
-    RENS.reportReadIds.add(rapportId);
-    rensUpdateUnreadIndicators();
-  }
-
   try{
     const { error } = await window.GrimoireSupabase
       .from('mk_rens_report_reads')
@@ -290,10 +284,17 @@ async function rensMarkReportRead(rapportId, opts = {}){
         report_id: rapportId,
         user_id: rensCurrentUserId(),
         read_at: now,
-      }, { onConflict: 'report_id,user_id' });
+      }, { onConflict: 'report_id,user_id', ignoreDuplicates: true });
     if(error)throw error;
+
+    if(!RENS.reportReads.some(row=>row.report_id===rapportId)){
+      RENS.reportReads.push({report_id:rapportId, read_at:now});
+      RENS.reportReadIds.add(rapportId);
+      rensUpdateUnreadIndicators();
+    }
   }catch(error){
     console.warn('Impossible de marquer le rapport comme lu.', error);
+    if(!opts.silent && typeof toast==='function')toast('Impossible de marquer le rapport comme lu.');
   }
 }
 
