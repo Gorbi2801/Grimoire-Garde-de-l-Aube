@@ -64,6 +64,7 @@
     mk_rens_map_nodes:['renseignements'],
     mk_rens_map_links:['renseignements'],
     mk_rens_attachments:['renseignements'],
+    mk_rens_separateurs:['renseignements'],
     mk_map_pins:['carte'],
     mk_map_zones:['carte'],
     mk_map_pin_reports:['carte'],

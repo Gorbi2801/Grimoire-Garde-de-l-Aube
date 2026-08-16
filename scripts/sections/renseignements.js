@@ -5,6 +5,7 @@
 // ── State ────────────────────────────────────────────────────────────
 const RENS = {
   fiches:         [],   // mk_rens_fiches
+  separateurs:    [],   // mk_rens_separateurs
   rapports:       [],   // mk_rens_rapports
   relations:      [],   // mk_rens_relations
   rapportLiens:   [],   // mk_rens_rapport_liens (rapport → fiche)
@@ -161,7 +162,7 @@ async function rensLoadReportReads(){
 
 async function rensLoad(){
   RENS.mapReady = true;
-  const [rf, rr, rl, rpl, rrp, mn, ml, atts, reads] = await Promise.all([
+  const [rf, rr, rl, rpl, rrp, mn, ml, atts, reads, sep] = await Promise.all([
     sbGet('mk_rens_fiches','?select=*&order=created_at.desc'),
     sbGet('mk_rens_rapports','?select=*&order=created_at.desc'),
     sbGet('mk_rens_relations','?select=*'),
@@ -170,7 +171,8 @@ async function rensLoad(){
     rensOptionalGet('mk_rens_map_nodes','?select=*&order=created_at.asc'),
     rensOptionalGet('mk_rens_map_links','?select=*'),
     rensLoadAttachments(),
-    rensLoadReportReads()
+    rensLoadReportReads(),
+    rensOptionalGet('mk_rens_separateurs','?select=*&order=ordre.asc')
   ]);
   RENS.fiches          = rf  || [];
   RENS.rapports        = rr  || [];
@@ -181,6 +183,7 @@ async function rensLoad(){
   RENS.mapLinks        = ml  || [];
   RENS.attachments     = atts || [];
   RENS.reportReads     = reads || [];
+  RENS.separateurs     = sep || [];
   RENS.reportReadIds   = new Set(RENS.reportReads.map(row=>row.report_id).filter(Boolean));
   rensRenderAll();
 }
@@ -373,6 +376,15 @@ function rensFicheMatchesSearch(fiche, query){
   return searchParts.join(' ').toLowerCase().includes(query);
 }
 
+function rensDefaultFicheCompare(a,b){
+  const statutOrder = {recherche:1, surveillance:2, verifie:3, neutre:4, neutralise:5};
+  const ua = a.urgente?0:1, ub = b.urgente?0:1;
+  if(ua!==ub) return ua-ub;
+  const sa = statutOrder[a.statut]??3, sb = statutOrder[b.statut]??3;
+  if(sa!==sb) return sa-sb;
+  return (a.nom||'').localeCompare(b.nom||'');
+}
+
 function rensFilterFicheList(fiches){
   if(RENS.searchQ){
     const q = RENS.searchQ.trim().toLowerCase();
@@ -390,12 +402,7 @@ function rensFilterFicheList(fiches){
     }
 
     // Tri de priorité : Urgentes en premier, puis Recherché, Surveillance, Neutre/Neutralisé
-    const statutOrder = {recherche:1, surveillance:2, verifie:3, neutre:4, neutralise:5};
-    const ua = a.urgente?0:1, ub = b.urgente?0:1;
-    if(ua!==ub) return ua-ub;
-    const sa = statutOrder[a.statut]??3, sb = statutOrder[b.statut]??3;
-    if(sa!==sb)return sa-sb;
-    return (a.nom||'').localeCompare(b.nom||'');
+    return rensDefaultFicheCompare(a,b);
   });
 
   return fiches;
@@ -633,16 +640,82 @@ function rensFilteredArchives(){
   return rensFilterFicheList(RENS.fiches.filter(rensIsArchived));
 }
 
+function rensTabNoun(type){
+  return type==='lieux'?'lieu(x)':type==='individus'?'individu(s)':type==='groupes'?'groupe(s)':'autre(s)';
+}
+
+function rensManualUIEnabled(){
+  // Ordre manuel + séparateurs visibles uniquement en vue "propre"
+  // (pas de recherche, pas de filtre statut, pas de tri par date).
+  return !RENS.searchQ && !RENS.filterStatut && !RENS.sortDate;
+}
+
+function rensBuildTabItems(type){
+  const fiches = RENS.fiches.filter(f=>!rensIsArchived(f) && f.type===type);
+  const seps   = (RENS.separateurs||[]).filter(s=>s.type===type);
+  const items = [
+    ...fiches.map(f=>({kind:'fiche', item:f})),
+    ...seps.map(s=>({kind:'sep', item:s})),
+  ];
+  const ordVal = x=>{
+    const o = x.item.ordre;
+    return (o===null||o===undefined||o==='') ? Infinity : Number(o);
+  };
+  items.sort((a,b)=>{
+    const ka=ordVal(a), kb=ordVal(b);
+    if(ka!==kb) return ka-kb;
+    if(ka===Infinity) return rensDefaultFicheCompare(a.item,b.item);
+    return a.kind===b.kind ? 0 : (a.kind==='sep'?-1:1);
+  });
+  return items;
+}
+
+function buildSeparateurHTML(s){
+  const peutOrdonner = rensCanDelete();
+  return `
+  <tr class="rens-separateur" id="sep-${s.id}">
+    <td colspan="6" style="background:var(--parch-dark);border-top:2px solid var(--gold);border-bottom:1px solid var(--border-g);padding:.45rem .8rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap;">
+        <span style="font-family:'Eagle Lake',serif;font-size:.9rem;color:var(--green-dark);letter-spacing:.04em;">▬ ${escH(s.label)}</span>
+        ${peutOrdonner?`<span style="display:flex;gap:.3rem;flex-wrap:wrap;">
+          <button class="btn-sm" title="Monter" onclick="rensMoveSeparateur('${s.id}','up')">▲</button>
+          <button class="btn-sm" title="Descendre" onclick="rensMoveSeparateur('${s.id}','down')">▼</button>
+          <button class="btn-sm" onclick="rensRenameSeparateur('${s.id}')">Renommer</button>
+          <button class="btn-sm" style="color:#7A1010;" onclick="rensDeleteSeparateur('${s.id}')">Suppr.</button>
+        </span>`:''}
+      </div>
+    </td>
+  </tr>`;
+}
+
 function renderTab(type){
   const container = document.getElementById('tab-'+type);
   if(!container) return;
-  const fiches = rensFilteredFiches(type);
-
   const labelEl = container.querySelector('.section-label');
-  if(labelEl) labelEl.textContent = `${fiches.length} ${type==='lieux'?'lieu(x)':type==='individus'?'individu(s)':type==='groupes'?'groupe(s)':'autre(s)'} recensé(s)`;
-
-  const listEl = container.querySelector('.fiches-list');
+  const listEl  = container.querySelector('.fiches-list');
   if(!listEl) return;
+
+  // Vue "propre" : ordre manuel + séparateurs.
+  if(rensManualUIEnabled()){
+    const items = rensBuildTabItems(type);
+    const ficheCount = items.filter(it=>it.kind==='fiche').length;
+    if(labelEl) labelEl.textContent = `${ficheCount} ${rensTabNoun(type)} recensé(s)`;
+    if(items.length===0){
+      listEl.innerHTML = '<tr><td colspan="6" style="font-style:italic;color:var(--ink-faint);font-size:.92rem;padding:.7rem .9rem;">Aucune fiche.</td></tr>';
+      rensUpdateDateSortButtons();
+      return;
+    }
+    listEl.innerHTML = items.map(it=> it.kind==='sep'
+      ? buildSeparateurHTML(it.item)
+      : buildFicheHTML(it.item, {manual:true})
+    ).join('');
+    rensUpdateDateSortButtons();
+    return;
+  }
+
+  // Vue filtrée / recherche / tri date : comportement classique, sans séparateurs.
+  const fiches = rensFilteredFiches(type);
+  if(labelEl) labelEl.textContent = `${fiches.length} ${rensTabNoun(type)} recensé(s)`;
   if(fiches.length===0){
     listEl.innerHTML = '<tr><td colspan="6" style="font-style:italic;color:var(--ink-faint);font-size:.92rem;padding:.7rem .9rem;">Aucune fiche.</td></tr>';
     rensUpdateDateSortButtons();
@@ -652,8 +725,102 @@ function renderTab(type){
   rensUpdateDateSortButtons();
 }
 
+// ── Séparateurs : CRUD + réordonnancement manuel ─────────────────────
+async function rensAddSeparateur(){
+  if(!rensCanDelete()) return;
+  const type = RENS.activeTab;
+  if(!type || type==='carte') return;
+  const label = (prompt('Nom du séparateur :','')||'').trim();
+  if(!label) return;
+  const items = rensBuildTabItems(type);
+  const sepOrdre = (items.length+1)*10;
+  const payload = { type, label, ordre: sepOrdre, created_by: session?.user?.id||null };
+  try{
+    // Fige l'ordre courant pour que le séparateur se pose en bas, stable.
+    const updates = [];
+    items.forEach((it,i)=>{
+      const newOrdre=(i+1)*10;
+      if(Number(it.item.ordre)!==newOrdre){
+        it.item.ordre=newOrdre;
+        updates.push(it.kind==='sep'
+          ? sbPatch('mk_rens_separateurs',`?id=eq.${it.item.id}`,{ordre:newOrdre})
+          : sbPatch('mk_rens_fiches',`?id=eq.${it.item.id}`,{ordre:newOrdre}));
+      }
+    });
+    await Promise.all(updates);
+    await sbPost('mk_rens_separateurs',payload);
+    await rensLoad();
+  }catch(error){
+    try{
+      const {created_by, ...fallback} = payload;
+      await sbPost('mk_rens_separateurs',fallback);
+      await rensLoad();
+    }catch(fallbackError){ alert('Erreur : '+fallbackError.message); }
+  }
+}
+
+async function rensRenameSeparateur(id){
+  if(!rensCanDelete()) return;
+  const sep = (RENS.separateurs||[]).find(s=>s.id===id);
+  if(!sep) return;
+  const label = (prompt('Renommer le séparateur :', sep.label||'')||'').trim();
+  if(!label || label===sep.label) return;
+  try{
+    await sbPatch('mk_rens_separateurs',`?id=eq.${id}`,{label});
+    await rensLoad();
+  }catch(error){ alert('Erreur : '+error.message); }
+}
+
+async function rensDeleteSeparateur(id){
+  if(!rensCanDelete()) return;
+  const sep = (RENS.separateurs||[]).find(s=>s.id===id);
+  if(!sep) return;
+  if(!confirm(`Supprimer le séparateur "${sep.label}" ?`)) return;
+  try{
+    await sbDelete('mk_rens_separateurs',`?id=eq.${id}`);
+    await rensLoad();
+  }catch(error){ alert('Erreur : '+error.message); }
+}
+
+function rensMoveFiche(id, dir){ rensMoveItem('fiche', id, dir); }
+function rensMoveSeparateur(id, dir){ rensMoveItem('sep', id, dir); }
+
+async function rensMoveItem(kind, id, dir){
+  if(!rensCanDelete()) return;
+  const rec = kind==='sep'
+    ? (RENS.separateurs||[]).find(s=>s.id===id)
+    : RENS.fiches.find(f=>f.id===id);
+  if(!rec) return;
+  const type = rec.type;
+  const items = rensBuildTabItems(type);
+  const idx = items.findIndex(it=>it.kind===kind && it.item.id===id);
+  if(idx<0) return;
+  const newIdx = dir==='up' ? idx-1 : idx+1;
+  if(newIdx<0 || newIdx>=items.length) return;
+  const tmp = items[idx]; items[idx] = items[newIdx]; items[newIdx] = tmp;
+  const updates = [];
+  items.forEach((it,i)=>{
+    const newOrdre = (i+1)*10;
+    if(Number(it.item.ordre) !== newOrdre){
+      it.item.ordre = newOrdre;
+      updates.push(it.kind==='sep'
+        ? sbPatch('mk_rens_separateurs',`?id=eq.${it.item.id}`,{ordre:newOrdre})
+        : sbPatch('mk_rens_fiches',`?id=eq.${it.item.id}`,{ordre:newOrdre}));
+    }
+  });
+  renderTab(type);
+  try{
+    await Promise.all(updates);
+    await rensLoad();
+  }catch(error){
+    alert('Erreur lors du réordonnancement : '+error.message);
+    await rensLoad();
+  }
+}
+
 // ── Construction HTML d'une fiche ────────────────────────────────────
-function buildFicheHTML(f){
+function buildFicheHTML(f, opts){
+  const manual = !!(opts && opts.manual);
   const raps = RENS.rapports.filter(r=>r.fiche_id===f.id);
   const rels = RENS.relations.filter(r=>r.fiche_source===f.id || r.fiche_cible===f.id);
   const archived = rensIsArchived(f);
@@ -678,6 +845,7 @@ function buildFicheHTML(f){
   const peutAjouter = rensCanWrite();
   const peutModifier = rensCanEditOwn(f);
   const peutSupprimer = rensCanDelete();
+  const peutOrdonner = peutSupprimer;
   const createdDate = rensFormatDate(f.created_at);
 
   return `
@@ -691,6 +859,7 @@ function buildFicheHTML(f){
     </td>
     <td class="rens-row-date">${createdDate}</td>
     <td class="rens-row-actions" onclick="event.stopPropagation()">
+      ${manual&&peutOrdonner?`<button class="btn-sm" title="Monter" onclick="rensMoveFiche('${f.id}','up')">▲</button><button class="btn-sm" title="Descendre" onclick="rensMoveFiche('${f.id}','down')">▼</button>`:''}
       ${badgeUrgente}
       ${peutModifier&&!archived?`<button class="btn-sm" onclick="openEditFiche('${f.id}')">Modifier</button>`:''}
       ${peutSupprimer&&!archived?`<button class="btn-sm" onclick="archiveRensFiche('${f.id}')">Archiver</button>`:''}
@@ -1606,6 +1775,7 @@ async function initRenseignements(){
   if(wrap && rensCanWrite()){
     wrap.innerHTML = `
       <button class="btn-add" onclick="document.getElementById('rens-add-form').style.display=document.getElementById('rens-add-form').style.display==='none'?'block':'none'">+ Nouvelle fiche</button>
+      ${rensCanDelete()?`<button class="btn-add" style="margin-left:.4rem;" onclick="rensAddSeparateur()">+ Séparateur</button>`:''}
       ${buildNewFicheFormHTML()}`;
   }
   // Brancher recherche et filtre
