@@ -652,38 +652,54 @@ function rensManualUIEnabled(){
 
 function rensBuildTabItems(type){
   const fiches = RENS.fiches.filter(f=>!rensIsArchived(f) && f.type===type);
-  const seps   = (RENS.separateurs||[]).filter(s=>s.type===type);
-  const items = [
-    ...fiches.map(f=>({kind:'fiche', item:f})),
-    ...seps.map(s=>({kind:'sep', item:s})),
-  ];
-  const ordVal = x=>{
-    const o = x.item.ordre;
-    return (o===null||o===undefined||o==='') ? Infinity : Number(o);
-  };
-  items.sort((a,b)=>{
-    const ka=ordVal(a), kb=ordVal(b);
-    if(ka!==kb) return ka-kb;
-    if(ka===Infinity) return rensDefaultFicheCompare(a.item,b.item);
-    return a.kind===b.kind ? 0 : (a.kind==='sep'?-1:1);
+  const seps = (RENS.separateurs||[]).filter(s=>s.type===type)
+    .slice().sort((a,b)=> (Number(a.ordre)||0)-(Number(b.ordre)||0)
+      || String(a.created_at||'').localeCompare(String(b.created_at||'')));
+  const bySep = new Map();
+  bySep.set(null, []);
+  seps.forEach(s=>bySep.set(s.id, []));
+  fiches.forEach(f=>{
+    const key = (f.separateur_id && bySep.has(f.separateur_id)) ? f.separateur_id : null;
+    bySep.get(key).push(f);
+  });
+  for(const arr of bySep.values()) arr.sort(rensDefaultFicheCompare);
+  const items = [];
+  bySep.get(null).forEach(f=>items.push({kind:'fiche', item:f}));
+  seps.forEach(s=>{
+    items.push({kind:'sep', item:s});
+    bySep.get(s.id).forEach(f=>items.push({kind:'fiche', item:f}));
   });
   return items;
 }
 
 function buildSeparateurHTML(s){
   const peutOrdonner = rensCanDelete();
+  const dnd = peutOrdonner
+    ? ` draggable="true" ondragstart="rensSepDragStart(event,'${s.id}')" ondragover="rensDragOver(event)" ondrop="rensDropOnSeparateur(event,'${s.id}')"`
+    : '';
   return `
-  <tr class="rens-separateur" id="sep-${s.id}">
-    <td colspan="6" style="background:var(--parch-dark);border-top:2px solid var(--gold);border-bottom:1px solid var(--border-g);padding:.45rem .8rem;">
+  <tr class="rens-separateur" id="sep-${s.id}"${dnd}>
+    <td colspan="6" style="background:var(--parch-dark);border-top:2px solid var(--gold);border-bottom:1px solid var(--border-g);padding:.45rem .8rem;cursor:${peutOrdonner?'grab':'default'};">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap;">
-        <span style="font-family:'Eagle Lake',serif;font-size:.9rem;color:var(--green-dark);letter-spacing:.04em;">▬ ${escH(s.label)}</span>
+        <span style="font-family:'Eagle Lake',serif;font-size:.9rem;color:var(--green-dark);letter-spacing:.04em;">\u25ac ${escH(s.label)}</span>
         ${peutOrdonner?`<span style="display:flex;gap:.3rem;flex-wrap:wrap;">
-          <button class="btn-sm" title="Monter" onclick="rensMoveSeparateur('${s.id}','up')">▲</button>
-          <button class="btn-sm" title="Descendre" onclick="rensMoveSeparateur('${s.id}','down')">▼</button>
+          <button class="btn-sm" title="Monter" onclick="rensMoveSeparateur('${s.id}','up')">\u25b2</button>
+          <button class="btn-sm" title="Descendre" onclick="rensMoveSeparateur('${s.id}','down')">\u25bc</button>
           <button class="btn-sm" onclick="rensRenameSeparateur('${s.id}')">Renommer</button>
           <button class="btn-sm" style="color:#7A1010;" onclick="rensDeleteSeparateur('${s.id}')">Suppr.</button>
         </span>`:''}
       </div>
+    </td>
+  </tr>`;
+}
+
+function buildUnassignedZoneHTML(){
+  const peutOrdonner = rensCanDelete();
+  const drop = peutOrdonner ? ` ondragover="rensDragOver(event)" ondrop="rensDropUnassign(event)"` : '';
+  return `
+  <tr class="rens-separateur rens-unassigned"${drop}>
+    <td colspan="6" style="background:transparent;border-bottom:1px dashed var(--border-g);padding:.35rem .8rem;">
+      <span style="font-style:italic;color:var(--ink-faint);font-size:.82rem;">Non class\u00e9${peutOrdonner?' \u2014 glissez une fiche ici pour la retirer de sa section':''}</span>
     </td>
   </tr>`;
 }
@@ -695,7 +711,7 @@ function renderTab(type){
   const listEl  = container.querySelector('.fiches-list');
   if(!listEl) return;
 
-  // Vue "propre" : ordre manuel + séparateurs.
+  // Vue "propre" : sections (séparateurs) + tri auto au sein de chaque section.
   if(rensManualUIEnabled()){
     const items = rensBuildTabItems(type);
     const ficheCount = items.filter(it=>it.kind==='fiche').length;
@@ -705,10 +721,13 @@ function renderTab(type){
       rensUpdateDateSortButtons();
       return;
     }
-    listEl.innerHTML = items.map(it=> it.kind==='sep'
+    const hasSep = (RENS.separateurs||[]).some(s=>s.type===type);
+    let html = hasSep ? buildUnassignedZoneHTML() : '';
+    html += items.map(it=> it.kind==='sep'
       ? buildSeparateurHTML(it.item)
       : buildFicheHTML(it.item, {manual:true})
     ).join('');
+    listEl.innerHTML = html;
     rensUpdateDateSortButtons();
     return;
   }
@@ -725,29 +744,17 @@ function renderTab(type){
   rensUpdateDateSortButtons();
 }
 
-// ── Séparateurs : CRUD + réordonnancement manuel ─────────────────────
+// ── Séparateurs : CRUD + sections ────────────────────────────────────
 async function rensAddSeparateur(){
   if(!rensCanDelete()) return;
   const type = RENS.activeTab;
   if(!type || type==='carte') return;
   const label = (prompt('Nom du séparateur :','')||'').trim();
   if(!label) return;
-  const items = rensBuildTabItems(type);
-  const sepOrdre = (items.length+1)*10;
-  const payload = { type, label, ordre: sepOrdre, created_by: session?.user?.id||null };
+  const seps = (RENS.separateurs||[]).filter(s=>s.type===type);
+  const maxOrdre = seps.reduce((m,s)=>Math.max(m, Number(s.ordre)||0), 0);
+  const payload = { type, label, ordre: maxOrdre+10, created_by: session?.user?.id||null };
   try{
-    // Fige l'ordre courant pour que le séparateur se pose en bas, stable.
-    const updates = [];
-    items.forEach((it,i)=>{
-      const newOrdre=(i+1)*10;
-      if(Number(it.item.ordre)!==newOrdre){
-        it.item.ordre=newOrdre;
-        updates.push(it.kind==='sep'
-          ? sbPatch('mk_rens_separateurs',`?id=eq.${it.item.id}`,{ordre:newOrdre})
-          : sbPatch('mk_rens_fiches',`?id=eq.${it.item.id}`,{ordre:newOrdre}));
-      }
-    });
-    await Promise.all(updates);
     await sbPost('mk_rens_separateurs',payload);
     await rensLoad();
   }catch(error){
@@ -775,47 +782,112 @@ async function rensDeleteSeparateur(id){
   if(!rensCanDelete()) return;
   const sep = (RENS.separateurs||[]).find(s=>s.id===id);
   if(!sep) return;
-  if(!confirm(`Supprimer le séparateur "${sep.label}" ?`)) return;
+  if(!confirm(`Supprimer le séparateur "${sep.label}" ? Les fiches qu'il contient repasseront en "Non classé".`)) return;
   try{
     await sbDelete('mk_rens_separateurs',`?id=eq.${id}`);
     await rensLoad();
   }catch(error){ alert('Erreur : '+error.message); }
 }
 
-function rensMoveFiche(id, dir){ rensMoveItem('fiche', id, dir); }
-function rensMoveSeparateur(id, dir){ rensMoveItem('sep', id, dir); }
+// ── Assignation d'une fiche à une section ────────────────────────────
+function rensFicheSectionSelectHTML(f){
+  const seps = (RENS.separateurs||[]).filter(s=>s.type===f.type)
+    .slice().sort((a,b)=>(Number(a.ordre)||0)-(Number(b.ordre)||0));
+  if(!seps.length) return '';
+  const opts = ['<option value="">\u2014 Aucune section \u2014</option>']
+    .concat(seps.map(s=>`<option value="${s.id}"${f.separateur_id===s.id?' selected':''}>${escH(s.label)}</option>`))
+    .join('');
+  return `<select class="rens-sec-sel" title="Section" style="font-family:'IM Fell English',serif;font-size:.8rem;max-width:9rem;" onclick="event.stopPropagation()" onchange="rensAssignFicheSeparateur('${f.id}', this.value||null)">${opts}</select>`;
+}
 
-async function rensMoveItem(kind, id, dir){
+async function rensAssignFicheSeparateur(ficheId, sepId){
   if(!rensCanDelete()) return;
-  const rec = kind==='sep'
-    ? (RENS.separateurs||[]).find(s=>s.id===id)
-    : RENS.fiches.find(f=>f.id===id);
-  if(!rec) return;
-  const type = rec.type;
-  const items = rensBuildTabItems(type);
-  const idx = items.findIndex(it=>it.kind===kind && it.item.id===id);
-  if(idx<0) return;
-  const newIdx = dir==='up' ? idx-1 : idx+1;
-  if(newIdx<0 || newIdx>=items.length) return;
-  const tmp = items[idx]; items[idx] = items[newIdx]; items[newIdx] = tmp;
-  const updates = [];
-  items.forEach((it,i)=>{
-    const newOrdre = (i+1)*10;
-    if(Number(it.item.ordre) !== newOrdre){
-      it.item.ordre = newOrdre;
-      updates.push(it.kind==='sep'
-        ? sbPatch('mk_rens_separateurs',`?id=eq.${it.item.id}`,{ordre:newOrdre})
-        : sbPatch('mk_rens_fiches',`?id=eq.${it.item.id}`,{ordre:newOrdre}));
-    }
-  });
-  renderTab(type);
+  const f = RENS.fiches.find(x=>x.id===ficheId);
+  if(!f || rensIsArchived(f)) return;
+  const val = sepId || null;
+  if((f.separateur_id||null)===val) return;
+  f.separateur_id = val; // optimiste
+  renderTab(f.type);
   try{
-    await Promise.all(updates);
+    await sbPatch('mk_rens_fiches',`?id=eq.${ficheId}`,{separateur_id:val});
     await rensLoad();
-  }catch(error){
-    alert('Erreur lors du réordonnancement : '+error.message);
-    await rensLoad();
-  }
+  }catch(error){ alert('Erreur : '+error.message); await rensLoad(); }
+}
+
+// ── Réordonnancement des séparateurs (flèches + glisser) ─────────────
+function rensRenumberSeparateurs(seps){
+  const updates=[];
+  seps.forEach((s,i)=>{
+    const no=(i+1)*10;
+    if(Number(s.ordre)!==no){ s.ordre=no; updates.push(sbPatch('mk_rens_separateurs',`?id=eq.${s.id}`,{ordre:no})); }
+  });
+  return updates;
+}
+
+async function rensMoveSeparateur(id, dir){
+  if(!rensCanDelete()) return;
+  const sep = (RENS.separateurs||[]).find(s=>s.id===id);
+  if(!sep) return;
+  const seps = (RENS.separateurs||[]).filter(s=>s.type===sep.type)
+    .slice().sort((a,b)=>(Number(a.ordre)||0)-(Number(b.ordre)||0));
+  const idx = seps.findIndex(s=>s.id===id);
+  const nidx = dir==='up'?idx-1:idx+1;
+  if(nidx<0||nidx>=seps.length) return;
+  const t=seps[idx]; seps[idx]=seps[nidx]; seps[nidx]=t;
+  const updates = rensRenumberSeparateurs(seps);
+  renderTab(sep.type);
+  try{ await Promise.all(updates); await rensLoad(); }
+  catch(error){ alert('Erreur : '+error.message); await rensLoad(); }
+}
+
+async function rensReorderSeparateurBefore(dragId, targetId){
+  if(!rensCanDelete() || dragId===targetId) return;
+  const drag = (RENS.separateurs||[]).find(s=>s.id===dragId);
+  const target = (RENS.separateurs||[]).find(s=>s.id===targetId);
+  if(!drag || !target || drag.type!==target.type) return;
+  let seps = (RENS.separateurs||[]).filter(s=>s.type===drag.type)
+    .slice().sort((a,b)=>(Number(a.ordre)||0)-(Number(b.ordre)||0))
+    .filter(s=>s.id!==dragId);
+  const ti = seps.findIndex(s=>s.id===targetId);
+  seps.splice(ti,0,drag);
+  const updates = rensRenumberSeparateurs(seps);
+  renderTab(drag.type);
+  try{ await Promise.all(updates); await rensLoad(); }
+  catch(error){ alert('Erreur : '+error.message); await rensLoad(); }
+}
+
+// ── Glisser-déposer (souris) ─────────────────────────────────────────
+let rensDragPayload = null;
+function rensFicheDragStart(ev, id){
+  rensDragPayload = 'fiche:'+id;
+  try{ ev.dataTransfer.setData('text/plain', rensDragPayload); ev.dataTransfer.effectAllowed='move'; }catch(e){}
+}
+function rensSepDragStart(ev, id){
+  rensDragPayload = 'sep:'+id;
+  try{ ev.dataTransfer.setData('text/plain', rensDragPayload); ev.dataTransfer.effectAllowed='move'; }catch(e){}
+  ev.stopPropagation();
+}
+function rensDragOver(ev){
+  if(!rensCanDelete()) return;
+  ev.preventDefault();
+  try{ ev.dataTransfer.dropEffect='move'; }catch(e){}
+}
+function rensReadDragPayload(ev){
+  let p = rensDragPayload;
+  try{ const d = ev.dataTransfer.getData('text/plain'); if(d) p=d; }catch(e){}
+  return p;
+}
+async function rensDropOnSeparateur(ev, sepId){
+  ev.preventDefault(); ev.stopPropagation();
+  const p = rensReadDragPayload(ev); rensDragPayload=null;
+  if(!p) return;
+  if(p.indexOf('fiche:')===0) await rensAssignFicheSeparateur(p.slice(6), sepId);
+  else if(p.indexOf('sep:')===0) await rensReorderSeparateurBefore(p.slice(4), sepId);
+}
+async function rensDropUnassign(ev){
+  ev.preventDefault(); ev.stopPropagation();
+  const p = rensReadDragPayload(ev); rensDragPayload=null;
+  if(p && p.indexOf('fiche:')===0) await rensAssignFicheSeparateur(p.slice(6), null);
 }
 
 // ── Construction HTML d'une fiche ────────────────────────────────────
@@ -846,10 +918,11 @@ function buildFicheHTML(f, opts){
   const peutModifier = rensCanEditOwn(f);
   const peutSupprimer = rensCanDelete();
   const peutOrdonner = peutSupprimer;
+  const dragAttrs = (manual && peutOrdonner) ? ` draggable="true" ondragstart="rensFicheDragStart(event,'${f.id}')"` : '';
   const createdDate = rensFormatDate(f.created_at);
 
   return `
-  <tr class="rens-row${f.urgente?' urgente':''}${archived?' archived':''}" id="fiche-${f.id}" data-id="${f.id}" data-tab="${f.type}" onclick="toggleFiche('fiche-${f.id}')">
+  <tr class="rens-row${f.urgente?' urgente':''}${archived?' archived':''}" id="fiche-${f.id}" data-id="${f.id}" data-tab="${f.type}"${dragAttrs} onclick="toggleFiche('fiche-${f.id}')">
     <td class="rens-row-chevron"><span class="fiche-chevron">▶</span></td>
     <td class="rens-row-name">${escH(f.nom)}</td>
     <td>${badgeArchived}${badgeStatut || '<span style="color:var(--ink-faint);font-style:italic;">Neutre</span>'}</td>
@@ -859,7 +932,7 @@ function buildFicheHTML(f, opts){
     </td>
     <td class="rens-row-date">${createdDate}</td>
     <td class="rens-row-actions" onclick="event.stopPropagation()">
-      ${manual&&peutOrdonner?`<button class="btn-sm" title="Monter" onclick="rensMoveFiche('${f.id}','up')">▲</button><button class="btn-sm" title="Descendre" onclick="rensMoveFiche('${f.id}','down')">▼</button>`:''}
+      ${manual&&peutOrdonner?rensFicheSectionSelectHTML(f):''}
       ${badgeUrgente}
       ${peutModifier&&!archived?`<button class="btn-sm" onclick="openEditFiche('${f.id}')">Modifier</button>`:''}
       ${peutSupprimer&&!archived?`<button class="btn-sm" onclick="archiveRensFiche('${f.id}')">Archiver</button>`:''}
