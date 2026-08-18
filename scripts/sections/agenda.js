@@ -304,6 +304,10 @@ function renderAgendaForm(event){
         <span>Descriptif</span>
         <textarea id="agendaDescription" rows="8" placeholder="Objectif, déroulé, consignes, prérequis...">${agendaEsc(event?.description||'')}</textarea>
       </label>
+      ${!event?`<label class="form-field agenda-description-field" style="flex-direction:row;align-items:center;gap:.5rem;">
+        <input type="checkbox" id="agendaNotify" checked style="width:auto;">
+        <span style="margin:0;">Avertir sur Discord (mention @Garde de l'Aube)</span>
+      </label>`:''}
     </div>
     <div class="agenda-actions">
       <button type="button" class="btn-del" onclick="cancelAgendaEdit()">Annuler</button>
@@ -405,7 +409,8 @@ async function saveAgendaEvent(){
       savedId=data?.id||null;
       const sendDiscord = window.GrimoireDiscord?.send || window.sendDiscordNotification;
       if(savedId&&typeof sendDiscord==='function'){
-        await sendDiscord('agenda_created',{eventId:savedId});
+        const notify = document.getElementById('agendaNotify')?.checked !== false;
+        await sendDiscord('agenda_created',{eventId:savedId, notify});
       }
     }
     agendaState.selectedId=savedId;

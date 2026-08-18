@@ -526,9 +526,9 @@ async function buildAgendaMessage(payload: Record<string, unknown>, caller: Call
   const location = text(event.location, 'Non renseigné');
   const description = truncate(event.description, 400);
 
+  const notify = payload.notify !== false;
   const lines = [
-    `<@&${AGENDA_ROLE_ID}>`,
-    '',
+    ...(notify ? [`<@&${AGENDA_ROLE_ID}>`, ''] : []),
     '<:aube:1516926588359540856> **Nouvel événement ajouté à l\u2019agenda**',
     '',
     `> ### ${title}`,
@@ -573,9 +573,10 @@ Deno.serve(async (req) => {
 
     if (!discordPayload) discordPayload = { content };
     if (action === 'agenda_created') {
+      const notifyRole = payload.notify !== false;
       discordPayload.allowed_mentions = {
         parse: [],
-        roles: [AGENDA_ROLE_ID],
+        roles: notifyRole ? [AGENDA_ROLE_ID] : [],
       };
     }
 
