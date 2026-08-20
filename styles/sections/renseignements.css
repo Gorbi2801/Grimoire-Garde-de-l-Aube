@@ -321,3 +321,33 @@ body{background:#1C1A18;font-family:'IM Fell English',Georgia,serif;font-size:16
 @media(max-width:640px){
   .cork-board{ grid-template-columns:1fr; }
 }
+
+/* Sélecteur de section (classer une fiche dans un séparateur) */
+.rens-sec-sel{
+  font-family:'Eagle Lake',serif;
+  font-size:.72rem;
+  letter-spacing:.03em;
+  color:var(--ink-mid);
+  background-color:var(--parch);
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M2 3.5l3 3 3-3' fill='none' stroke='%235C4A3A' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat:no-repeat;
+  background-position:right .5rem center;
+  background-size:.6rem;
+  border:1px solid var(--border-g);
+  border-left:3px solid var(--gold);
+  padding:.2rem 1.5rem .2rem .55rem;
+  max-width:11rem;
+  cursor:pointer;
+  -webkit-appearance:none;
+  -moz-appearance:none;
+  appearance:none;
+  transition:background-color .12s,border-color .12s,box-shadow .12s;
+}
+.rens-sec-sel:hover{ background-color:var(--parch-deep); border-color:var(--gold); }
+.rens-sec-sel:focus{ outline:none; border-color:var(--gold); box-shadow:0 0 0 2px rgba(201,168,76,.28); }
+.rens-sec-sel.has-section{
+  background-color:rgba(201,168,76,.16);
+  color:var(--ink-faint);
+  border-color:var(--gold);
+}
+.rens-sec-sel option{ font-family:'IM Fell English',serif; color:var(--ink); background:var(--parch); }

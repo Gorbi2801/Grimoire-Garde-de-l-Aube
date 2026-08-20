@@ -797,7 +797,7 @@ function rensFicheSectionSelectHTML(f){
   const opts = ['<option value="">\u2014 Aucune section \u2014</option>']
     .concat(seps.map(s=>`<option value="${s.id}"${f.separateur_id===s.id?' selected':''}>${escH(s.label)}</option>`))
     .join('');
-  return `<select class="rens-sec-sel" title="Section" style="font-family:'IM Fell English',serif;font-size:.8rem;max-width:9rem;" onclick="event.stopPropagation()" onchange="rensAssignFicheSeparateur('${f.id}', this.value||null)">${opts}</select>`;
+  return `<select class="rens-sec-sel${f.separateur_id?' has-section':''}" title="Classer dans une section" onclick="event.stopPropagation()" onchange="rensAssignFicheSeparateur('${f.id}', this.value||null)">${opts}</select>`;
 }
 
 async function rensAssignFicheSeparateur(ficheId, sepId){
